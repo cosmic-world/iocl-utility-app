@@ -1,0 +1,65 @@
+#mover_hover:hover {
+  cursor: pointer;
+  color: red;
+}
+html {
+  scroll-behavior: smooth;
+}
+:root {
+  /* color platte */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #cdc3c3;
+  --color-btn-primary: #0046bb;
+  --color-btn-secondary: #f00f0f;
+  --color-link-primary: #168df4;
+  --color-link-secondary: #abedfc;
+  --color-text-primary: #000000;
+  --color-text-secondary: #ffffff;
+  --color-text-white: #ffffff;
+  --color-text-black: #000000;
+  --color-text-hover: blue;
+
+  /* font style */
+  --font-family: "Roboto", sans-serif !important;
+  --font-size-web-h1: 43px;
+  --font-size-web-h2: 34px;
+  --font-size-web-h3: 24px;
+  --font-size-web-p: 18px;
+  --font-size-web-btn: 16px;
+
+  --font-size-mob-h1: 30px;
+  --font-size-mob-h2: 24px;
+  --font-size-mob-h3: 18px;
+  --font-size-mob-p: 14px;
+  --font-size-mob-btn: 14px;
+
+  --font-size-big: 1.5rem;
+  --font-size-large: 1.25rem;
+  --font-size-normal: 1rem;
+  --font-size-small: 0.75rem;
+  --font-size-little: 0.5rem;
+  --font-size-heading: 1.5rem;
+  --font-size-para: 1.25rem;
+  --font-size-btn: 1rem;
+  --font-size-footer: 0.75rem;
+  --font-weight-bold: 700;
+  --font-weight-normal: 500;
+  --font-weight-heading: 800;
+
+  /* padding */
+  --padding-btn: 4px 22px;
+  --padding-link: 4px 22px;
+  --padding-horizontal-component: 16px 144px;
+}
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: rgb(160, 144, 144);
+  opacity: 0.3; /* Firefox */
+  letter-spacing: 0em;
+}
+
+.section_padding {
+  padding: var(--padding-horizontal-component);
+}

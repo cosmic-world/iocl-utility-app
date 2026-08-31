@@ -1,0 +1,107 @@
+.ttes_table_div {
+  height: 25%;
+  width: 100%;
+  overflow: auto;
+}
+.ttes_table_view {
+  height: 90%;
+  width: 100%;
+  overflow: auto;
+}
+
+.ttes_table {
+  background-color: #dee4ea;
+  width: 100% !important;
+}
+
+.ttes_table > thead tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 16px;
+  vertical-align: middle;
+  padding: 2px;
+  background-color: rgb(65, 63, 63);
+  color: white;
+  text-align: center;
+  user-select: none;
+  font-family: "calibri";
+  font-weight: normal;
+  min-width: 100px;
+}
+.ttes_table > tbody > tr > td {
+  color: black;
+  text-align: center !important;
+  font-size: 16px;
+  cursor: pointer;
+  vertical-align: middle;
+  font-family: "calibri";
+  border: 1px solid black;
+  height: 45px !important;
+  padding: 0px 2px !important;
+  max-width: 250px;
+}
+
+.header-locationName {
+  background-color: #0d6efd;
+  font-weight: bold !important;
+}
+
+.custom-cascader .ant-select-selection-placeholder,
+.ant-select-selection-item {
+  font-size: 20px !important;
+}
+
+.custom-cascader-dropdown .ant-cascader-menu-item {
+  font-size: 20px !important;
+}
+
+.custom-cascader-dropdown {
+  min-width: 360px !important; /* increase overall tray width */
+}
+
+.progress-bar {
+  width: 40%;
+}
+
+.card-style {
+  width: 300px;
+  height: 300px;
+  cursor: pointer;
+}
+
+.brand-name {
+  text-transform: uppercase;
+  font-size: 2rem !important;
+  font-weight: bold !important;
+}
+
+.app-name {
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+}
+
+.icon-size {
+  zoom: 1.5;
+  margin-right: 5px !important;
+}
+
+@media (max-width: 768px) {
+  .progress-bar {
+    width: 80%;
+  }
+  .icon-size {
+    zoom: 1;
+    margin-right: 50 !important;
+  }
+  .ttes_table_view {
+    min-height: 80%;
+  }
+  .ttes_table > tbody {
+    min-height: 80%;
+  }
+}
