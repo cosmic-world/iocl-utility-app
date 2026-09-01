@@ -46,9 +46,6 @@ export default function contacts() {
               : "test"),
         );
         setPasscode(filteredData.length > 0 ? filteredData[0]["Passcode"] : "");
-        setAdmin_Passcode(
-          filteredData.length > 0 ? filteredData[0]["Admin_pass"] : "",
-        );
       } catch (error) {
         console.error("Error fetching sheet data:", error);
       }

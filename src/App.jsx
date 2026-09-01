@@ -89,7 +89,6 @@ function App() {
           ),
         );
         dispatch(SetPermitList(filteredData));
-        console.log("PermitList updated:", filteredData);
         const permit_type_array = filteredData.map((val) => val["Permit Type"]);
         const permit_labels = [
           "Hot Work ",
@@ -119,7 +118,7 @@ function App() {
         clearInterval(intervalId);
       }
     };
-  }, []);
+  }, [selectedTerminal]);
   
   const permit_type_array = PermitList.length>0?PermitList.map((val) => val["Permit Type"]):[];
   const permit_labels = [

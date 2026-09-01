@@ -47,6 +47,12 @@ export default function PermitDisplay({ state }) {
     }, 10000);
   }, []);
 
+  // useEffect(() => {
+  //   if(clock == 0){
+  //   window.location.reload()
+  //   }
+  // }, []);
+
   useEffect(() => {
     setstartIndex((prevState) =>
       prevState + step < PermitList.length ? prevState + step : 0,

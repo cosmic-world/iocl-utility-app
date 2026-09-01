@@ -141,10 +141,9 @@ export default function contacts() {
       <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
         {["user", "admin"].map((item, index) => {
           return (
-            <Badge color={userType === item ?"success": "none"} overlap="circular" variant="dot">
+            <Badge key={index} color={userType === item ?"success": "none"} overlap="circular" variant="dot">
             <Card
               style={{ width: 250, height: 250, cursor: "pointer", margin: 10 }}
-              key={index}
             >
               <CardActionArea
                 onClick={() => handleUserSelection(item)}
