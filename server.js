@@ -1119,7 +1119,7 @@ app.post("/api/upload-labour-pass",
 
 
 
-const PORT = 5000;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 5000;
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Upload server running on http://localhost:${PORT}`);
 });

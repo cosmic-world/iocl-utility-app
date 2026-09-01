@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
@@ -57,7 +58,7 @@ export default function MasterData() {
 
     try {
       const response = await fetch(
-        "/api/upload-contractor-excel",
+        apiUrl("/api/upload-contractor-excel"),
         {
           method: "POST",
           body: formData,
@@ -116,7 +117,7 @@ export default function MasterData() {
       const payload = { locationCode, contractorName, mailID, mobileNo };
       // Submit to server
       const response = await fetch(
-        "/api/upload-contractor-single",
+        apiUrl("/api/upload-contractor-single"),
         {
           method: "POST",
           headers: {
@@ -149,7 +150,7 @@ export default function MasterData() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "/api/contractor-master-data",
+        apiUrl("/api/contractor-master-data"),
       );
       if (!response.ok) {
         throw new Error("Failed to load records");

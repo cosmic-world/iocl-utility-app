@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
@@ -75,7 +76,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "/api/ttcrew-master-data",
+        apiUrl("/api/ttcrew-master-data"),
       );
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -111,7 +112,7 @@ export default function tempPassDashboard() {
         getTodayLabel().split("-").reverse().join("-"),
       );
 
-      const url = `/api/temp_pass_records?${params.toString()}`;
+      const url = apiUrl(`/api/temp_pass_records?${params.toString()}`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -274,7 +275,7 @@ export default function tempPassDashboard() {
 
       // Submit to server
       const response = await fetch(
-        "/api/upload-temp-pass",
+        apiUrl("/api/upload-temp-pass"),
         {
           method: "POST",
           body: formData,
@@ -322,7 +323,7 @@ export default function tempPassDashboard() {
     setApprovingId(recordId);
     try {
       const response = await fetch(
-        `/api/records/${recordId}/approve`,
+        apiUrl(`/api/records/${recordId}/approve`),
         { method: "POST" },
       );
       const data = await response.json();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
@@ -109,7 +110,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "/api/officer-master-data",
+        apiUrl("/api/officer-master-data"),
       );
       if (!response.ok) {
         throw new Error("Failed to sync officer master records");
@@ -135,7 +136,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "/api/labour-master-data",
+        apiUrl("/api/labour-master-data"),
       );
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -177,7 +178,7 @@ export default function tempPassDashboard() {
 
       if (searchContractor) params.append("contractor", searchContractor);
 
-      const url = `/api/labour-master-data?${params.toString()}`;
+      const url = apiUrl(`/api/labour-master-data?${params.toString()}`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -297,7 +298,7 @@ export default function tempPassDashboard() {
 
       // Submit to server
       const response = await fetch(
-        "/api/upload-labour-pass",
+        apiUrl("/api/upload-labour-pass"),
         {
           method: "POST",
           body: formData,
@@ -347,7 +348,7 @@ export default function tempPassDashboard() {
     setApprovingId(recordId);
     try {
       const response = await fetch(
-        `/api/records/${recordId}/approve`,
+        apiUrl(`/api/records/${recordId}/approve`),
         { method: "POST" },
       );
       const data = await response.json();

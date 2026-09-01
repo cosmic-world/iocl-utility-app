@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import {
   DataGrid,
@@ -440,7 +441,7 @@ export default function ExportCustomToolbar({}) {
           requestTill.split("-").reverse().join("-"),
         );
 
-      const url = `/api/temp_pass_records?${params.toString()}`;
+      const url = apiUrl(`/api/temp_pass_records?${params.toString()}`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");

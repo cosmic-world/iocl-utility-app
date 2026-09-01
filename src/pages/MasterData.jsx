@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
@@ -57,7 +58,7 @@ export default function MasterData() {
 
     try {
       const response = await fetch(
-        "/api/upload-ttcrew-excel",
+        apiUrl("/api/upload-ttcrew-excel"),
         {
           method: "POST",
           body: formData,
@@ -144,7 +145,7 @@ export default function MasterData() {
         driving_licence_no: drivingLicence,
       };
       // Submit to server
-      const response = await fetch("/api/upload-master", {
+      const response = await fetch(apiUrl("/api/upload-master"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE

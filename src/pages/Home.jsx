@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "../api";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { ManageAccounts, Person } from "@mui/icons-material";
@@ -35,7 +36,7 @@ export default function contacts() {
       if (officerList && officerList.length > 0) return;
 
       try {
-        const response = await fetch("/api/officer-master-data");
+        const response = await fetch(apiUrl("/api/officer-master-data"));
         const data = await response.json();
         dispatch(SetOfficerMasterList(data || []));
       } catch (error) {
@@ -76,7 +77,7 @@ export default function contacts() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await fetch("/api/admin/request-otp", {
+      const response = await fetch(apiUrl("/api/admin/request-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
@@ -112,7 +113,7 @@ export default function contacts() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await fetch("/api/admin/verify-otp", {
+      const response = await fetch(apiUrl("/api/admin/verify-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, otp }),
