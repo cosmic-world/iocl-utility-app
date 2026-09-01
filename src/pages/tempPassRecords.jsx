@@ -86,7 +86,7 @@ export default function tempPassDashboard() {
       setSaveLoader(false);
       dispatch(SetMasterList(zlist));
       zlist.length > 0
-        ? alert("Syncing completed successfully.")
+        ? null
         : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
@@ -401,14 +401,14 @@ export default function tempPassDashboard() {
       >
         <Button
           variant={
-            navBarComponent === "tempPassDashboard" ? "outlined" : "contained"
+            navBarComponent === "tempPassDashboard" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "tempPassDashboard" ? "white" : "null",
+              navBarComponent === "tempPassDashboard" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
@@ -419,14 +419,14 @@ export default function tempPassDashboard() {
         </Button>
         <Button
           variant={
-            navBarComponent === "tempPassHistory" ? "outlined" : "contained"
+            navBarComponent === "tempPassHistory" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "tempPassHistory" ? "white" : "null",
+              navBarComponent === "tempPassHistory" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(
@@ -438,13 +438,13 @@ export default function tempPassDashboard() {
           Temporary Pass Dashboard
         </Button>
         <Button
-          variant={navBarComponent === "masterData" ? "outlined" : "contained"}
+          variant={navBarComponent === "masterData" ? "contained" : "outlined"}
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "masterData" ? "white" : "null",
+              navBarComponent === "masterData" ? "null" : "white",
             "&:disabled": {
               cursor: "not-allowed",
               backgroundColor: "white",

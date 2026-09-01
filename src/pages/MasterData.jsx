@@ -190,14 +190,14 @@ export default function MasterData() {
       >
         <Button
           variant={
-            navBarComponent === "tempPassDashboard" ? "outlined" : "contained"
+            navBarComponent === "tempPassDashboard" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "tempPassDashboard" ? "white" : "null",
+              navBarComponent === "tempPassDashboard" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
@@ -208,14 +208,14 @@ export default function MasterData() {
         </Button>
         <Button
           variant={
-            navBarComponent === "tempPassHistory" ? "outlined" : "contained"
+            navBarComponent === "tempPassHistory" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "tempPassHistory" ? "white" : "null",
+              navBarComponent === "tempPassHistory" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(
@@ -227,13 +227,13 @@ export default function MasterData() {
           Temporary Pass Dashboard
         </Button>
         <Button
-          variant={navBarComponent === "masterData" ? "outlined" : "contained"}
+          variant={navBarComponent === "masterData" ? "contained" : "outlined"}
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "masterData" ? "white" : "null",
+              navBarComponent === "masterData" ? "null" : "white",
             "&:disabled": {
               cursor: "not-allowed",
               backgroundColor: "white",

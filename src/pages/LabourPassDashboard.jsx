@@ -423,14 +423,14 @@ export default function tempPassDashboard() {
       >
         <Button
           variant={
-            navBarComponent === "labourPassDashboard" ? "outlined" : "contained"
+            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "labourPassDashboard" ? "white" : "null",
+              navBarComponent === "labourPassDashboard" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(SetSelectedApplication("Labour Pass Dashboard"));
@@ -450,7 +450,7 @@ export default function tempPassDashboard() {
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "contractor_masterData" ? "white" : "null",
+              navBarComponent === "contractor_masterData" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(SetSelectedApplication("Labour Master Data"));
@@ -461,14 +461,14 @@ export default function tempPassDashboard() {
         </Button>
         <Button
           variant={
-            navBarComponent === "contractor_cred" ? "outlined" : "contained"
+            navBarComponent === "contractor_cred" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "contractor_cred" ? "white" : "null",
+              navBarComponent === "contractor_cred" ? "null" : "white",
             "&:disabled": {
               cursor: "not-allowed",
               backgroundColor: "white",

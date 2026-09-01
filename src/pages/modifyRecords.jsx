@@ -423,13 +423,13 @@ const ModifyRecords = () => {
         }}
       >
         <Button
-          variant={navBarComponent === "formControl" ? "outlined" : "contained"}
+          variant={navBarComponent === "formControl" ? "contained" : "outlined"}
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "formControl" ? "white" : "null",
+              navBarComponent === "formControl" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
@@ -440,14 +440,14 @@ const ModifyRecords = () => {
         </Button>
         <Button
           variant={
-            navBarComponent === "permitDisplay" ? "outlined" : "contained"
+            navBarComponent === "permitDisplay" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "permitDisplay" ? "white" : "null",
+              navBarComponent === "permitDisplay" ? "null" : "white",
           }}
           onClick={() => {
             dispatch(
@@ -460,14 +460,14 @@ const ModifyRecords = () => {
         </Button>
         <Button
           variant={
-            navBarComponent === "layoutDisplay" ? "outlined" : "contained"
+            navBarComponent === "layoutDisplay" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "layoutDisplay" ? "white" : "null",
+              navBarComponent === "layoutDisplay" ? "null" : "white",
             "&:disabled": {
               cursor: "not-allowed",
               backgroundColor: "white",
@@ -484,14 +484,14 @@ const ModifyRecords = () => {
         </Button>
         <Button
           variant={
-            navBarComponent === "modifyRecords" ? "outlined" : "contained"
+            navBarComponent === "modifyRecords" ? "contained" : "outlined"
           }
           color="warning"
           sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-              navBarComponent === "modifyRecords" ? "white" : "null",
+              navBarComponent === "modifyRecords" ? "null" : "white",
             "&:disabled": {
               cursor: "not-allowed",
               backgroundColor: "white",
