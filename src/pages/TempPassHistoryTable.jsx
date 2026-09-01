@@ -466,7 +466,7 @@ export default function ExportCustomToolbar({}) {
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
       <div
-        className="d-flex justify-content-center align-items-center"
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
           borderBottom: "1px solid black",
           width: "100%",

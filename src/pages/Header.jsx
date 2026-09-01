@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Typewriter from "typewriter-effect";
-import { NavBarComponent } from "../action/userSlice";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Menu, MenuItem, Divider } from "@mui/material";
 
@@ -58,6 +58,7 @@ export default function Header({}) {
               selected={navBarComponent == "home"}
               onClick={() => {
                 dispatch(NavBarComponent("home"));
+                dispatch(SetSelectedApplication("USER TYPE"));
                 setAnchorE1(null);
               }}
               className="d-flex justify-content-center"
@@ -69,6 +70,7 @@ export default function Header({}) {
               selected={navBarComponent == "home2"}
               onClick={() => {
                 dispatch(NavBarComponent("home2"));
+                dispatch(SetSelectedApplication("APPLICATION SELECTION"));
                 setAnchorE1(null);
               }}
               disabled={userType == "" ? true : false}
@@ -78,10 +80,24 @@ export default function Header({}) {
             </MenuItem>
             <Divider className="bg-dark" />
             <MenuItem
+              selected={navBarComponent == "officer_cred"}
+              className="d-flex justify-content-center"
+              disabled={userType != "admin"}
+              onClick={() => {
+                dispatch(NavBarComponent("officer_cred"));
+                dispatch(SetSelectedApplication("ADMIN CONTROL"));
+                setAnchorE1(null);
+              }}
+            >
+              Admin Control
+            </MenuItem>
+            <Divider className="bg-dark" />
+            <MenuItem
               selected={navBarComponent == "contacts"}
               className="d-flex justify-content-center"
               onClick={() => {
                 dispatch(NavBarComponent("contacts"));
+                dispatch(SetSelectedApplication("CONTACTS"));
                 setAnchorE1(null);
               }}
             >
@@ -100,7 +116,7 @@ export default function Header({}) {
           backgroundColor: "#0d6efd",
         }}
         onClick={(event) =>
-          navBarComponent != "" ? setAnchorE1(event.currentTarget) : null
+          navBarComponent != "" && navBarComponent != "home"? setAnchorE1(event.currentTarget) : null
         }
       />
       {/* current date-time stamp display */}

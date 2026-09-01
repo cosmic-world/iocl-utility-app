@@ -87,7 +87,7 @@ export default function contacts() {
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start">
     <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
 
-      <Card style={{ width: 250, height: 200, cursor: "pointer" }}>
+      <Card style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}>
         <CardActionArea
           onClick={() => {
             dispatch(SetSelectedApplication("TT Crew Temporary Pass"));
@@ -115,7 +115,7 @@ export default function contacts() {
         </CardActionArea>
       </Card>
 
-      <Card style={{ width: 250, height: 200, cursor: "pointer" }}>
+      <Card style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}>
         <CardActionArea
           // disabled
           // onClick={() => dispatch(SetSelectedApplication("Permit Dashboard"))}
@@ -142,7 +142,7 @@ export default function contacts() {
         </CardActionArea>
       </Card>
 
-      <Card style={{ width: 250, height: 200, cursor: "not-allowed" }}>
+      <Card style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}>
         <CardActionArea
           disabled
           onClick={() => {

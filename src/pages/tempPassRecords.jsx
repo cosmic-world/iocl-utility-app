@@ -86,9 +86,9 @@ export default function tempPassDashboard() {
 
       setSaveLoader(false);
       dispatch(SetMasterList(zlist));
-      zlist.length > 0
-        ? alert("Syncing completed successfully.")
-        : alert("No records found in the database.");
+      // zlist.length > 0
+      //   ? alert("Syncing completed successfully.")
+      //   : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -397,7 +397,7 @@ export default function tempPassDashboard() {
       }}
     >
       <div
-        className="d-flex justify-content-center align-items-center"
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
           border: "1px solid black",
           width: "100%",

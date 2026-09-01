@@ -55,7 +55,7 @@ export default function contacts() {
 
     dispatch(SetUserType(item));
     dispatch(NavBarComponent("home2"));
-    dispatch(SetSelectedApplication("Application List"));
+    dispatch(SetSelectedApplication("APPLICATION SELECTION"));
   };
 
   const handleSendOtp = async () => {
@@ -125,7 +125,7 @@ export default function contacts() {
 
       dispatch(SetUserType("admin"));
       dispatch(NavBarComponent("home2"));
-      dispatch(SetSelectedApplication("Application List"));
+      dispatch(SetSelectedApplication("APPLICATION SELECTION"));
       setShowAdminForm(false);
       setMessage({ type: "success", text: data.message || "Admin verified." });
     } catch (error) {
@@ -142,7 +142,7 @@ export default function contacts() {
           return (
             <Badge color={userType === item ?"success": "none"} overlap="circular" variant="dot">
             <Card
-              style={{ width: 250, height: 250, cursor: "pointer" }}
+              style={{ width: 250, height: 250, cursor: "pointer", margin: 10 }}
               key={index}
             >
               <CardActionArea

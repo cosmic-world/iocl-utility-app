@@ -50,7 +50,7 @@ export default function PermitDisplay() {
     >
 
       <div
-        className="d-flex justify-content-center align-items-center"
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
           border: "1px solid black",
           width: "100%",

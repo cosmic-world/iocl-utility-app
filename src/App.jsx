@@ -89,6 +89,7 @@ function App() {
           ),
         );
         dispatch(SetPermitList(filteredData));
+        console.log("PermitList updated:", filteredData);
         const permit_type_array = filteredData.map((val) => val["Permit Type"]);
         const permit_labels = [
           "Hot Work ",
