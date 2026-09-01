@@ -75,7 +75,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/ttcrew-master-data",
+        "/api/ttcrew-master-data",
       );
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -86,9 +86,9 @@ export default function tempPassDashboard() {
 
       setSaveLoader(false);
       dispatch(SetMasterList(zlist));
-      // zlist.length > 0
-      //   ? alert("Syncing completed successfully.")
-      //   : alert("No records found in the database.");
+      zlist.length > 0
+        ? alert("Syncing completed successfully.")
+        : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -111,7 +111,7 @@ export default function tempPassDashboard() {
         getTodayLabel().split("-").reverse().join("-"),
       );
 
-      const url = `http://localhost:5000/api/temp_pass_records?${params.toString()}`;
+      const url = `/api/temp_pass_records?${params.toString()}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -274,7 +274,7 @@ export default function tempPassDashboard() {
 
       // Submit to server
       const response = await fetch(
-        "http://localhost:5000/api/upload-temp-pass",
+        "/api/upload-temp-pass",
         {
           method: "POST",
           body: formData,
@@ -322,7 +322,7 @@ export default function tempPassDashboard() {
     setApprovingId(recordId);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/records/${recordId}/approve`,
+        `/api/records/${recordId}/approve`,
         { method: "POST" },
       );
       const data = await response.json();

@@ -57,7 +57,7 @@ export default function MasterData() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/upload-ttcrew-excel",
+        "/api/upload-ttcrew-excel",
         {
           method: "POST",
           body: formData,
@@ -144,7 +144,7 @@ export default function MasterData() {
         driving_licence_no: drivingLicence,
       };
       // Submit to server
-      const response = await fetch("http://localhost:5000/api/upload-master", {
+      const response = await fetch("/api/upload-master", {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE

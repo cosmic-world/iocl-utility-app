@@ -59,7 +59,7 @@ export default function LabourMasterData() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/upload-labour-excel",
+        "/api/upload-labour-excel",
         {
           method: "POST",
           body: formData,
@@ -135,7 +135,7 @@ export default function LabourMasterData() {
       };
       // Submit to server
       const response = await fetch(
-        "http://localhost:5000/api/upload-labour-single",
+        "/api/upload-labour-single",
         {
           method: "POST",
           headers: {
@@ -172,7 +172,7 @@ export default function LabourMasterData() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/contractor-master-data",
+        "/api/contractor-master-data",
       );
       if (!response.ok) {
         throw new Error("Failed to load records");

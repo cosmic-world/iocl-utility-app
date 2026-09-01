@@ -440,7 +440,7 @@ export default function ExportCustomToolbar({}) {
           requestTill.split("-").reverse().join("-"),
         );
 
-      const url = `http://localhost:5000/api/temp_pass_records?${params.toString()}`;
+      const url = `/api/temp_pass_records?${params.toString()}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");

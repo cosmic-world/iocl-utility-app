@@ -35,7 +35,7 @@ export default function contacts() {
       if (officerList && officerList.length > 0) return;
 
       try {
-        const response = await fetch("http://localhost:5000/api/officer-master-data");
+        const response = await fetch("/api/officer-master-data");
         const data = await response.json();
         dispatch(SetOfficerMasterList(data || []));
       } catch (error) {
@@ -76,7 +76,7 @@ export default function contacts() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/request-otp", {
+      const response = await fetch("/api/admin/request-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
@@ -112,7 +112,7 @@ export default function contacts() {
     setMessage({ type: "", text: "" });
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/verify-otp", {
+      const response = await fetch("/api/admin/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, otp }),

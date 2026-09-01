@@ -109,7 +109,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/officer-master-data",
+        "/api/officer-master-data",
       );
       if (!response.ok) {
         throw new Error("Failed to sync officer master records");
@@ -135,7 +135,7 @@ export default function tempPassDashboard() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/labour-master-data",
+        "/api/labour-master-data",
       );
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -177,7 +177,7 @@ export default function tempPassDashboard() {
 
       if (searchContractor) params.append("contractor", searchContractor);
 
-      const url = `http://localhost:5000/api/labour-master-data?${params.toString()}`;
+      const url = `/api/labour-master-data?${params.toString()}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -297,7 +297,7 @@ export default function tempPassDashboard() {
 
       // Submit to server
       const response = await fetch(
-        "http://localhost:5000/api/upload-labour-pass",
+        "/api/upload-labour-pass",
         {
           method: "POST",
           body: formData,
@@ -347,7 +347,7 @@ export default function tempPassDashboard() {
     setApprovingId(recordId);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/records/${recordId}/approve`,
+        `/api/records/${recordId}/approve`,
         { method: "POST" },
       );
       const data = await response.json();

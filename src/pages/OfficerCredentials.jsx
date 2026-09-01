@@ -57,7 +57,7 @@ export default function MasterData() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/upload-officer-excel",
+        "/api/upload-officer-excel",
         {
           method: "POST",
           body: formData,
@@ -116,7 +116,7 @@ export default function MasterData() {
       const payload = { locationCode, officerName, mailID, mobileNo };
       // Submit to server
       const response = await fetch(
-        "http://localhost:5000/api/upload-officer-single",
+        "/api/upload-officer-single",
         {
           method: "POST",
           headers: {
@@ -149,7 +149,7 @@ export default function MasterData() {
     setSyncing(true);
     try {
       const response = await fetch(
-        "http://localhost:5000/api/officer-master-data",
+        "/api/officer-master-data",
       );
       if (!response.ok) {
         throw new Error("Failed to load records");

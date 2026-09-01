@@ -12,7 +12,7 @@ module.exports = {
         return function (proxy, allowedHost) {
             const config = configFunction(proxy, allowedHost);
             // Ensure the dev server allowedHosts is set to a valid non-empty string
-            config.allowedHosts = ["localhost"];
+            config.allowedHosts = "all";
             return config;
         };
     },
