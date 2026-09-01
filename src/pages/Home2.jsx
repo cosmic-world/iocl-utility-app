@@ -102,8 +102,8 @@ export default function contacts() {
   const stateOfficeList = zlist;
 
   return (
-    <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-center mt-1 mb-1">
-      <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
+    <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">
+      <Box className="d-flex flex-wrap w-100 mt-2 pb-2 justify-content-evenly align-items-center">
         <Card
           style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}
         >

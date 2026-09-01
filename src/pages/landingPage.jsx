@@ -18,7 +18,7 @@ import ModifyRecords from "./modifyRecords";
 export default function LandingPage({ state }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
   return (
-    <div className="w-100" style={{ height: "calc(100% - 50px)" }}>
+    <div className="w-100" style={{ height: "calc(100% - 50px)", overflowY: "auto" }}>
       {navBarComponent === "" ? <ProgressPage /> : null}
       {navBarComponent === "home" ? <Home /> : null}
       {navBarComponent === "home2" ? <Home2 /> : null}
