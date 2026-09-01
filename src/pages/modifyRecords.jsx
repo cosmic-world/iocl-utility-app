@@ -13,19 +13,14 @@ import {
 } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  CircularProgress,
-} from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 import { DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import UserConfirmationModalWithoutPin from "./UserConfirmationModalWithoutPin";
-import {
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -47,14 +42,16 @@ function formatDate(date1) {
 }
 function formatTime(dateStr) {
   const parts = dateStr.match(/\d+/g);
-  const hour = parts[3].padStart(2, '0');
-  const minute = parts[4].padStart(2, '0');
-  return `${hour}:${minute}`
+  const hour = parts[3].padStart(2, "0");
+  const minute = parts[4].padStart(2, "0");
+  return `${hour}:${minute}`;
 }
 
 const ModifyRecords = () => {
   const dispatch = useDispatch();
-  const { selectedTerminal, userType, navBarComponent } = useSelector((state) => state.myApp);
+  const { selectedTerminal, userType, navBarComponent } = useSelector(
+    (state) => state.myApp,
+  );
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [localID, setlocalID] = React.useState(0);
@@ -67,7 +64,7 @@ const ModifyRecords = () => {
   const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
-  const delete_sheet_url = `https://script.google.com/macros/s/AKfycbzkp6GfBX8y_DJeLV4bR9Pm5slAtKNWaxTS4YNpzVczo2MUx3aOT6JMLD0k5PsZ-cnB/exec`
+  const delete_sheet_url = `https://script.google.com/macros/s/AKfycbzkp6GfBX8y_DJeLV4bR9Pm5slAtKNWaxTS4YNpzVczo2MUx3aOT6JMLD0k5PsZ-cnB/exec`;
 
   const fetchSheetData = async () => {
     try {
@@ -89,13 +86,12 @@ const ModifyRecords = () => {
         });
         return obj;
       });
-        const formattedData = formattedData1.filter(
-          obj => !(Object.keys(obj).length === 1 && obj[""] === "")
-        );
+      const formattedData = formattedData1.filter(
+        (obj) => !(Object.keys(obj).length === 1 && obj[""] === ""),
+      );
       const filteredData1 =
         formattedData.length > 0
-          ? formattedData
-            .filter(
+          ? formattedData.filter(
               (ele) =>
                 ele["Location Name"].toLowerCase() ===
                 ((locationName !== "") & (locationName != undefined)
@@ -120,13 +116,16 @@ const ModifyRecords = () => {
       );
       const res1 =
         filteredData.length > 0
-          ? filteredData.map((val) => val['Unique ID'])
-          : [{ id: 0 }].map((val) => val['Unique ID']);
+          ? filteredData.map((val) => val["Unique ID"])
+          : [{ id: 0 }].map((val) => val["Unique ID"]);
       var result = Math.max(...res1);
       setRows(filteredData.map((val, index) => ({ id: index, ...val })));
       setlocalID(result + 1);
     } catch (error) {
-      console.log("error admin...", `${error} and also check internet connection`);
+      console.log(
+        "error admin...",
+        `${error} and also check internet connection`,
+      );
     }
   };
 
@@ -152,7 +151,7 @@ const ModifyRecords = () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
   };
 
-  const handleDeleteClick = async(id) => {
+  const handleDeleteClick = async (id) => {
     setSaveLoader(true);
     try {
       await fetch(delete_sheet_url, {
@@ -161,13 +160,16 @@ const ModifyRecords = () => {
           row: id,
         }),
       });
-      setSaveLoader(false)
+      setSaveLoader(false);
       setSuccessOpen(true);
-      fetchSheetData()
+      fetchSheetData();
     } catch (error) {
-      setSaveLoader(false)
-      setFailOpen(true)
-      console.log("error admin...", `${error} and also check internet connection`);
+      setSaveLoader(false);
+      setFailOpen(true);
+      console.log(
+        "error admin...",
+        `${error} and also check internet connection`,
+      );
     }
   };
 
@@ -194,26 +196,29 @@ const ModifyRecords = () => {
       await fetch(sheet_url, {
         method: "POST",
         body: new URLSearchParams({
-          row: newRow['Unique ID'],
+          row: newRow["Unique ID"],
           updates: JSON.stringify([
-            { col: 2, value: newRow['Permit Type'] },
-            { col: 3, value: newRow['Work Description'] },
-            { col: 4, value: newRow['Work Location'] },
-            { col: 5, value: newRow['Receiver Name'] },
-            { col: 6, value: newRow['Clearance From'] },
-            { col: 7, value: newRow['Clearance Till'] },
-            { col: 8, value: newRow['Contractor Name'] },
-            { col: 9, value: newRow['Contractor Supervisor'] },
+            { col: 2, value: newRow["Permit Type"] },
+            { col: 3, value: newRow["Work Description"] },
+            { col: 4, value: newRow["Work Location"] },
+            { col: 5, value: newRow["Receiver Name"] },
+            { col: 6, value: newRow["Clearance From"] },
+            { col: 7, value: newRow["Clearance Till"] },
+            { col: 8, value: newRow["Contractor Name"] },
+            { col: 9, value: newRow["Contractor Supervisor"] },
           ]),
         }),
       });
       fetchSheetData();
-      setSaveLoader(false)
+      setSaveLoader(false);
       setSuccessOpen(true);
     } catch (error) {
-      setSaveLoader(false)
-      setFailOpen(true)
-      console.log("error admin...", `${error} and also check internet connection`);
+      setSaveLoader(false);
+      setFailOpen(true);
+      console.log(
+        "error admin...",
+        `${error} and also check internet connection`,
+      );
     }
     return updatedRow;
   };
@@ -232,7 +237,7 @@ const ModifyRecords = () => {
       editable: false,
       align: "center",
       headerAlign: "center",
-      headerClassName: "header-class"
+      headerClassName: "header-class",
     },
     {
       field: "Permit Type",
@@ -249,7 +254,7 @@ const ModifyRecords = () => {
           "Height + Hot Work",
           "Height + Cold Work",
           "Electrical Work",
-        ]
+        ];
       },
     },
     {
@@ -293,13 +298,13 @@ const ModifyRecords = () => {
         };
         return (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DemoItem>
-          <TimePicker
-            value={params.value ? dayjs(params.value, "HH:mm") : null}
-            format="HH:mm"
-            onChange={(newValue)=>handleChange(newValue)}
-          />
-          </DemoItem>
+            <DemoItem>
+              <TimePicker
+                value={params.value ? dayjs(params.value, "HH:mm") : null}
+                format="HH:mm"
+                onChange={(newValue) => handleChange(newValue)}
+              />
+            </DemoItem>
           </LocalizationProvider>
         );
       },
@@ -321,13 +326,13 @@ const ModifyRecords = () => {
         };
         return (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DemoItem>
-          <TimePicker
-            value={params.value ? dayjs(params.value, "HH:mm") : null}
-            format="HH:mm"
-            onChange={(newValue)=>handleChange(newValue)}
-          />
-          </DemoItem>
+            <DemoItem>
+              <TimePicker
+                value={params.value ? dayjs(params.value, "HH:mm") : null}
+                format="HH:mm"
+                onChange={(newValue) => handleChange(newValue)}
+              />
+            </DemoItem>
           </LocalizationProvider>
         );
       },
@@ -355,7 +360,7 @@ const ModifyRecords = () => {
       width: 100,
       cellClassName: "actions",
       getActions: (params) => {
-        const id = params.id
+        const id = params.id;
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
         if (isInEditMode) {
           return [
@@ -381,22 +386,21 @@ const ModifyRecords = () => {
             label="Edit"
             className="textPrimary"
             onClick={() => {
-              handleEditClick(id)
+              handleEditClick(id);
             }}
             color="inherit"
             style={{ color: "blue" }}
-          />
-          ,
+          />,
           <GridActionsCellItem
             icon={<Delete />}
             label="Delete"
             onClick={() => {
-              setSelectedId(params.row['Unique ID']);
-              setShow(true)
+              setSelectedId(params.row["Unique ID"]);
+              setShow(true);
             }}
             color="danger"
             style={{ color: "red" }}
-          />
+          />,
         ];
       },
     },
@@ -410,97 +414,99 @@ const ModifyRecords = () => {
         setShow={setShow}
         selectedId={selectedId}
       />
-            <div
-              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-              style={{
-                border: "1px solid black",
-                width: "100%",
-                borderTop: "none",
-              }}
-            >
-              <Button
-                variant={
-                  navBarComponent === "formControl" ? "outlined" : "contained"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "formControl" ? "white" : "null",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
-                  dispatch(NavBarComponent("formControl"));
-                }}
-              >
-                Permit Request Form
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "permitDisplay" ? "outlined" : "contained"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "permitDisplay" ? "white" : "null",
-                }}
-                onClick={() => {
-                  dispatch(
-                    SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
-                  );
-                  dispatch(NavBarComponent("permitDisplay"));
-                }}
-              >
-                Permit Table View
-              </Button>
-              <Button
-                variant={navBarComponent === "layoutDisplay" ? "outlined" : "contained"}
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "layoutDisplay" ? "white" : "null",
-                  "&:disabled": {
-                    cursor: "not-allowed",
-                    backgroundColor: "white",
-                    pointerEvents: "all !important",
-                  },
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("TT Crew Master Data"));
-                  dispatch(NavBarComponent("layoutDisplay"));
-                }}
-                disabled={window.innerWidth < 768}
-              >
-                Permit Layout View (Desktop Only)
-              </Button>
-              <Button
-                  variant={navBarComponent === "modifyRecords" ? "outlined" : "contained"}
-                  color="warning"
-                  sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                      navBarComponent === "modifyRecords" ? "white" : "null",
-                  "&:disabled": {
-                      cursor: "not-allowed",
-                      backgroundColor: "white",
-                      pointerEvents: "all !important",
-                  },
-                  }}
-                  onClick={() => {
-                  dispatch(SetSelectedApplication("Modify Records"));
-                  dispatch(NavBarComponent("modifyRecords"));
-                  }}
-                  disabled={userType !== "admin"}
-              >
-                  Modify Records (Admin Only)
-              </Button>
-            </div>
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+          borderTop: "none",
+        }}
+      >
+        <Button
+          variant={navBarComponent === "formControl" ? "outlined" : "contained"}
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "formControl" ? "white" : "null",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
+            dispatch(NavBarComponent("formControl"));
+          }}
+        >
+          Permit Request Form
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "permitDisplay" ? "outlined" : "contained"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "permitDisplay" ? "white" : "null",
+          }}
+          onClick={() => {
+            dispatch(
+              SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
+            );
+            dispatch(NavBarComponent("permitDisplay"));
+          }}
+        >
+          Permit Table View
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "layoutDisplay" ? "outlined" : "contained"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "layoutDisplay" ? "white" : "null",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("TT Crew Master Data"));
+            dispatch(NavBarComponent("layoutDisplay"));
+          }}
+          disabled={window.innerWidth < 768}
+        >
+          Permit Layout View (Desktop Only)
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "modifyRecords" ? "outlined" : "contained"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "modifyRecords" ? "white" : "null",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Modify Records"));
+            dispatch(NavBarComponent("modifyRecords"));
+          }}
+          disabled={userType !== "admin"}
+        >
+          Modify Records (Admin Only)
+        </Button>
+      </div>
       {saveLoader ? (
         <CircularProgress
           color="success"

@@ -29,7 +29,9 @@ class DraggableModalDialog extends React.Component {
 
 export default function formControlPage() {
   const dispatch = useDispatch();
-  const { selectedTerminal, officerList, locationCode } = useSelector((state) => state.myApp);
+  const { selectedTerminal, officerList, locationCode } = useSelector(
+    (state) => state.myApp,
+  );
   const [saveLoader, setSaveLoader] = useState(false);
   const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
@@ -43,7 +45,7 @@ export default function formControlPage() {
   const [division, setDivision] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const officerListForLocation = officerList.filter(
-    (officer) => officer["LOCATION_CODE"] == locationCode
+    (officer) => officer["LOCATION_CODE"] == locationCode,
   );
 
   const handleResetForm = () => {
@@ -97,16 +99,19 @@ export default function formControlPage() {
             "Contractor Name": contractorName,
             "Contractor Supervisor": supervisorName,
             "Location Name": locationName,
-            "Division": division,
+            Division: division,
           }),
         }),
       });
       setSaveLoader(false);
-      handleResetForm()
+      handleResetForm();
       alert("Data submitted successfully");
     } catch (error) {
       setSaveLoader(false);
-      console.log("error form...", `${error} and also check internet connection`);
+      console.log(
+        "error form...",
+        `${error} and also check internet connection`,
+      );
     }
   };
 
@@ -285,9 +290,11 @@ export default function formControlPage() {
               Officer Name
             </div>
             <div className="col-8">
-                            <Autocomplete
+              <Autocomplete
                 className="w-100"
-                options={officerListForLocation.map((officer) => officer["OFFICER_NAME"])}
+                options={officerListForLocation.map(
+                  (officer) => officer["OFFICER_NAME"],
+                )}
                 name="receiverName"
                 value={receiverName !== "" ? receiverName : null}
                 isOptionEqualToValue={(option, value) => option === value}
@@ -553,7 +560,12 @@ export default function formControlPage() {
           size="large"
           color="secondary"
           sx={{ width: 200 }}
-          onClick={() => <>{dispatch(NavBarComponent("permitDisplay"))}{dispatch(SetSelectedApplication("Permit Table View"))}</>}
+          onClick={() => (
+            <>
+              {dispatch(NavBarComponent("permitDisplay"))}
+              {dispatch(SetSelectedApplication("Permit Table View"))}
+            </>
+          )}
         >
           Go To Display
         </Button>

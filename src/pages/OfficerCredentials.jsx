@@ -32,10 +32,8 @@ export default function MasterData() {
     navBarComponent,
     userType,
     locationCode: selectedLocationCode,
-  } = useSelector(
-    (state) => state.myApp,
-  );
-  
+  } = useSelector((state) => state.myApp);
+
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -67,18 +65,15 @@ export default function MasterData() {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(
-        apiUrl("/api/upload-officer-excel"),
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(apiUrl("/api/upload-officer-excel"), {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
 
       if (data.success) {
         alert(data.message);
-              handleSync(); // Refresh officer list after upload
+        handleSync(); // Refresh officer list after upload
       } else {
         alert("Upload failed: " + data.message);
       }
@@ -127,16 +122,13 @@ export default function MasterData() {
     try {
       const payload = { locationCode, officerName, mailID, mobileNo, role };
       // Submit to server
-      const response = await fetch(
-        apiUrl("/api/upload-officer-single"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(apiUrl("/api/upload-officer-single"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
         },
-      );
+        body: JSON.stringify(payload),
+      });
       const data = await response.json();
       if (data.success) {
         alert("Record submitted successfully!");
@@ -224,7 +216,7 @@ export default function MasterData() {
         ),
       );
       alert("Officer record deleted successfully.");
-            handleSync(); // Refresh officer list after deletion
+      handleSync(); // Refresh officer list after deletion
     } catch (error) {
       alert("Error: " + error.message);
     } finally {
@@ -235,7 +227,11 @@ export default function MasterData() {
   const isSuperAdmin = userType === "super_admin";
 
   useEffect(() => {
-    setOfficersForLocation(officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode))
+    setOfficersForLocation(
+      officerList.filter(
+        (officer) => officer["LOCATION_CODE"] == searchLocationCode,
+      ),
+    );
   }, [officerList]);
 
   return (
@@ -248,7 +244,6 @@ export default function MasterData() {
         overflowX: "auto",
       }}
     >
-
       {saveLoader ? (
         <CircularProgress
           color="success"
@@ -270,8 +265,8 @@ export default function MasterData() {
 
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-            Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO, ROLE.
-            ROLE must be USER or SUPER_ADMIN.
+            Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO,
+            ROLE. ROLE must be USER or SUPER_ADMIN.
           </Typography>
           <Button
             variant="outlined"
@@ -456,10 +451,20 @@ export default function MasterData() {
           color="primary"
           variant="contained"
           sx={{ m: 1, width: 180 }}
-          onClick={() => <>
-          {setOfficersForLocation(officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode))}
-          {officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode).length === 0 ? alert("No officers found for the entered Location Code."):''}
-          </>}
+          onClick={() => (
+            <>
+              {setOfficersForLocation(
+                officerList.filter(
+                  (officer) => officer["LOCATION_CODE"] == searchLocationCode,
+                ),
+              )}
+              {officerList.filter(
+                (officer) => officer["LOCATION_CODE"] == searchLocationCode,
+              ).length === 0
+                ? alert("No officers found for the entered Location Code.")
+                : ""}
+            </>
+          )}
         >
           Search Officers
         </Button>

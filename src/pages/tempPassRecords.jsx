@@ -75,9 +75,7 @@ export default function tempPassDashboard() {
     setSaveLoader(true);
     setSyncing(true);
     try {
-      const response = await fetch(
-        apiUrl("/api/ttcrew-master-data"),
-      );
+      const response = await fetch(apiUrl("/api/ttcrew-master-data"));
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
@@ -274,13 +272,10 @@ export default function tempPassDashboard() {
       if (documents[2]) formData.append("driving_licence", documents[2]);
 
       // Submit to server
-      const response = await fetch(
-        apiUrl("/api/upload-temp-pass"),
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(apiUrl("/api/upload-temp-pass"), {
+        method: "POST",
+        body: formData,
+      });
 
       if (response.ok) {
         alert("Record submitted successfully!");
@@ -322,10 +317,9 @@ export default function tempPassDashboard() {
     setSaveLoader(true);
     setApprovingId(recordId);
     try {
-      const response = await fetch(
-        apiUrl(`/api/records/${recordId}/approve`),
-        { method: "POST" },
-      );
+      const response = await fetch(apiUrl(`/api/records/${recordId}/approve`), {
+        method: "POST",
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to update approval history");
@@ -466,7 +460,7 @@ export default function tempPassDashboard() {
           TT Crew Master Data (Admin Only)
         </Button>
       </div>
-      
+
       <div
         className="d-flex flex-column justify-content-center align-items-center"
         style={{ border: "1px solid black", width: "100%" }}

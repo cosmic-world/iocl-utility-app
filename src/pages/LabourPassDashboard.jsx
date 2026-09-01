@@ -104,14 +104,11 @@ export default function tempPassDashboard() {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
-  const 
-  handleSyncOfficerList = async () => {
+  const handleSyncOfficerList = async () => {
     setSaveLoader(true);
     setSyncing(true);
     try {
-      const response = await fetch(
-        apiUrl("/api/officer-master-data"),
-      );
+      const response = await fetch(apiUrl("/api/officer-master-data"));
       if (!response.ok) {
         throw new Error("Failed to sync officer master records");
       }
@@ -135,9 +132,7 @@ export default function tempPassDashboard() {
     setSaveLoader(true);
     setSyncing(true);
     try {
-      const response = await fetch(
-        apiUrl("/api/labour-master-data"),
-      );
+      const response = await fetch(apiUrl("/api/labour-master-data"));
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
@@ -297,13 +292,10 @@ export default function tempPassDashboard() {
       if (documents[2]) formData.append("document3", documents[2]);
 
       // Submit to server
-      const response = await fetch(
-        apiUrl("/api/upload-labour-pass"),
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(apiUrl("/api/upload-labour-pass"), {
+        method: "POST",
+        body: formData,
+      });
 
       if (response.ok) {
         alert("Record submitted successfully!");
@@ -347,10 +339,9 @@ export default function tempPassDashboard() {
     setSaveLoader(true);
     setApprovingId(recordId);
     try {
-      const response = await fetch(
-        apiUrl(`/api/records/${recordId}/approve`),
-        { method: "POST" },
-      );
+      const response = await fetch(apiUrl(`/api/records/${recordId}/approve`), {
+        method: "POST",
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to update approval history");

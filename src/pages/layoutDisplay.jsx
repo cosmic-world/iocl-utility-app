@@ -12,14 +12,12 @@ import {
   Select,
   CircularProgress,
 } from "@mui/material";
-import {
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 export default function PermitDisplay({ state }) {
-    const dispatch = useDispatch();
-  const { PermitList, selectedTerminal, navBarComponent, userType } = useSelector((state) => state.myApp);
+  const dispatch = useDispatch();
+  const { PermitList, selectedTerminal, navBarComponent, userType } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
   const [markerPosition, setMarkerPosition] = useState(null);
@@ -85,7 +83,7 @@ export default function PermitDisplay({ state }) {
     setOldRowNumber(null);
     setMark("new");
   };
-  
+
   const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
   const handleSubmit = async () => {
     const x_list = PermitList.filter(
@@ -109,7 +107,10 @@ export default function PermitDisplay({ state }) {
       mark != "existing" ? setSaveLoader(false) : null;
       handleMenuClose();
     } catch (error) {
-      console.log("error layout new...", `${error} and also check internet connection`);
+      console.log(
+        "error layout new...",
+        `${error} and also check internet connection`,
+      );
     }
     if (mark === "existing") {
       try {
@@ -126,7 +127,10 @@ export default function PermitDisplay({ state }) {
         });
         setSaveLoader(false);
       } catch (error) {
-        console.log("error layout existing...", `${error} and also check internet connection`);
+        console.log(
+          "error layout existing...",
+          `${error} and also check internet connection`,
+        );
       }
     }
   };
@@ -229,98 +233,103 @@ export default function PermitDisplay({ state }) {
           "d-flex flex-column h-100 w-100 justify-content-start align-items-center"
         }
       >
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          border: "1px solid black",
-          width: "100%",
-          borderTop: "none",
-        }}
-      >
-        <Button
-          variant={
-            navBarComponent === "formControl" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "formControl" ? "white" : "null",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
-            dispatch(NavBarComponent("formControl"));
+        <div
+          className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+          style={{
+            border: "1px solid black",
+            width: "100%",
+            borderTop: "none",
           }}
         >
-          Permit Request Form
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "permitDisplay" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "permitDisplay" ? "white" : "null",
-          }}
-          onClick={() => {
-            dispatch(
-              SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
-            );
-            dispatch(NavBarComponent("permitDisplay"));
-          }}
-        >
-          Permit Table View
-        </Button>
-        <Button
-          variant={navBarComponent === "layoutDisplay" ? "outlined" : "contained"}
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "layoutDisplay" ? "white" : "null",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Master Data"));
-            dispatch(NavBarComponent("layoutDisplay"));
-          }}
-          disabled={window.innerWidth < 768}
-        >
-          Permit Layout View (Desktop Only)
-        </Button>
-        <Button
-            variant={navBarComponent === "modifyRecords" ? "outlined" : "contained"}
+          <Button
+            variant={
+              navBarComponent === "formControl" ? "outlined" : "contained"
+            }
             color="warning"
             sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-                navBarComponent === "modifyRecords" ? "white" : "null",
-            "&:disabled": {
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "formControl" ? "white" : "null",
+            }}
+            onClick={() => {
+              dispatch(
+                SetSelectedApplication("TT Crew Temporary Pass Request"),
+              );
+              dispatch(NavBarComponent("formControl"));
+            }}
+          >
+            Permit Request Form
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "permitDisplay" ? "outlined" : "contained"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "permitDisplay" ? "white" : "null",
+            }}
+            onClick={() => {
+              dispatch(
+                SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
+              );
+              dispatch(NavBarComponent("permitDisplay"));
+            }}
+          >
+            Permit Table View
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "layoutDisplay" ? "outlined" : "contained"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "layoutDisplay" ? "white" : "null",
+              "&:disabled": {
                 cursor: "not-allowed",
                 backgroundColor: "white",
                 pointerEvents: "all !important",
-            },
+              },
             }}
             onClick={() => {
-            dispatch(SetSelectedApplication("Modify Records"));
-            dispatch(NavBarComponent("modifyRecords"));
+              dispatch(SetSelectedApplication("TT Crew Master Data"));
+              dispatch(NavBarComponent("layoutDisplay"));
+            }}
+            disabled={window.innerWidth < 768}
+          >
+            Permit Layout View (Desktop Only)
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "modifyRecords" ? "outlined" : "contained"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "modifyRecords" ? "white" : "null",
+              "&:disabled": {
+                cursor: "not-allowed",
+                backgroundColor: "white",
+                pointerEvents: "all !important",
+              },
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Modify Records"));
+              dispatch(NavBarComponent("modifyRecords"));
             }}
             disabled={userType !== "admin"}
-        >
+          >
             Modify Records (Admin Only)
-        </Button>
-      </div>
-
+          </Button>
+        </div>
 
         <div
           className={
@@ -440,34 +449,50 @@ export default function PermitDisplay({ state }) {
             </div>
           </div>
           <div className="d-flex flex-column h-100 w-100 justify-content-start align-items-center">
-            <label className="d-flex w-100 justify-content-center align-items-center" 
-            style={{backgroundColor:'white',border: "1px solid black", borderBottom: 0, fontSize: "20px", fontWeight:'bold',
-                              fontFamily: "Lucida Sans", minHeight: '40px'}}
+            <label
+              className="d-flex w-100 justify-content-center align-items-center"
+              style={{
+                backgroundColor: "white",
+                border: "1px solid black",
+                borderBottom: 0,
+                fontSize: "20px",
+                fontWeight: "bold",
+                fontFamily: "Lucida Sans",
+                minHeight: "40px",
+              }}
             >
-              To show the work spot on the layout, double click the location on the layout and select the permit records from the dropdown
+              To show the work spot on the layout, double click the location on
+              the layout and select the permit records from the dropdown
             </label>
-          {imgExists ? (
-            <div className="p-1 w-100" style={{ border: "1px solid black", height: 'calc(100% - 40px' }}>
+            {imgExists ? (
               <div
+                className="p-1 w-100"
                 style={{
-                  position: "relative",
-                  width: "100%",
-                  height: "100%",
-                  cursor: "pointer",
+                  border: "1px solid black",
+                  height: "calc(100% - 40px",
                 }}
-                onDoubleClick={(e) => handleClick(e, "new")}
               >
-                <img
-                  src={imagePath}
-                  alt="layout"
+                <div
                   style={{
+                    position: "relative",
                     width: "100%",
                     height: "100%",
-                    display: "block",
+                    cursor: "pointer",
                   }}
-                />
-                {PermitList.filter((val) => val.page_left && val.page_top).map(
-                  (val, index) => {
+                  onDoubleClick={(e) => handleClick(e, "new")}
+                >
+                  <img
+                    src={imagePath}
+                    alt="layout"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "block",
+                    }}
+                  />
+                  {PermitList.filter(
+                    (val) => val.page_left && val.page_top,
+                  ).map((val, index) => {
                     return (
                       <Tooltip
                         key={index}
@@ -544,31 +569,30 @@ export default function PermitDisplay({ state }) {
                                         : "#ccc",
                           }}
                         >
-                            {index + 1}
-                            </div>
+                          {index + 1}
+                        </div>
                       </Tooltip>
                     );
-                  },
-                )}
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                border: "1px solid",
-                fontFamily: "Lucida Sans",
-                fontSize: "2rem",
-                fontWeight: "bold",
-              }}
-            >
-              Layout Not Available
-            </div>
-          )}
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: "1px solid",
+                  fontFamily: "Lucida Sans",
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                }}
+              >
+                Layout Not Available
+              </div>
+            )}
           </div>
         </div>
         <div className="ttes_table_div px-2">

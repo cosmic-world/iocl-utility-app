@@ -11,7 +11,7 @@ export const userSlice = createSlice({
     labour_masterList: [], // to store master data
     officerList: [], // to store master data
     contractorList: [], // to store master data
-        selectedTerminal: "", // to store selected material name
+    selectedTerminal: "", // to store selected material name
     PermitList: [], // to store Permit List data from Google Sheets
     locationList: [], // to store location list data from Google Sheets
     locationCode: "", // to store location code data from Google Sheets
@@ -38,7 +38,7 @@ export const userSlice = createSlice({
     SetContractorMasterList: (state, action) => {
       state.contractorList = action.payload;
     },
-        SelectedTerminal: (state, action) => {
+    SelectedTerminal: (state, action) => {
       state.selectedTerminal = action.payload;
     },
     SetPermitList: (state, action) => {
@@ -65,7 +65,7 @@ export const {
   SelectedTerminal,
   SetPermitList,
   SetLocationList,
-  SetLocationCode
+  SetLocationCode,
 } = userSlice.actions;
 
 export default userSlice.reducer;

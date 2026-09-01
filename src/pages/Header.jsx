@@ -32,7 +32,7 @@ export default function Header({}) {
         borderRight: "none",
       }}
     >
-      {navBarComponent != "" && navBarComponent != "home"? (
+      {navBarComponent != "" && navBarComponent != "home" ? (
         <>
           <Menu
             id="profile-dropdown"
@@ -109,14 +109,19 @@ export default function Header({}) {
 
       <MenuIcon
         style={{
-          cursor: navBarComponent != "" && navBarComponent != "home"? "pointer" : "default",
+          cursor:
+            navBarComponent != "" && navBarComponent != "home"
+              ? "pointer"
+              : "default",
           zoom: 1.5,
           color: "white",
           height: "100%",
           backgroundColor: "#0d6efd",
         }}
         onClick={(event) =>
-          navBarComponent != "" && navBarComponent != "home"? setAnchorE1(event.currentTarget) : null
+          navBarComponent != "" && navBarComponent != "home"
+            ? setAnchorE1(event.currentTarget)
+            : null
         }
       />
       {/* current date-time stamp display */}
@@ -145,25 +150,27 @@ export default function Header({}) {
         style={{
           color: "#0d6efd",
           fontWeight: "bold",
-          borderRight: userType!=""?"1px solid #0d6efd":null,
+          borderRight: userType != "" ? "1px solid #0d6efd" : null,
           width: 400,
         }}
       >
         <label>{`Developed by Manas Roy`}</label>
       </div>
-      {userType!=""?
-      <div
-        className="d-none d-xxl-flex justify-content-center align-items-center h-100"
-        style={{
-          color: "#0d6efd",
-          fontWeight: "bold",
-          width: 300,
-        }}
-      >
-        <label>{`Role:`}&nbsp;</label>
-        <label style={{ color: "orange" }}>{`${userType.toUpperCase().replace(/_/g, " ")}`}</label>
-      </div>
-      :null}
+      {userType != "" ? (
+        <div
+          className="d-none d-xxl-flex justify-content-center align-items-center h-100"
+          style={{
+            color: "#0d6efd",
+            fontWeight: "bold",
+            width: 300,
+          }}
+        >
+          <label>{`Role:`}&nbsp;</label>
+          <label
+            style={{ color: "orange" }}
+          >{`${userType.toUpperCase().replace(/_/g, " ")}`}</label>
+        </div>
+      ) : null}
     </div>
   );
 }

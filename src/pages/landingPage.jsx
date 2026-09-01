@@ -36,7 +36,7 @@ export default function LandingPage({ state }) {
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}
       {navBarComponent === "permitDisplay" ? <PermitDisplay /> : null}
-            {navBarComponent === "layoutDisplay" ? (
+      {navBarComponent === "layoutDisplay" ? (
         <LayoutDisplay state={state} />
       ) : null}
       {navBarComponent === "modifyRecords" ? <ModifyRecords /> : null}

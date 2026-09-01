@@ -11,7 +11,7 @@ import {
   Button,
   Stack,
   Alert,
-  Badge 
+  Badge,
 } from "@mui/material";
 import {
   SetUserType,
@@ -59,9 +59,14 @@ export default function contacts() {
   };
 
   const handleSendOtp = async () => {
-    const trimmedEmail = String(adminEmail || "").trim().toLowerCase();
+    const trimmedEmail = String(adminEmail || "")
+      .trim()
+      .toLowerCase();
     const isRegistered = officerList.some(
-      (item) => String(item.MAIL_ID || item.MAILID || "").trim().toLowerCase() === trimmedEmail
+      (item) =>
+        String(item.MAIL_ID || item.MAILID || "")
+          .trim()
+          .toLowerCase() === trimmedEmail,
     );
 
     if (!trimmedEmail || !isRegistered) {
@@ -90,21 +95,31 @@ export default function contacts() {
       setOtpSent(true);
       setMessage({
         type: "success",
-        text: data.message || "OTP sent successfully to the registered officer email.",
+        text:
+          data.message ||
+          "OTP sent successfully to the registered officer email.",
       });
     } catch (error) {
       setOtpSent(false);
-      setMessage({ type: "error", text: error.message || "Failed to send OTP." });
+      setMessage({
+        type: "error",
+        text: error.message || "Failed to send OTP.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    const trimmedEmail = String(adminEmail || "").trim().toLowerCase();
+    const trimmedEmail = String(adminEmail || "")
+      .trim()
+      .toLowerCase();
 
     if (!trimmedEmail || !otp) {
-      setMessage({ type: "error", text: "Enter the registered email and OTP." });
+      setMessage({
+        type: "error",
+        text: "Enter the registered email and OTP.",
+      });
       return;
     }
 
@@ -131,7 +146,10 @@ export default function contacts() {
       setShowAdminForm(false);
       setMessage({ type: "success", text: data.message || "Admin verified." });
     } catch (error) {
-      setMessage({ type: "error", text: error.message || "OTP verification failed." });
+      setMessage({
+        type: "error",
+        text: error.message || "OTP verification failed.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -142,35 +160,50 @@ export default function contacts() {
       <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
         {["user", "admin"].map((item, index) => {
           return (
-            <Badge key={index} color={userType === item ?"success": "none"} overlap="circular" variant="dot">
-            <Card
-              style={{ width: 250, height: 250, cursor: "pointer", margin: 10 }}
+            <Badge
+              key={index}
+              color={userType === item ? "success" : "none"}
+              overlap="circular"
+              variant="dot"
             >
-              <CardActionArea
-                onClick={() => handleUserSelection(item)}
-                data-active={userType === item}
-                sx={{
-                  height: "100%",
-                  backgroundColor: "white",
-                  transition: "background-color 0.3s",
-                  "&.MuiButtonBase-root, &.MuiCardActionArea-root": {
-                    backgroundColor:
-                      userType === item ? "action.selected" : "white !important",
-                  },
+              <Card
+                style={{
+                  width: 250,
+                  height: 250,
+                  cursor: "pointer",
+                  margin: 10,
                 }}
               >
-                <CardContent className="w-100 h-100 text-center">
-                  <Typography className="brand-name">
-                    {index == 0 ? (
-                      <Person color="primary" sx={{ zoom: 3, mb: 1 }} />
-                    ) : (
-                      <ManageAccounts color="primary" sx={{ zoom: 3, mb: 1 }} />
-                    )}{" "}
-                    <br /> I am <br /> {item}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
+                <CardActionArea
+                  onClick={() => handleUserSelection(item)}
+                  data-active={userType === item}
+                  sx={{
+                    height: "100%",
+                    backgroundColor: "white",
+                    transition: "background-color 0.3s",
+                    "&.MuiButtonBase-root, &.MuiCardActionArea-root": {
+                      backgroundColor:
+                        userType === item
+                          ? "action.selected"
+                          : "white !important",
+                    },
+                  }}
+                >
+                  <CardContent className="w-100 h-100 text-center">
+                    <Typography className="brand-name">
+                      {index == 0 ? (
+                        <Person color="primary" sx={{ zoom: 3, mb: 1 }} />
+                      ) : (
+                        <ManageAccounts
+                          color="primary"
+                          sx={{ zoom: 3, mb: 1 }}
+                        />
+                      )}{" "}
+                      <br /> I am <br /> {item}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
             </Badge>
           );
         })}
@@ -223,7 +256,9 @@ export default function contacts() {
                 ) : null}
 
                 {message.text ? (
-                  <Alert severity={message.type || "info"}>{message.text}</Alert>
+                  <Alert severity={message.type || "info"}>
+                    {message.text}
+                  </Alert>
                 ) : null}
               </Stack>
             </CardContent>

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { NavBarComponent, SetSelectedApplication, SetLocationList } from "../action/userSlice";
+import {
+  NavBarComponent,
+  SetSelectedApplication,
+  SetLocationList,
+} from "../action/userSlice";
 
 function App() {
   const [progress, setProgress] = useState(0);
@@ -27,7 +31,7 @@ function App() {
     }
   }, [progress]);
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchSheetData = async () => {
       try {
         const response = await fetch(
@@ -46,7 +50,9 @@ function App() {
           });
           return obj;
         });
-        const filteredData = formattedData.filter(val=>val['Active']=='Y')
+        const filteredData = formattedData.filter(
+          (val) => val["Active"] == "Y",
+        );
         dispatch(
           SetLocationList(
             filteredData.map((obj) =>
@@ -59,7 +65,10 @@ function App() {
           ),
         );
       } catch (error) {
-        console.log("error progress...", `${error} and also check internet connection`);
+        console.log(
+          "error progress...",
+          `${error} and also check internet connection`,
+        );
       }
     };
     fetchSheetData();

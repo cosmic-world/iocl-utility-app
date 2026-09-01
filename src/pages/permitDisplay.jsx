@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
-import {
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
-import {Button} from "@mui/material";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import { Button } from "@mui/material";
 
 export default function PermitDisplay() {
-    const dispatch = useDispatch();
-  const { PermitList, navBarComponent, userType } = useSelector((state) => state.myApp);
+  const dispatch = useDispatch();
+  const { PermitList, navBarComponent, userType } = useSelector(
+    (state) => state.myApp,
+  );
   const [startIndex, setstartIndex] = useState(0);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;
@@ -31,10 +30,10 @@ export default function PermitDisplay() {
     }, 5000);
   }, []);
 
-    // useEffect(() => {
-    //   window.location.reload()
-    // }, []);
-    
+  // useEffect(() => {
+  //   window.location.reload()
+  // }, []);
+
   useEffect(() => {
     setstartIndex((prevState) =>
       prevState + step < PermitList.length ? prevState + step : 0,
@@ -52,7 +51,6 @@ export default function PermitDisplay() {
         backgroundColor: "#dee4ea",
       }}
     >
-
       <div
         className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
@@ -62,9 +60,7 @@ export default function PermitDisplay() {
         }}
       >
         <Button
-          variant={
-            navBarComponent === "formControl" ? "outlined" : "contained"
-          }
+          variant={navBarComponent === "formControl" ? "outlined" : "contained"}
           color="warning"
           sx={{
             my: 1,
@@ -100,7 +96,9 @@ export default function PermitDisplay() {
           Permit Table View
         </Button>
         <Button
-          variant={navBarComponent === "layoutDisplay" ? "outlined" : "contained"}
+          variant={
+            navBarComponent === "layoutDisplay" ? "outlined" : "contained"
+          }
           color="warning"
           sx={{
             my: 1,
@@ -122,26 +120,28 @@ export default function PermitDisplay() {
           Permit Layout View (Desktop Only)
         </Button>
         <Button
-            variant={navBarComponent === "modifyRecords" ? "outlined" : "contained"}
-            color="warning"
-            sx={{
+          variant={
+            navBarComponent === "modifyRecords" ? "outlined" : "contained"
+          }
+          color="warning"
+          sx={{
             my: 1,
             mx: 5,
             backgroundColor:
-                navBarComponent === "modifyRecords" ? "white" : "null",
+              navBarComponent === "modifyRecords" ? "white" : "null",
             "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
             },
-            }}
-            onClick={() => {
+          }}
+          onClick={() => {
             dispatch(SetSelectedApplication("Modify Records"));
             dispatch(NavBarComponent("modifyRecords"));
-            }}
-            disabled={userType !== "admin"}
+          }}
+          disabled={userType !== "admin"}
         >
-            Modify Records (Admin Only)
+          Modify Records (Admin Only)
         </Button>
       </div>
 

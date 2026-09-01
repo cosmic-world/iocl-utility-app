@@ -6,7 +6,11 @@ import "./App.css";
 import Header from "./pages/Header";
 import LandingPage from "./pages/landingPage";
 import { useDispatch, useSelector } from "react-redux";
-import { NavBarComponent, SetPermitList, SelectedTerminal, } from "./action/userSlice";
+import {
+  NavBarComponent,
+  SetPermitList,
+  SelectedTerminal,
+} from "./action/userSlice";
 
 function formatDate(date1) {
   const date = new Date(...date1.slice(5, -1).split(","));
@@ -14,14 +18,16 @@ function formatDate(date1) {
 }
 function formatTime(dateStr) {
   const parts = dateStr.match(/\d+/g);
-  const hour = parts[3].padStart(2, '0');
-  const minute = parts[4].padStart(2, '0');
-  return `${hour}:${minute}`
+  const hour = parts[3].padStart(2, "0");
+  const minute = parts[4].padStart(2, "0");
+  return `${hour}:${minute}`;
 }
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList } = useSelector((state) => state.myApp);
+  const { navBarComponent, selectedTerminal, PermitList } = useSelector(
+    (state) => state.myApp,
+  );
 
   useEffect(() => {
     if (navBarComponent == "") {
@@ -39,7 +45,7 @@ function App() {
         const response = await fetch(
           `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details`,
         );
-        const text = await response.text();        
+        const text = await response.text();
         // Remove unwanted characters from response
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows.map((row) =>
@@ -55,7 +61,7 @@ function App() {
           return obj;
         });
         const formattedData = formattedData1.filter(
-          obj => !(Object.keys(obj).length === 1 && obj[""] === "")
+          (obj) => !(Object.keys(obj).length === 1 && obj[""] === ""),
         );
         const filteredData1 =
           formattedData.length > 0
@@ -106,7 +112,10 @@ function App() {
           series: series,
         }));
       } catch (error) {
-        console.log("error app...", `${error} and also check internet connection`);
+        console.log(
+          "error app...",
+          `${error} and also check internet connection`,
+        );
       }
     };
     if (selectedTerminal !== "") {
@@ -119,8 +128,9 @@ function App() {
       }
     };
   }, [selectedTerminal]);
-  
-  const permit_type_array = PermitList.length>0?PermitList.map((val) => val["Permit Type"]):[];
+
+  const permit_type_array =
+    PermitList.length > 0 ? PermitList.map((val) => val["Permit Type"]) : [];
   const permit_labels = [
     "Hot Work ",
     "Cold Work ",

@@ -57,13 +57,10 @@ export default function MasterData() {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(
-        apiUrl("/api/upload-contractor-excel"),
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(apiUrl("/api/upload-contractor-excel"), {
+        method: "POST",
+        body: formData,
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -116,16 +113,13 @@ export default function MasterData() {
     try {
       const payload = { locationCode, contractorName, mailID, mobileNo };
       // Submit to server
-      const response = await fetch(
-        apiUrl("/api/upload-contractor-single"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(apiUrl("/api/upload-contractor-single"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
         },
-      );
+        body: JSON.stringify(payload),
+      });
       const data = await response.json();
       if (data.success) {
         alert("Record submitted successfully!");
@@ -149,9 +143,7 @@ export default function MasterData() {
     setSaveLoader(true);
     setSyncing(true);
     try {
-      const response = await fetch(
-        apiUrl("/api/contractor-master-data"),
-      );
+      const response = await fetch(apiUrl("/api/contractor-master-data"));
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
