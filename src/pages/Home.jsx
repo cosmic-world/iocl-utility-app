@@ -53,7 +53,6 @@ export default function contacts() {
       setMessage({ type: "", text: "" });
       return;
     }
-
     dispatch(SetUserType(item));
     dispatch(NavBarComponent("home2"));
     dispatch(SetSelectedApplication("APPLICATION SELECTION"));
@@ -124,7 +123,9 @@ export default function contacts() {
         throw new Error(data.message || "Invalid OTP.");
       }
 
-      dispatch(SetUserType("admin"));
+      dispatch(
+        SetUserType(data.role === "SUPER_ADMIN" ? "super_admin" : "admin"),
+      );
       dispatch(NavBarComponent("home2"));
       dispatch(SetSelectedApplication("APPLICATION SELECTION"));
       setShowAdminForm(false);

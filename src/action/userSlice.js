@@ -14,6 +14,7 @@ export const userSlice = createSlice({
         selectedTerminal: "", // to store selected material name
     PermitList: [], // to store Permit List data from Google Sheets
     locationList: [], // to store location list data from Google Sheets
+    locationCode: "", // to store location code data from Google Sheets
   },
   reducers: {
     NavBarComponent: (state, action) => {
@@ -46,6 +47,9 @@ export const userSlice = createSlice({
     SetLocationList: (state, action) => {
       state.locationList = action.payload;
     },
+    SetLocationCode: (state, action) => {
+      state.locationCode = action.payload;
+    },
   },
 });
 
@@ -61,6 +65,7 @@ export const {
   SelectedTerminal,
   SetPermitList,
   SetLocationList,
+  SetLocationCode
 } = userSlice.actions;
 
 export default userSlice.reducer;

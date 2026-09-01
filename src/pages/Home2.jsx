@@ -5,7 +5,7 @@ import { DisplaySettings, GridView, Dashboard,
   Password, LocationOn
  } from "@mui/icons-material";
 import { Typography, CardActionArea, Box, Badge } from "@mui/material";
-import { SetSelectedApplication, NavBarComponent, SelectedTerminal } from "../action/userSlice";
+import { SetSelectedApplication, NavBarComponent, SelectedTerminal, SetLocationCode } from "../action/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Cascader } from "antd";
 import { Button, TextField, Select, InputAdornment, OutlinedInput } from "@mui/material";
@@ -46,6 +46,7 @@ export default function contacts() {
               : "test"),
         );
         setPasscode(filteredData.length > 0 ? filteredData[0]["Passcode"] : "");
+        dispatch(SetLocationCode(filteredData.length > 0 ? filteredData[0]["Location Code"] : ""));
       } catch (error) {
         console.error("Error fetching sheet data:", error);
       }

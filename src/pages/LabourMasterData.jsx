@@ -270,30 +270,6 @@ export default function LabourMasterData() {
         >
           Contractor Master Data (Admin Only)
         </Button>
-        <Button
-          variant={
-            navBarComponent === "officer_cred" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "officer_cred" ? "white" : "null",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          disabled={userType !== "admin"}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Officer Master Data"));
-            dispatch(NavBarComponent("officer_cred"));
-          }}
-        >
-          Officer Master Data (Admin Only)
-        </Button>
       </div>
 
       {saveLoader ? (

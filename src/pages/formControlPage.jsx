@@ -29,7 +29,7 @@ class DraggableModalDialog extends React.Component {
 
 export default function formControlPage() {
   const dispatch = useDispatch();
-  const { selectedTerminal } = useSelector((state) => state.myApp);
+  const { selectedTerminal, officerList, locationCode } = useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
@@ -42,6 +42,9 @@ export default function formControlPage() {
   const [supervisorName, setSupervisorName] = useState("");
   const [division, setDivision] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
+  const officerListForLocation = officerList.filter(
+    (officer) => officer["LOCATION_CODE"] == locationCode
+  );
 
   const handleResetForm = () => {
     setSaveLoader(false);
@@ -282,19 +285,30 @@ export default function formControlPage() {
               Officer Name
             </div>
             <div className="col-8">
-              <TextField
+                            <Autocomplete
                 className="w-100"
-                style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-                value={receiverName}
-                error={receiverName == ""}
-                onChange={(e) => setReceiverName(e.target.value)}
-                InputProps={{
-                  sx: {
-                    fontFamily: "Lucida Sans",
-                    fontSize: "20px",
-                  },
-                  inputProps: { autoComplete: "off" },
-                }}
+                options={officerListForLocation.map((officer) => officer["OFFICER_NAME"])}
+                name="receiverName"
+                value={receiverName !== "" ? receiverName : null}
+                isOptionEqualToValue={(option, value) => option === value}
+                onChange={(e, newValue) =>
+                  newValue !== null
+                    ? setReceiverName(newValue)
+                    : setReceiverName("")
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    error={receiverName == ""}
+                    InputProps={{
+                      ...params.InputProps,
+                      style: {
+                        fontFamily: "Lucida Sans",
+                        fontSize: 20,
+                      },
+                    }}
+                  />
+                )}
               />
             </div>
           </div>

@@ -88,7 +88,7 @@ app.post("/api/admin/request-otp", async (req, res) => {
     const request = new sql.Request();
     request.input("email", sql.NVarChar, email);
     const result = await request.query(`
-      SELECT TOP 1 *
+      SELECT [ROLE]
       FROM OfficerCredentials
       WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
     `);
@@ -99,11 +99,12 @@ app.post("/api/admin/request-otp", async (req, res) => {
         message: "Email address is not found in the registered officer list.",
       });
     }
-
+    console.log('result',result, result.recordset[0].ROLE)
     const otp = generateOtp();
     otpStore[email] = {
       otp,
       expiresAt: Date.now() + 5 * 60 * 1000,
+      role: String(result.recordset[0].ROLE || "USER").toUpperCase(),
     };
 
     const mailOptions = {
@@ -157,10 +158,12 @@ app.post("/api/admin/verify-otp", async (req, res) => {
     }
 
     delete otpStore[email];
+    console.log('storedEntry',storedEntry)
     return res.status(200).json({
       success: true,
       message: "Admin verified successfully.",
       userType: "admin",
+      role: storedEntry.role,
     });
   } catch (error) {
     console.error("OTP verification failed:", error);
@@ -804,15 +807,23 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 const officerName     = sanitizeValue(row['OFFICER NAME']).toLocaleUpperCase();
                 const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
                 const mobile         = sanitizeValue(row['MOBILE NO']);
+                const officerRole = String(sanitizeValue(row['ROLE']) || 'USER').toUpperCase();
+
+                if (!['USER', 'SUPER_ADMIN'].includes(officerRole)) {
+                  throw new Error(
+                    `Invalid ROLE for officer ${officerName || '(unknown)'}: ${officerRole}`,
+                  );
+                }
 
                 await pool.request()
                 .input('locationCode', sql.VarChar, locationCode)
                 .input('officerName', sql.VarChar, officerName)
                 .input('mailID', sql.VarChar, mailID)
                 .input('mobile', sql.VarChar, mobile)
+                .input('role', sql.VarChar, officerRole)
                 .query(`
-                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO)
-                VALUES (@locationCode, @officerName, @mailID, @mobile)
+                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO, [ROLE])
+                VALUES (@locationCode, @officerName, @mailID, @mobile, @role)
                 `)
     }
     catch (err) {
@@ -863,10 +874,15 @@ app.post("/api/upload-officer-single",
       request.input('officerName', sql.NVarChar, bodyData['officerName'].toUpperCase() || null);
       request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
+      const officerRole = String(bodyData['role'] || "USER").toUpperCase();
+      if (!["USER", "SUPER_ADMIN"].includes(officerRole)) {
+        return res.status(400).json({ error: "Invalid officer role." });
+      }
+      request.input('role', sql.NVarChar, officerRole);
       
       const insertSql = `INSERT INTO dbo.OfficerCredentials (
-        LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO) 
-        VALUES (@locationCode, @officerName, @mailID, @mobileNo)`;
+        LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO, [ROLE]) 
+        VALUES (@locationCode, @officerName, @mailID, @mobileNo, @role)`;
       await request.query(insertSql)
       
       await sql.close();
@@ -890,6 +906,36 @@ app.get("/api/officer-master-data", (req, res) => {
       res.status(500).json({ error: error.message });
     }
   })();
+});
+
+app.delete("/api/officer-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super admin can delete officer records." });
+    }
+
+    const officerId = Number(req.params.id);
+    if (!Number.isInteger(officerId) || officerId <= 0) {
+      return res.status(400).json({ error: "Invalid officer id." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, officerId);
+    const result = await request.query(
+      "DELETE FROM dbo.OfficerCredentials WHERE ID = @id"
+    );
+    await sql.close();
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Officer record not found." });
+    }
+
+    return res.status(200).json({ success: true, id: officerId });
+  } catch (error) {
+    console.error("Officer delete error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 

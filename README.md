@@ -136,3 +136,11 @@ ADD
     doc1_path NVARCHAR(200) NULL,
     doc2_path NVARCHAR(200) NULL,
     doc3_path NVARCHAR(200) NULL;
+
+UPDATE dbo.OfficerCredentials
+SET [ROLE] = 'SUPER_ADMIN'
+WHERE MAIL_ID = 'admin@example.com';
+
+ALTER TABLE dbo.OfficerCredentials
+ADD [ROLE] NVARCHAR(20) NOT NULL
+    CONSTRAINT DF_OfficerCredentials_ROLE DEFAULT 'USER';

@@ -82,7 +82,7 @@ export default function Header({}) {
             <MenuItem
               selected={navBarComponent == "officer_cred"}
               className="d-flex justify-content-center"
-              disabled={userType != "admin"}
+              disabled={userType == "user"}
               onClick={() => {
                 dispatch(NavBarComponent("officer_cred"));
                 dispatch(SetSelectedApplication("ADMIN CONTROL"));

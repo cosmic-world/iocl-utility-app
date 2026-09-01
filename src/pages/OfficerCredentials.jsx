@@ -18,7 +18,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Visibility, Download } from "@mui/icons-material";
+import { Visibility, Download, Delete } from "@mui/icons-material";
 import {
   SetOfficerMasterList,
   NavBarComponent,
@@ -27,9 +27,15 @@ import {
 
 export default function MasterData() {
   const dispatch = useDispatch();
-  const { officerList, navBarComponent, userType } = useSelector(
+  const {
+    officerList,
+    navBarComponent,
+    userType,
+    locationCode: selectedLocationCode,
+  } = useSelector(
     (state) => state.myApp,
   );
+  
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +45,11 @@ export default function MasterData() {
   const [mailID, setMailID] = useState("");
   const [officerName, setOfficerName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
-
+  const [role, setRole] = useState("USER");
+  const [searchLocationCode, setSearchLocationCode] = useState(
+    selectedLocationCode || "",
+  );
+  const [officersForLocation, setOfficersForLocation] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleExcelChange = (e) => {
@@ -68,6 +78,7 @@ export default function MasterData() {
 
       if (data.success) {
         alert(data.message);
+              handleSync(); // Refresh officer list after upload
       } else {
         alert("Upload failed: " + data.message);
       }
@@ -114,7 +125,7 @@ export default function MasterData() {
     setSubmitting(true);
 
     try {
-      const payload = { locationCode, officerName, mailID, mobileNo };
+      const payload = { locationCode, officerName, mailID, mobileNo, role };
       // Submit to server
       const response = await fetch(
         apiUrl("/api/upload-officer-single"),
@@ -129,11 +140,14 @@ export default function MasterData() {
       const data = await response.json();
       if (data.success) {
         alert("Record submitted successfully!");
+        await loadOfficerList();
         // Reset form
         setLocationCode("");
         setMailID("");
         setOfficerName("");
         setMobileNo("");
+        setRole("USER");
+        handleSync(); // Refresh officer list after submission
       } else {
         alert("Upload failed: " + data.error);
       }
@@ -145,24 +159,31 @@ export default function MasterData() {
     }
   };
 
+  const loadOfficerList = async () => {
+    const response = await fetch(apiUrl("/api/officer-master-data"));
+    if (!response.ok) {
+      throw new Error("Failed to load officer records");
+    }
+    const data = await response.json();
+    const officerRecords = Array.isArray(data) ? data : [];
+    dispatch(SetOfficerMasterList(officerRecords));
+    return officerRecords;
+  };
+
+  useEffect(() => {
+    loadOfficerList().catch((error) => {
+      console.error("Failed to fetch officer records", error);
+    });
+  }, [dispatch]);
+
   const handleSync = async () => {
     setSaveLoader(true);
     setSyncing(true);
     try {
-      const response = await fetch(
-        apiUrl("/api/officer-master-data"),
-      );
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetOfficerMasterList(zlist));
-      zlist.length > 0
-        ? alert("Syncing completed successfully.")
-        : alert("No records found in the database.");
+      const officerRecords = await loadOfficerList();
+      // officerRecords.length > 0
+      //   ? alert("Syncing completed successfully.")
+      //   : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -170,6 +191,52 @@ export default function MasterData() {
       setSyncing(false);
     }
   };
+
+  const handleDeleteOfficer = async (officerId) => {
+    if (!isSuperAdmin) {
+      alert("Only a super admin can delete officer records.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this officer?")) {
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/officer-master-data/${officerId}`),
+        {
+          method: "DELETE",
+          headers: { "x-user-role": userType },
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete officer record.");
+      }
+
+      dispatch(
+        SetOfficerMasterList(
+          officerList.filter(
+            (officer) => String(officer.ID) !== String(officerId),
+          ),
+        ),
+      );
+      alert("Officer record deleted successfully.");
+            handleSync(); // Refresh officer list after deletion
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
+  const isSuperAdmin = userType === "super_admin";
+
+  useEffect(() => {
+    setOfficersForLocation(officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode))
+  }, [officerList]);
 
   return (
     <div
@@ -181,97 +248,6 @@ export default function MasterData() {
         overflowX: "auto",
       }}
     >
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{ border: "1px solid black", width: "100%" }}
-      >
-        <Button
-          variant={
-            navBarComponent === "labourPassDashboard" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "labourPassDashboard" ? "white" : "null",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Labour Pass Dashboard"));
-            dispatch(NavBarComponent("labourPassDashboard"));
-          }}
-        >
-          Labour Pass Dashboard
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_masterData"
-              ? "outlined"
-              : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_masterData" ? "white" : "null",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Labour Master Data"));
-            dispatch(NavBarComponent("contractor_masterData"));
-          }}
-        >
-          Labour Master Data
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_cred" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_cred" ? "white" : "null",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          disabled={userType !== "admin"}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Contractor Master Data"));
-            dispatch(NavBarComponent("contractor_cred"));
-          }}
-        >
-          Contractor Master Data (Admin Only)
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "officer_cred" ? "outlined" : "contained"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "officer_cred" ? "white" : "null",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          disabled={userType !== "admin"}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Officer Master Data"));
-            dispatch(NavBarComponent("officer_cred"));
-          }}
-        >
-          Officer Master Data (Admin Only)
-        </Button>
-      </div>
 
       {saveLoader ? (
         <CircularProgress
@@ -294,7 +270,8 @@ export default function MasterData() {
 
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-            Please use our official excel template.
+            Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO, ROLE.
+            ROLE must be USER or SUPER_ADMIN.
           </Typography>
           <Button
             variant="outlined"
@@ -423,6 +400,31 @@ export default function MasterData() {
               }}
             />
           </div>
+
+          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+            <Typography>Role</Typography>
+            <TextField
+              select
+              fullWidth
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              SelectProps={{ native: true }}
+              style={{ backgroundColor: "white" }}
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  paddingTop: "10px !important", // Reducer top whitespace
+                  paddingBottom: "10px !important", // Keeps it centered vertically
+                  textTransform: "uppercase",
+                },
+              }}
+            >
+              <option value="USER">USER</option>
+              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            </TextField>
+          </div>
         </div>
 
         <Button
@@ -438,6 +440,82 @@ export default function MasterData() {
           {submitting ? "Submitting..." : "SUBMIT"}
         </Button>
       </div>
+
+      <Typography variant="h6" sx={{ mt: 2 }}>
+        Existing Officers
+      </Typography>
+      <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
+        <TextField
+          label="Location Code"
+          value={searchLocationCode}
+          onChange={(e) => setSearchLocationCode(e.target.value.toUpperCase())}
+          placeholder="Enter Location Code"
+          style={{ backgroundColor: "white", margin: 5, width: 350 }}
+        />
+        <Button
+          color="primary"
+          variant="contained"
+          sx={{ m: 1, width: 180 }}
+          onClick={() => <>
+          {setOfficersForLocation(officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode))}
+          {officerList.filter((officer) => officer["LOCATION_CODE"] == searchLocationCode).length === 0 ? alert("No officers found for the entered Location Code."):''}
+          </>}
+        >
+          Search Officers
+        </Button>
+        <Button
+          color="secondary"
+          variant="outlined"
+          sx={{ m: 1, width: 180, backgroundColor: "white" }}
+          onClick={() => {
+            setSearchLocationCode("");
+          }}
+        >
+          Clear Search
+        </Button>
+      </div>
+      <Table bordered hover striped className="ttes_table">
+        <thead className="table-head">
+          <tr>
+            <th>LOCATION CODE</th>
+            <th>OFFICER NAME</th>
+            <th>MAIL ID</th>
+            <th>MOBILE NO</th>
+            <th>ROLE</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {officersForLocation.map((officer) => (
+            <tr key={officer.ID}>
+              <td>{officer.LOCATION_CODE}</td>
+              <td>{officer.OFFICER_NAME}</td>
+              <td>{officer.MAIL_ID}</td>
+              <td>{officer.MOBILE_NO}</td>
+              <td>{officer.ROLE || "USER"}</td>
+              <td style={{ textAlign: "center" }}>
+                <span
+                  title={
+                    isSuperAdmin
+                      ? "Delete officer"
+                      : "Only a super admin can delete officers"
+                  }
+                >
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    startIcon={<Delete />}
+                    onClick={() => handleDeleteOfficer(officer.ID)}
+                    disabled={saveLoader || !isSuperAdmin}
+                  >
+                    Delete
+                  </Button>
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
     </div>
   );
 }
