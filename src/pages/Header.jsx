@@ -141,11 +141,12 @@ export default function Header({}) {
       </div>
 
       <div
-        className="d-none d-xxl-flex justify-content-center align-items-center h-100 w-25"
+        className="d-none d-xxl-flex justify-content-center align-items-center h-100"
         style={{
           color: "#0d6efd",
           fontWeight: "bold",
           borderRight: userType!=""?"1px solid #0d6efd":null,
+          width: 400,
         }}
       >
         <label>{`Developed by Manas Roy`}</label>
@@ -156,11 +157,11 @@ export default function Header({}) {
         style={{
           color: "#0d6efd",
           fontWeight: "bold",
-          width: 200,
+          width: 300,
         }}
       >
         <label>{`Role:`}&nbsp;</label>
-        <label style={{ color: "orange" }}>{`${userType}`}</label>
+        <label style={{ color: "orange" }}>{`${userType.toUpperCase().replace(/_/g, " ")}`}</label>
       </div>
       :null}
     </div>
