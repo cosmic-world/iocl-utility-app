@@ -139,7 +139,7 @@ export default function Header({}) {
       </div>
 
       <div
-        className={`header-locationName h-100 w-50
+        className={`header-locationName h-100 flex-grow-1
       d-none d-xxl-flex justify-content-center align-items-center text-white user-select-none`}
       >
         {selectedApplication}
