@@ -475,7 +475,7 @@ export default function tempPassDashboard() {
               pointerEvents: "all !important",
             },
           }}
-          disabled={userType !== "admin"}
+          disabled={userType == "user"}
           onClick={() => {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));

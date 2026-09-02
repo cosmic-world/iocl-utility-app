@@ -325,7 +325,7 @@ export default function PermitDisplay({ state }) {
               dispatch(SetSelectedApplication("Modify Records"));
               dispatch(NavBarComponent("modifyRecords"));
             }}
-            disabled={userType !== "admin"}
+            disabled={userType == "user"}
           >
             Modify Records (Admin Only)
           </Button>

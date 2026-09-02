@@ -244,7 +244,7 @@ export default function MasterData() {
             dispatch(SetSelectedApplication("TT Crew Master Data"));
             dispatch(NavBarComponent("masterData"));
           }}
-          disabled={userType !== "admin"}
+          disabled={userType == "user"}
         >
           TT Crew Master Data (Admin Only)
         </Button>
