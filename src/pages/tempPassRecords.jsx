@@ -117,6 +117,7 @@ export default function tempPassDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
+      console.log("Fetched records:", zlist);
       zlist.length > 0 ? (
         setRecords(zlist)
       ) : (
@@ -132,7 +133,7 @@ export default function tempPassDashboard() {
       setSearching(false);
     }
   };
-
+console.log("records:", records);
   const handleFileChange = (index, event) => {
     const file = event.target.files[0];
     if (!file) return;
