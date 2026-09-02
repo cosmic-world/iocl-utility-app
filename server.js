@@ -310,6 +310,9 @@ app.post("/api/records/:id/approve", async (req, res) => {
 app.get("/api/temp_pass_records", (req, res) => {
   (async () => {
     try {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
       const { location_code, vendor, tt_no, up_to_date, requestFrom, requestTill } = req.query;
       const sqlConfig = {
         user: process.env.AZURE_SQL_USER,

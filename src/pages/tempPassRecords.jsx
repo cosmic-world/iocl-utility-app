@@ -111,13 +111,12 @@ export default function tempPassDashboard() {
       );
 
       const url = apiUrl(`/api/temp_pass_records?${params.toString()}`);
-      const response = await fetch(url);
+      const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      console.log("Fetched records:", zlist);
       zlist.length > 0 ? (
         setRecords(zlist)
       ) : (
@@ -133,7 +132,6 @@ export default function tempPassDashboard() {
       setSearching(false);
     }
   };
-console.log("records:", records);
   const handleFileChange = (index, event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -328,12 +326,11 @@ console.log("records:", records);
 
       setRecords((prevRecords) =>
         prevRecords.map((item) =>
-          item.id === recordId
+          (item.Id ?? item.id) === recordId
             ? { ...item, approval_history: data.approval_history }
             : item,
         ),
       );
-      fetchRecords();
       alert("Approval recorded for today.");
     } catch (error) {
       alert(error.message);

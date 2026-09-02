@@ -5,6 +5,7 @@ import {
   SetSelectedApplication,
   SetLocationList,
 } from "../action/userSlice";
+import {Box} from "@mui/material";
 
 function App() {
   const [progress, setProgress] = useState(0);
@@ -75,9 +76,10 @@ function App() {
   }, []);
 
   return (
-    <div
+    <Box
       style={{
-        height: "100vh",
+        height: "100%",
+        width: "100%",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -119,7 +121,7 @@ function App() {
           />
         </div>
       </div>
-    </div>
+    </Box>
   );
 }
 
