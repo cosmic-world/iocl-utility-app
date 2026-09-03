@@ -68,7 +68,7 @@ export default function contacts() {
           .trim()
           .toLowerCase() === trimmedEmail,
     );
-
+    
     if (!trimmedEmail || !isRegistered) {
       setMessage({
         type: "error",

@@ -484,7 +484,7 @@ export default function MasterData() {
         <thead className="table-head">
           <tr>
             <th>LOCATION CODE</th>
-            <th>OFFICER NAME</th>
+            <th>NAME</th>
             <th>MAIL ID</th>
             <th>MOBILE NO</th>
             <th>ROLE</th>
@@ -498,7 +498,7 @@ export default function MasterData() {
               <td>{officer.OFFICER_NAME}</td>
               <td>{officer.MAIL_ID}</td>
               <td>{officer.MOBILE_NO}</td>
-              <td>{officer.ROLE || "ADMIN"}</td>
+              <td>{officer.ROLE}</td>
               <td style={{ textAlign: "center" }}>
                 <span
                   title={
