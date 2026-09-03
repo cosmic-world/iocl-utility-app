@@ -123,6 +123,11 @@ export default function ExportCustomToolbar({}) {
   const [records, setRecords] = useState([]);
   const [requestFrom, setRequestFrom] = useState("");
   const [requestTill, setRequestTill] = useState("");
+  const [showRecords, setShowRecords] = useState(false);
+
+    useEffect(() => {
+      fetchRecords();
+    }, []);
 
   const getDaysDifference = (fromStr, toStr) => {
     if (!fromStr || !toStr) return 0;
@@ -421,7 +426,7 @@ export default function ExportCustomToolbar({}) {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (e,type) => {
     setSaveLoader(true);
     setSearching(true);
     try {
@@ -448,12 +453,13 @@ export default function ExportCustomToolbar({}) {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length > 0 ? (
-        setRecords(zlist)
-      ) : (
+      zlist.length > 0 ? <>
+        {setRecords(zlist)}
+        {type === 'search' ? setShowRecords(true): setShowRecords(false)}
+      </> : (
         <>
           {setRecords(zlist)}
-          {alert("No records found matching the search criteria.")}
+          {type === 'search' ?alert("No records found matching the search criteria.") : null}
         </>
       );
     } catch (error) {
@@ -463,6 +469,39 @@ export default function ExportCustomToolbar({}) {
       setSearching(false);
     }
   };
+
+  const existingVendorList =
+  masterList.length > 0
+    ? [
+        ...new Set(
+          masterList
+            .filter(
+              (ele) =>
+                searchLocationCode === "" ||
+                ele.LOCATION_CODE == searchLocationCode
+            )
+            .map((item) => item["VENDOR"]).filter(Boolean)
+        ),
+      ]
+    : [];
+
+  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))] : []
+  const combinedVendorList = [...new Set([...existingVendorList, ...newVendorList])]
+
+  const existingTTList = masterList.length > 0 ? [
+                    ...new Set(
+                      masterList
+                        .filter(
+                          (ele) => searchLocationCode === "" || ele.LOCATION_CODE == searchLocationCode,
+                        )
+                        .map((item) => item["TT"]).filter(Boolean)
+                    ),
+                  ]
+                : []
+                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))] : []
+  const combinedTTList = [
+  ...new Set([...existingTTList, ...newTTList]),
+];
 
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
@@ -624,20 +663,8 @@ export default function ExportCustomToolbar({}) {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            disabled={searchLocationCode === ""}
-            options={
-              masterList.length > 0
-                ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) => ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["VENDOR"]),
-                    ),
-                  ]
-                : []
-            }
+            // disabled={searchLocationCode === ""}
+            options={combinedVendorList}
             sx={{
               // 1. Increase font size of the placeholder/input text
               "& .MuiInputBase-input": {
@@ -695,22 +722,8 @@ export default function ExportCustomToolbar({}) {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            disabled={searchLocationCode === "" || searchVendor === ""}
-            options={
-              masterList.length > 0
-                ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) =>
-                            ele.LOCATION_CODE == searchLocationCode &&
-                            ele.VENDOR == searchVendor,
-                        )
-                        .map((item) => item["TT_NO"]),
-                    ),
-                  ]
-                : []
-            }
+            // disabled={searchLocationCode === "" || searchVendor === ""}
+            options={combinedTTList}
             sx={{
               // 1. Increase font size of the placeholder/input text
               "& .MuiInputBase-input": {
@@ -842,7 +855,7 @@ export default function ExportCustomToolbar({}) {
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            fetchRecords(e);
+            fetchRecords(e,'search');
           }}
         >
           {seaching ? "Fetching..." : "FETCH RECORDS"}
@@ -857,6 +870,7 @@ export default function ExportCustomToolbar({}) {
             setSearchLocationCode("");
             setSearchTT("");
             setSearchVendor("");
+            setShowRecords(false);
           }}
         >
           CLEAR TABLE
@@ -925,7 +939,7 @@ export default function ExportCustomToolbar({}) {
               // minWidth: 'max-content'
             },
           }}
-          rows={rows}
+          rows={showRecords ? rows : []}
           columns={columns}
           filterModel={filterModel}
           onFilterModelChange={handleFilterModelChange}

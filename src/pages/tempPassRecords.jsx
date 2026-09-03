@@ -57,7 +57,7 @@ export default function tempPassDashboard() {
   const [searchLocationCode, setSearchLocationCode] = useState("");
   const [searchTT, setSearchTT] = useState("");
   const [searchVendor, setSearchVendor] = useState("");
-
+  const [showRecords, setShowRecords] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [seaching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +66,7 @@ export default function tempPassDashboard() {
 
   useEffect(() => {
     handleSync();
+    fetchRecords();
   }, []);
 
   const getTodayLabel = () =>
@@ -96,7 +97,7 @@ export default function tempPassDashboard() {
     }
   };
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (e, type) => {
     setSaveLoader(true);
     setSearching(true);
     try {
@@ -117,12 +118,13 @@ export default function tempPassDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length > 0 ? (
-        setRecords(zlist)
-      ) : (
+      zlist.length > 0 ? <>
+        {setRecords(zlist)}
+        {type === 'search' ? setShowRecords(true): setShowRecords(false)}
+      </> : (
         <>
           {setRecords(zlist)}
-          {alert("No records found matching the search criteria.")}
+          {type === 'search' ?alert("No records found matching the search criteria.") : null}
         </>
       );
     } catch (error) {
@@ -380,32 +382,38 @@ export default function tempPassDashboard() {
     handleFileChange(index, mockEvent);
   };
 
-  const existingVendorList = masterList.length > 0
-                ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) => ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["VENDOR"]),
-                    ),
-                  ]
-                : []
-  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]))] : []
+const existingVendorList =
+  masterList.length > 0
+    ? [
+        ...new Set(
+          masterList
+            .filter(
+              (ele) =>
+                searchLocationCode === "" ||
+                ele.LOCATION_CODE == searchLocationCode
+            )
+            .map((item) => item["VENDOR"]).filter(Boolean)
+        ),
+      ]
+    : [];
+
+  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))] : []
   const combinedVendorList = [...new Set([...existingVendorList, ...newVendorList])]
 
   const existingTTList = masterList.length > 0 ? [
                     ...new Set(
                       masterList
                         .filter(
-                          (ele) => ele.LOCATION_CODE == searchLocationCode,
+                          (ele) => searchLocationCode === "" || ele.LOCATION_CODE == searchLocationCode,
                         )
-                        .map((item) => item["TT"]),
+                        .map((item) => item["TT"]).filter(Boolean)
                     ),
                   ]
                 : []
-                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]))] : []
-  const combinedTTList = [...new Set([...existingTTList, ...newTTList])];
+                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))] : []
+  const combinedTTList = [
+  ...new Set([...existingTTList, ...newTTList]),
+];
 
   return (
     <div
@@ -1416,7 +1424,8 @@ export default function tempPassDashboard() {
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            fetchRecords(e);
+            fetchRecords(e,'search');
+            setShowRecords(true);
           }}
         >
           {seaching ? "Searching..." : "SEARCH RECORDS"}
@@ -1431,6 +1440,7 @@ export default function tempPassDashboard() {
             setSearchLocationCode("");
             setSearchTT("");
             setSearchVendor("");
+            setShowRecords(false);
           }}
         >
           CLEAR VIEW
@@ -1495,52 +1505,52 @@ export default function tempPassDashboard() {
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
-                      {record
+                      {record && showRecords
                         ? new Date(record.created_at)
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["location_code"] : ""}
+                      {record && showRecords? record["location_code"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["crew_type"] : ""}
+                      {record && showRecords? record["crew_type"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["crew_name"] : ""}
+                      {record && showRecords? record["crew_name"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["vendor"] : ""}
+                      {record && showRecords? record["vendor"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["tt_no"] : ""}
+                      {record && showRecords? record["tt_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["mobile_no"] : ""}
+                      {record && showRecords? record["mobile_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["govt_id"] : ""}
+                      {record && showRecords? record["govt_id"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? record["driving_licence_no"] : ""}
+                      {record && showRecords? record["driving_licence_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record
+                      {record && showRecords
                         ? new Date(record["request_from"])
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record
+                      {record && showRecords
                         ? new Date(record["request_to"])
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record
+                      {record && showRecords
                         ? getDaysDifference(
                             new Date(record["request_from"])
                               .toLocaleDateString("en-GB")
@@ -1552,7 +1562,7 @@ export default function tempPassDashboard() {
                         : ""}
                     </td>
                     <td style={{ textAlign: "center", minWidth: 180 }}>
-                      {record ? (
+                      {record && showRecords? (
                         <div className="d-flex justify-content-center align-items-center gap-2 text-nowrap">
                           <Button
                             size="small"
@@ -1603,13 +1613,13 @@ export default function tempPassDashboard() {
                       )}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? getLink(record.request_letter_path) : ""}
+                      {record && showRecords? getLink(record.request_letter_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? getLink(record.id_proof_path) : ""}
+                      {record && showRecords? getLink(record.id_proof_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record ? getLink(record.driving_licence_path) : ""}
+                      {record && showRecords? getLink(record.driving_licence_path) : ""}
                     </td>
                   </tr>
                 );
