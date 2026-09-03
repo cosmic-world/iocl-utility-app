@@ -156,7 +156,7 @@ export default function contacts() {
   };
 
   return (
-    <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-center">
+    <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-xxl-center justify-content-start" style={{ overflow: "auto" }}>
       <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
         {["user", "admin", "security"].map((item, index) => {
           return (
@@ -216,7 +216,7 @@ export default function contacts() {
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
-                Admin verification
+                Role verification
               </Typography>
 
               <Stack spacing={2}>
