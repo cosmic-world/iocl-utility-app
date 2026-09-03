@@ -99,12 +99,11 @@ app.post("/api/admin/request-otp", async (req, res) => {
         message: "Email address is not found in the registered officer list.",
       });
     }
-    console.log('result',result, result.recordset[0].ROLE)
     const otp = generateOtp();
     otpStore[email] = {
       otp,
       expiresAt: Date.now() + 5 * 60 * 1000,
-      role: String(result.recordset[0].ROLE || "USER").toUpperCase(),
+      role: String(result.recordset[0].ROLE).toUpperCase(),
     };
 
     const mailOptions = {
@@ -810,9 +809,9 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 const officerName     = sanitizeValue(row['OFFICER NAME']).toLocaleUpperCase();
                 const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
                 const mobile         = sanitizeValue(row['MOBILE NO']);
-                const officerRole = String(sanitizeValue(row['ROLE']) || 'USER').toUpperCase();
+                const officerRole = String(sanitizeValue(row['ROLE']) || 'ADMIN').toUpperCase();
 
-                if (!['USER', 'SUPER_ADMIN'].includes(officerRole)) {
+                if (!['ADMIN', 'SUPER_ADMIN', 'SECURITY'].includes(officerRole)) {
                   throw new Error(
                     `Invalid ROLE for officer ${officerName || '(unknown)'}: ${officerRole}`,
                   );
@@ -877,8 +876,8 @@ app.post("/api/upload-officer-single",
       request.input('officerName', sql.NVarChar, bodyData['officerName'].toUpperCase() || null);
       request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
-      const officerRole = String(bodyData['role'] || "USER").toUpperCase();
-      if (!["USER", "SUPER_ADMIN"].includes(officerRole)) {
+      const officerRole = String(bodyData['role'] || "ADMIN").toUpperCase();
+      if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(officerRole)) {
         return res.status(400).json({ error: "Invalid officer role." });
       }
       request.input('role', sql.NVarChar, officerRole);

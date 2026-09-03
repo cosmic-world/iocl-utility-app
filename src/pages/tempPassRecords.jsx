@@ -380,6 +380,33 @@ export default function tempPassDashboard() {
     handleFileChange(index, mockEvent);
   };
 
+  const existingVendorList = masterList.length > 0
+                ? [
+                    ...new Set(
+                      masterList
+                        .filter(
+                          (ele) => ele.LOCATION_CODE == searchLocationCode,
+                        )
+                        .map((item) => item["VENDOR"]),
+                    ),
+                  ]
+                : []
+  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]))] : []
+  const combinedVendorList = [...new Set([...existingVendorList, ...newVendorList])]
+
+  const existingTTList = masterList.length > 0 ? [
+                    ...new Set(
+                      masterList
+                        .filter(
+                          (ele) => ele.LOCATION_CODE == searchLocationCode,
+                        )
+                        .map((item) => item["TT"]),
+                    ),
+                  ]
+                : []
+                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]))] : []
+  const combinedTTList = [...new Set([...existingTTList, ...newTTList])];
+
   return (
     <div
       className={
@@ -510,7 +537,7 @@ export default function tempPassDashboard() {
               isOptionEqualToValue={(option, value) => option === value}
               onChange={(e, newValue) =>
                 newValue !== null
-                  ? setLocationCode(newValue)
+                  ? setLocationCode(newValue.trim())
                   : setLocationCode("")
               }
               sx={{
@@ -598,11 +625,11 @@ export default function tempPassDashboard() {
               value={vendor !== "" ? vendor : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setVendor(newValue.toLocaleUpperCase())
+                  ? setVendor(newValue.toLocaleUpperCase().trim())
                   : setVendor("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setVendor(newValue) : setVendor("");
+                newValue !== null ? setVendor(newValue.trim()) : setVendor("");
               }}
               selectOnFocus
               clearOnBlur
@@ -665,11 +692,11 @@ export default function tempPassDashboard() {
               value={crewName !== "" ? crewName : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setCrewName(newValue.toLocaleUpperCase())
+                  ? setCrewName(newValue.toLocaleUpperCase().trim())
                   : setCrewName("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setCrewName(newValue) : setCrewName("");
+                newValue !== null ? setCrewName(newValue.trim()) : setCrewName("");
               }}
               selectOnFocus
               clearOnBlur
@@ -736,11 +763,11 @@ export default function tempPassDashboard() {
               value={ttNo !== "" ? ttNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setTTNo(newValue.toLocaleUpperCase())
+                  ? setTTNo(newValue.toLocaleUpperCase().trim())
                   : setTTNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setTTNo(newValue) : setTTNo("");
+                newValue !== null ? setTTNo(newValue.trim()) : setTTNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -806,10 +833,10 @@ export default function tempPassDashboard() {
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
               onInputChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue) : setMobileNo("");
+                newValue !== null ? setMobileNo(newValue.trim()) : setMobileNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue) : setMobileNo("");
+                newValue !== null ? setMobileNo(newValue.trim()) : setMobileNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -879,11 +906,11 @@ export default function tempPassDashboard() {
               value={aadhaarNo !== "" ? aadhaarNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setAadhaarNo(newValue.toLocaleUpperCase())
+                  ? setAadhaarNo(newValue.toLocaleUpperCase().trim())
                   : setAadhaarNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setAadhaarNo(newValue) : setAadhaarNo("");
+                newValue !== null ? setAadhaarNo(newValue.trim()) : setAadhaarNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -952,12 +979,12 @@ export default function tempPassDashboard() {
               value={drivingLicence !== "" ? drivingLicence : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue.toLocaleUpperCase())
+                  ? setDrivingLicence(newValue.toLocaleUpperCase().trim())
                   : setDrivingLicence("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue)
+                  ? setDrivingLicence(newValue.trim())
                   : setDrivingLicence("");
               }}
               selectOnFocus
@@ -1282,20 +1309,8 @@ export default function tempPassDashboard() {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            disabled={searchLocationCode === ""}
-            options={
-              masterList.length > 0
-                ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) => ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["VENDOR"]),
-                    ),
-                  ]
-                : []
-            }
+            // disabled={searchLocationCode === ""}
+            options={combinedVendorList}
             sx={{
               // 1. Increase font size of the placeholder/input text
               "& .MuiInputBase-input": {
@@ -1353,22 +1368,8 @@ export default function tempPassDashboard() {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            disabled={searchLocationCode === "" || searchVendor === ""}
-            options={
-              masterList.length > 0
-                ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) =>
-                            ele.LOCATION_CODE == searchLocationCode &&
-                            ele.VENDOR == searchVendor,
-                        )
-                        .map((item) => item["TT_NO"]),
-                    ),
-                  ]
-                : []
-            }
+            // disabled={searchLocationCode === "" || searchVendor === ""}
+            options={combinedTTList}
             sx={{
               // 1. Increase font size of the placeholder/input text
               "& .MuiInputBase-input": {
@@ -1579,7 +1580,7 @@ export default function tempPassDashboard() {
                               : parseApprovalHistory(
                                     record.approval_history,
                                   ).includes(getTodayLabel())
-                                ? "Approved Today"
+                                ? "Approved"
                                 : "Approve Today"}
                           </Button>
                           <label>{`${parseApprovalHistory(record.approval_history).length}-Days`}</label>

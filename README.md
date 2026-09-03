@@ -144,3 +144,7 @@ WHERE MAIL_ID = 'admin@example.com';
 ALTER TABLE dbo.OfficerCredentials
 ADD [ROLE] NVARCHAR(20) NOT NULL
     CONSTRAINT DF_OfficerCredentials_ROLE DEFAULT 'USER';
+
+UPDATE dbo.temp_pass_records
+SET vendor = LTRIM(RTRIM(vendor))
+WHERE vendor IS NOT NULL;

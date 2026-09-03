@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiUrl } from "../api";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { ManageAccounts, Person } from "@mui/icons-material";
+import { ManageAccounts, Person, PersonSearch } from "@mui/icons-material";
 import {
   Typography,
   CardActionArea,
@@ -48,7 +48,7 @@ export default function contacts() {
   }, [dispatch, officerList]);
 
   const handleUserSelection = (item) => {
-    if (item === "admin") {
+    if (item === "admin" || item === "security") {
       setShowAdminForm(true);
       setMessage({ type: "", text: "" });
       return;
@@ -139,7 +139,7 @@ export default function contacts() {
       }
 
       dispatch(
-        SetUserType(data.role === "SUPER_ADMIN" ? "super_admin" : "admin"),
+        SetUserType(data.role),
       );
       dispatch(NavBarComponent("home2"));
       dispatch(SetSelectedApplication("APPLICATION SELECTION"));
@@ -158,7 +158,7 @@ export default function contacts() {
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-center">
       <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
-        {["user", "admin"].map((item, index) => {
+        {["user", "admin", "security"].map((item, index) => {
           return (
             <Badge
               key={index}
@@ -193,12 +193,14 @@ export default function contacts() {
                     <Typography className="brand-name">
                       {index == 0 ? (
                         <Person color="primary" sx={{ zoom: 3, mb: 1 }} />
-                      ) : (
+                      ) : index == 1 ?(
                         <ManageAccounts
                           color="primary"
                           sx={{ zoom: 3, mb: 1 }}
                         />
-                      )}{" "}
+                      ) : (
+                        <PersonSearch color="primary" sx={{ zoom: 3, mb: 1 }} />
+                      )}
                       <br /> I am <br /> {item}
                     </Typography>
                   </CardContent>

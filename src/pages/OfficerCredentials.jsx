@@ -43,7 +43,7 @@ export default function MasterData() {
   const [mailID, setMailID] = useState("");
   const [officerName, setOfficerName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
-  const [role, setRole] = useState("USER");
+  const [role, setRole] = useState("");
   const [searchLocationCode, setSearchLocationCode] = useState(
     selectedLocationCode || "",
   );
@@ -138,7 +138,7 @@ export default function MasterData() {
         setMailID("");
         setOfficerName("");
         setMobileNo("");
-        setRole("USER");
+        setRole("");
         handleSync(); // Refresh officer list after submission
       } else {
         alert("Upload failed: " + data.error);
@@ -224,7 +224,7 @@ export default function MasterData() {
     }
   };
 
-  const isSuperAdmin = userType === "super_admin";
+  const isSuperAdmin = userType === "SUPER_ADMIN";
 
   useEffect(() => {
     setOfficersForLocation(
@@ -266,7 +266,7 @@ export default function MasterData() {
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
             Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO,
-            ROLE. ROLE must be USER or SUPER_ADMIN.
+            ROLE. ROLE must be ADMIN, SUPER_ADMIN, or SECURITY.
           </Typography>
           <Button
             variant="outlined"
@@ -416,8 +416,9 @@ export default function MasterData() {
                 },
               }}
             >
-              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
               <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              <option value="SECURITY">SECURITY</option>
             </TextField>
           </div>
         </div>
@@ -497,7 +498,7 @@ export default function MasterData() {
               <td>{officer.OFFICER_NAME}</td>
               <td>{officer.MAIL_ID}</td>
               <td>{officer.MOBILE_NO}</td>
-              <td>{officer.ROLE || "USER"}</td>
+              <td>{officer.ROLE || "ADMIN"}</td>
               <td style={{ textAlign: "center" }}>
                 <span
                   title={

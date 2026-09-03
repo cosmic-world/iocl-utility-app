@@ -32,7 +32,7 @@ export default function Header({}) {
         borderRight: "none",
       }}
     >
-      {navBarComponent != "" && navBarComponent != "home" ? (
+      {userType != "" ? (
         <>
           <Menu
             id="profile-dropdown"
@@ -110,7 +110,7 @@ export default function Header({}) {
       <MenuIcon
         style={{
           cursor:
-            navBarComponent != "" && navBarComponent != "home"
+            userType != ""
               ? "pointer"
               : "default",
           zoom: 1.5,
@@ -119,7 +119,7 @@ export default function Header({}) {
           backgroundColor: "#0d6efd",
         }}
         onClick={(event) =>
-          navBarComponent != "" && navBarComponent != "home"
+          userType != ""
             ? setAnchorE1(event.currentTarget)
             : null
         }
