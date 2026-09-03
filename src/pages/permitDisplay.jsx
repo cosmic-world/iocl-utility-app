@@ -145,7 +145,7 @@ export default function PermitDisplay() {
         </Button>
       </div>
 
-      <div className="ttes_table_view m-2">
+      <div className="ttes_table_view m-0">
         <Table bordered hover className="ttes_table">
           <thead className="table-head">
             <tr>

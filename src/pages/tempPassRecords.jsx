@@ -486,10 +486,7 @@ export default function tempPassDashboard() {
         </Button>
       </div>
 
-      <div
-        className="d-flex flex-column justify-content-center align-items-center"
-        style={{ border: "1px solid black", width: "100%" }}
-      >
+      <div className="d-flex flex-column justify-content-start align-items-center" style={{ border: "1px solid black", width: "100%", height: 'fit-content' }}>
         <Typography
           variant="h4"
           className="w-75 d-flex justify-content-center align-items-center"
@@ -1229,8 +1226,8 @@ export default function tempPassDashboard() {
 
       <Typography
         variant="h4"
-        className="w-75 d-flex justify-content-center align-items-center mt-3"
-        style={{ borderBottom: "1px dashed black" }}
+        className="w-75 d-flex justify-content-center align-items-start mt-3"
+        style={{ borderBottom: "1px dashed black"}}
       >
         Existing Request
       </Typography>

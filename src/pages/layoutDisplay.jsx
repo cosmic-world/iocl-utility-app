@@ -548,8 +548,8 @@ export default function PermitDisplay({ state }) {
                             zoom: 1,
                             top: `${val.page_top}%`,
                             left: `${val.page_left}%`,
-                            height: 30,
-                            width: 30,
+                            height: 25,
+                            width: 25,
                             borderRadius: "50%",
                             textAlign: "center",
                             fontWeight: "bold",
@@ -624,9 +624,6 @@ export default function PermitDisplay({ state }) {
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
                       {permit ? i + 1 : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Date"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {permit ? permit["Date"] : ""}
