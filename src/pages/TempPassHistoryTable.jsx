@@ -502,6 +502,7 @@ export default function ExportCustomToolbar({}) {
   const combinedTTList = [
   ...new Set([...existingTTList, ...newTTList]),
 ];
+  const filteredRecords = rows.filter((record) => record['vendor'] && record['vendor'].toLowerCase().includes(searchVendor.toLowerCase()) && record['tt_no'] && record['tt_no'].toLowerCase().includes(searchTT.toLowerCase()));
 
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
@@ -620,7 +621,7 @@ export default function ExportCustomToolbar({}) {
               <TextField
                 {...params}
                 label="Location Code"
-                placeholder="Select Location Code or Type For New..."
+                placeholder="Select Location Code"
                 InputLabelProps={{
                   ...params.InputLabelProps,
                   shrink: true,
@@ -651,12 +652,12 @@ export default function ExportCustomToolbar({}) {
             value={searchVendor !== "" ? searchVendor : null}
             onInputChange={(event, newValue) => {
               newValue !== null
-                ? setSearchVendor(newValue)
+                ? setSearchVendor(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
                 : setSearchVendor("");
             }}
             onChange={(event, newValue) => {
               newValue !== null
-                ? setSearchVendor(newValue)
+                ? setSearchVendor(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
                 : setSearchVendor("");
             }}
             selectOnFocus
@@ -713,10 +714,10 @@ export default function ExportCustomToolbar({}) {
             className="w-100"
             value={searchTT !== "" ? searchTT : null}
             onInputChange={(event, newValue) => {
-              newValue !== null ? setSearchTT(newValue) : setSearchTT("");
+              newValue !== null ? setSearchTT(newValue.toLocaleUpperCase().trim().replace(/\s/g, "")) : setSearchTT("");
             }}
             onChange={(event, newValue) => {
-              newValue !== null ? setSearchTT(newValue) : setSearchTT("");
+              newValue !== null ? setSearchTT(newValue.toLocaleUpperCase().trim().replace(/\s/g, "")) : setSearchTT("");
             }}
             selectOnFocus
             clearOnBlur
@@ -939,7 +940,7 @@ export default function ExportCustomToolbar({}) {
               // minWidth: 'max-content'
             },
           }}
-          rows={showRecords ? rows : []}
+          rows={showRecords ? filteredRecords : []}
           columns={columns}
           filterModel={filterModel}
           onFilterModelChange={handleFilterModelChange}

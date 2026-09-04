@@ -414,6 +414,7 @@ const existingVendorList =
   const combinedTTList = [
   ...new Set([...existingTTList, ...newTTList]),
 ];
+  const filteredRecords = records.filter((record) => record['vendor'] && record['vendor'].toLowerCase().includes(searchVendor.toLowerCase()) && record['tt_no'] && record['tt_no'].toLowerCase().includes(searchTT.toLowerCase()));
 
   return (
     <div
@@ -768,11 +769,11 @@ const existingVendorList =
               value={ttNo !== "" ? ttNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setTTNo(newValue.toLocaleUpperCase().trim())
+                  ? setTTNo(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
                   : setTTNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setTTNo(newValue.trim()) : setTTNo("");
+                newValue !== null ? setTTNo(newValue.trim().replace(/\s/g, "")) : setTTNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -838,10 +839,10 @@ const existingVendorList =
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
               onInputChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue.trim()) : setMobileNo("");
+                newValue !== null ? setMobileNo(newValue.trim().replace(/\s/g, "")) : setMobileNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue.trim()) : setMobileNo("");
+                newValue !== null ? setMobileNo(newValue.trim().replace(/\s/g, "")) : setMobileNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -911,11 +912,11 @@ const existingVendorList =
               value={aadhaarNo !== "" ? aadhaarNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setAadhaarNo(newValue.toLocaleUpperCase().trim())
+                  ? setAadhaarNo(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
                   : setAadhaarNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setAadhaarNo(newValue.trim()) : setAadhaarNo("");
+                newValue !== null ? setAadhaarNo(newValue.trim().replace(/\s/g, "")) : setAadhaarNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -984,12 +985,12 @@ const existingVendorList =
               value={drivingLicence !== "" ? drivingLicence : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue.toLocaleUpperCase().trim())
+                  ? setDrivingLicence(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
                   : setDrivingLicence("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue.trim())
+                  ? setDrivingLicence(newValue.trim().replace(/\s/g, ""))
                   : setDrivingLicence("");
               }}
               selectOnFocus
@@ -1471,9 +1472,9 @@ const existingVendorList =
           </thead>
           <tbody>
             {Array.from(
-              { length: records.length > 0 ? records.length : 100 },
+              { length: filteredRecords.length > 0 ? filteredRecords.length : 100 },
               (_, i) => {
-                const record = records[i];
+                const record = filteredRecords[i];
                 const getLink = (value) => {
                   if (!value) return "-";
                   const url = value.startsWith("http")
