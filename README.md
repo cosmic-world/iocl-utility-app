@@ -137,9 +137,9 @@ ADD
     doc2_path NVARCHAR(200) NULL,
     doc3_path NVARCHAR(200) NULL;
 
-UPDATE dbo.OfficerCredentials
-SET [ROLE] = 'SUPER_ADMIN'
-WHERE MAIL_ID = 'admin@example.com';
+UPDATE dbo.temp_pass_records
+SET vendor = 'SRI RAMAKRISHNA YARN CARRIERS LTD (11020069)'
+WHERE vendor = 'SRIRAMAKRISHNA YARN CARRIERS LTD (11020069)';
 
 ALTER TABLE dbo.OfficerCredentials
 ADD [ROLE] NVARCHAR(20) NOT NULL

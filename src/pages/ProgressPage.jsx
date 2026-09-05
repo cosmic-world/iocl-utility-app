@@ -5,7 +5,7 @@ import {
   SetSelectedApplication,
   SetLocationList,
 } from "../action/userSlice";
-import {Box} from "@mui/material";
+import { Box } from "@mui/material";
 
 function App() {
   const [progress, setProgress] = useState(0);

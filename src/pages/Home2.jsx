@@ -24,6 +24,7 @@ import {
   InputAdornment,
   OutlinedInput,
 } from "@mui/material";
+import { Modal } from "react-bootstrap";
 
 export default function contacts() {
   const dispatch = useDispatch();
@@ -33,7 +34,9 @@ export default function contacts() {
   const [passcode, setPasscode] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
-  const [permitDashClicked, setPermitDashClicked] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [selectedCard, setSelectedCard] = useState("");
+
   useEffect(() => {
     const fetchSheetData = async () => {
       try {
@@ -100,7 +103,19 @@ export default function contacts() {
   });
 
   const stateOfficeList = zlist;
-
+  const handleSubmit = (e) => {
+    if (selectedCard === "TT Crew Temporary Pass") {
+      dispatch(SetSelectedApplication("TT Crew Temporary Pass"));
+      dispatch(NavBarComponent("tempPassDashboard"));
+    } else if (selectedCard === "Permit Dashboard") {
+      dispatch(SetSelectedApplication("Permit Dashboard"));
+      dispatch(NavBarComponent("formControl"));
+    } else if (selectedCard === "Labour Entry") {
+      dispatch(SetSelectedApplication("Labour Entry"));
+      dispatch(NavBarComponent("labourPassDashboard"));
+    }
+    setModalShow(false);
+  };
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">
       <Box className="d-flex flex-wrap w-100 mt-2 pb-2 justify-content-evenly align-items-center">
@@ -109,8 +124,8 @@ export default function contacts() {
         >
           <CardActionArea
             onClick={() => {
-              dispatch(SetSelectedApplication("TT Crew Temporary Pass"));
-              dispatch(NavBarComponent("tempPassDashboard"));
+              setSelectedCard("TT Crew Temporary Pass");
+              setModalShow(true);
             }}
             data-active={selectedApplication === "TT Crew Temporary Pass"}
             sx={{
@@ -138,9 +153,10 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}
         >
           <CardActionArea
-            // disabled
-            // onClick={() => dispatch(SetSelectedApplication("Permit Dashboard"))}
-            onClick={() => setPermitDashClicked(true)}
+            onClick={() => {
+              setSelectedCard("Permit Dashboard");
+              setModalShow(true);
+            }}
             data-active={selectedApplication === "Permit Dashboard"}
             sx={{
               height: "100%",
@@ -164,14 +180,13 @@ export default function contacts() {
         </Card>
 
         <Card
-          className="order-3 order-xxl-2"
           style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
         >
           <CardActionArea
             disabled
             onClick={() => {
-              dispatch(SetSelectedApplication("Labour Entry"));
-              dispatch(NavBarComponent("labourPassDashboard"));
+              setSelectedCard("Labour Entry");
+              setModalShow(true);
             }}
             data-active={selectedApplication === "Labour Entry"}
             sx={{
@@ -205,29 +220,39 @@ export default function contacts() {
           </CardActionArea>
         </Card>
 
-        {permitDashClicked ? (
-          <Box
-            className="order-2 order-xxl-3 d-flex justify-content-center"
-            sx={{ mt: 0, width: "100%" }}
-          >
-            <Card variant="outlined" style={{ maxWidth: 420 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Location Selection
-                </Typography>
-
+        <Modal
+          show={modalShow}
+          onHide={() => setModalShow(false)}
+          size="md"
+          centered
+          backdrop="static"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title
+              id="contained-modal-title-vcenter"
+              className="text-center w-100"
+            >
+              Verify Location Access
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Card variant="outlined" style={{ width: "100%" }}>
+              <CardContent className="d-flex flex-column align-items-center justify-content-center">
                 <Cascader
                   className="custom-cascader"
                   popupClassName="custom-cascader-dropdown"
                   options={stateOfficeList}
                   expandTrigger="hover"
+                  getPopupContainer={(triggerNode) =>
+                    triggerNode.closest(".modal") || document.body
+                  }
                   placeholder={
                     selectedTerminal === "" || selectedTerminal === undefined
                       ? "Select Terminal..."
                       : `${selectedTerminal[0]} / ${selectedTerminal[selectedTerminal.length - 1]}`
                   }
                   style={{
-                    width: "360px",
+                    width: "100%",
                     height: "60px",
                     marginBottom: "20px",
                   }}
@@ -246,7 +271,7 @@ export default function contacts() {
                   error={pass != "" && pass != passcode}
                   style={{
                     marginBottom: 20,
-                    width: 360,
+                    width: "100%",
                     backgroundColor: "white",
                   }}
                   type={"password"}
@@ -267,24 +292,21 @@ export default function contacts() {
                   variant="contained"
                   color="success"
                   onClick={(e) => {
-                    dispatch(SetSelectedApplication("Permit Dashboard"));
-                    setPermitDashClicked(false);
-                    dispatch(NavBarComponent("formControl"));
+                    handleSubmit(e);
                   }}
-                  disabled={
-                    selectedTerminal === "" ||
-                    selectedTerminal === undefined ||
-                    userType == "user"
-                      ? pass === "" || pass != passcode
-                      : false
-                  }
+                  disabled={pass === "" || pass != passcode}
                 >
                   {"Submit"}
                 </Button>
               </CardContent>
             </Card>
-          </Box>
-        ) : null}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="contained" onClick={() => setModalShow(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Box>
     </Box>
   );

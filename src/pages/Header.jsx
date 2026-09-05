@@ -109,19 +109,14 @@ export default function Header({}) {
 
       <MenuIcon
         style={{
-          cursor:
-            userType != ""
-              ? "pointer"
-              : "default",
+          cursor: userType != "" ? "pointer" : "default",
           zoom: 1.5,
           color: "white",
           height: "100%",
           backgroundColor: "#0d6efd",
         }}
         onClick={(event) =>
-          userType != ""
-            ? setAnchorE1(event.currentTarget)
-            : null
+          userType != "" ? setAnchorE1(event.currentTarget) : null
         }
       />
       {/* current date-time stamp display */}

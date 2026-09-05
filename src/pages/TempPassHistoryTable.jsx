@@ -125,9 +125,9 @@ export default function ExportCustomToolbar({}) {
   const [requestTill, setRequestTill] = useState("");
   const [showRecords, setShowRecords] = useState(false);
 
-    useEffect(() => {
-      fetchRecords();
-    }, []);
+  useEffect(() => {
+    fetchRecords();
+  }, []);
 
   const getDaysDifference = (fromStr, toStr) => {
     if (!fromStr || !toStr) return 0;
@@ -426,7 +426,7 @@ export default function ExportCustomToolbar({}) {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
-  const fetchRecords = async (e,type) => {
+  const fetchRecords = async (e, type) => {
     setSaveLoader(true);
     setSearching(true);
     try {
@@ -453,13 +453,17 @@ export default function ExportCustomToolbar({}) {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length > 0 ? <>
-        {setRecords(zlist)}
-        {type === 'search' ? setShowRecords(true): setShowRecords(false)}
-      </> : (
+      zlist.length > 0 ? (
         <>
           {setRecords(zlist)}
-          {type === 'search' ?alert("No records found matching the search criteria.") : null}
+          {type === "search" ? setShowRecords(true) : setShowRecords(false)}
+        </>
+      ) : (
+        <>
+          {setRecords(zlist)}
+          {type === "search"
+            ? alert("No records found matching the search criteria.")
+            : null}
         </>
       );
     } catch (error) {
@@ -471,38 +475,56 @@ export default function ExportCustomToolbar({}) {
   };
 
   const existingVendorList =
-  masterList.length > 0
-    ? [
-        ...new Set(
-          masterList
-            .filter(
-              (ele) =>
-                searchLocationCode === "" ||
-                ele.LOCATION_CODE == searchLocationCode
-            )
-            .map((item) => item["VENDOR"]).filter(Boolean)
-        ),
-      ]
-    : [];
+    masterList.length > 0
+      ? [
+          ...new Set(
+            masterList
+              .filter(
+                (ele) =>
+                  searchLocationCode === "" ||
+                  ele.LOCATION_CODE == searchLocationCode,
+              )
+              .map((item) => item["VENDOR"])
+              .filter(Boolean),
+          ),
+        ]
+      : [];
 
-  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))] : []
-  const combinedVendorList = [...new Set([...existingVendorList, ...newVendorList])]
+  const newVendorList =
+    records.length > 0
+      ? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))]
+      : [];
+  const combinedVendorList = [
+    ...new Set([...existingVendorList, ...newVendorList]),
+  ];
 
-  const existingTTList = masterList.length > 0 ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) => searchLocationCode === "" || ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["TT"]).filter(Boolean)
-                    ),
-                  ]
-                : []
-                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))] : []
-  const combinedTTList = [
-  ...new Set([...existingTTList, ...newTTList]),
-];
-  const filteredRecords = rows.filter((record) => record['vendor'] && record['vendor'].toLowerCase().includes(searchVendor.toLowerCase()) && record['tt_no'] && record['tt_no'].toLowerCase().includes(searchTT.toLowerCase()));
+  const existingTTList =
+    masterList.length > 0
+      ? [
+          ...new Set(
+            masterList
+              .filter(
+                (ele) =>
+                  searchLocationCode === "" ||
+                  ele.LOCATION_CODE == searchLocationCode,
+              )
+              .map((item) => item["TT"])
+              .filter(Boolean),
+          ),
+        ]
+      : [];
+  const newTTList =
+    records.length > 0
+      ? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))]
+      : [];
+  const combinedTTList = [...new Set([...existingTTList, ...newTTList])];
+  const filteredRecords = rows.filter(
+    (record) =>
+      record["vendor"] &&
+      record["vendor"].toLowerCase().includes(searchVendor.toLowerCase()) &&
+      record["tt_no"] &&
+      record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
+  );
 
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
@@ -652,12 +674,16 @@ export default function ExportCustomToolbar({}) {
             value={searchVendor !== "" ? searchVendor : null}
             onInputChange={(event, newValue) => {
               newValue !== null
-                ? setSearchVendor(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
+                ? setSearchVendor(
+                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                  )
                 : setSearchVendor("");
             }}
             onChange={(event, newValue) => {
               newValue !== null
-                ? setSearchVendor(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
+                ? setSearchVendor(
+                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                  )
                 : setSearchVendor("");
             }}
             selectOnFocus
@@ -714,10 +740,18 @@ export default function ExportCustomToolbar({}) {
             className="w-100"
             value={searchTT !== "" ? searchTT : null}
             onInputChange={(event, newValue) => {
-              newValue !== null ? setSearchTT(newValue.toLocaleUpperCase().trim().replace(/\s/g, "")) : setSearchTT("");
+              newValue !== null
+                ? setSearchTT(
+                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                  )
+                : setSearchTT("");
             }}
             onChange={(event, newValue) => {
-              newValue !== null ? setSearchTT(newValue.toLocaleUpperCase().trim().replace(/\s/g, "")) : setSearchTT("");
+              newValue !== null
+                ? setSearchTT(
+                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                  )
+                : setSearchTT("");
             }}
             selectOnFocus
             clearOnBlur
@@ -856,7 +890,7 @@ export default function ExportCustomToolbar({}) {
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            fetchRecords(e,'search');
+            fetchRecords(e, "search");
           }}
         >
           {seaching ? "Fetching..." : "FETCH RECORDS"}

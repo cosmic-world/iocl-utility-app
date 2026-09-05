@@ -68,7 +68,7 @@ export default function contacts() {
           .trim()
           .toLowerCase() === trimmedEmail,
     );
-    
+
     if (!trimmedEmail || !isRegistered) {
       setMessage({
         type: "error",
@@ -138,9 +138,7 @@ export default function contacts() {
         throw new Error(data.message || "Invalid OTP.");
       }
 
-      dispatch(
-        SetUserType(data.role),
-      );
+      dispatch(SetUserType(data.role));
       dispatch(NavBarComponent("home2"));
       dispatch(SetSelectedApplication("APPLICATION SELECTION"));
       setShowAdminForm(false);
@@ -156,7 +154,10 @@ export default function contacts() {
   };
 
   return (
-    <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-xxl-center justify-content-start" style={{ overflow: "auto" }}>
+    <Box
+      className="d-flex flex-column w-100 h-100 align-items-center justify-content-xxl-center justify-content-start"
+      style={{ overflow: "auto" }}
+    >
       <Box className="d-flex flex-wrap w-100 mt-5 mb-5 justify-content-evenly align-items-center">
         {["user", "admin", "security"].map((item, index) => {
           return (
@@ -193,7 +194,7 @@ export default function contacts() {
                     <Typography className="brand-name">
                       {index == 0 ? (
                         <Person color="primary" sx={{ zoom: 3, mb: 1 }} />
-                      ) : index == 1 ?(
+                      ) : index == 1 ? (
                         <ManageAccounts
                           color="primary"
                           sx={{ zoom: 3, mb: 1 }}

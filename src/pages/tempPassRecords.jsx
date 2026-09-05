@@ -86,9 +86,7 @@ export default function tempPassDashboard() {
 
       setSaveLoader(false);
       dispatch(SetMasterList(zlist));
-      zlist.length > 0
-        ? null
-        : alert("No records found in the database.");
+      zlist.length > 0 ? null : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -118,13 +116,17 @@ export default function tempPassDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length > 0 ? <>
-        {setRecords(zlist)}
-        {type === 'search' ? setShowRecords(true): setShowRecords(false)}
-      </> : (
+      zlist.length > 0 ? (
         <>
           {setRecords(zlist)}
-          {type === 'search' ?alert("No records found matching the search criteria.") : null}
+          {type === "search" ? setShowRecords(true) : setShowRecords(false)}
+        </>
+      ) : (
+        <>
+          {setRecords(zlist)}
+          {type === "search"
+            ? alert("No records found matching the search criteria.")
+            : null}
         </>
       );
     } catch (error) {
@@ -382,39 +384,57 @@ export default function tempPassDashboard() {
     handleFileChange(index, mockEvent);
   };
 
-const existingVendorList =
-  masterList.length > 0
-    ? [
-        ...new Set(
-          masterList
-            .filter(
-              (ele) =>
-                searchLocationCode === "" ||
-                ele.LOCATION_CODE == searchLocationCode
-            )
-            .map((item) => item["VENDOR"]).filter(Boolean)
-        ),
-      ]
-    : [];
+  const existingVendorList =
+    masterList.length > 0
+      ? [
+          ...new Set(
+            masterList
+              .filter(
+                (ele) =>
+                  searchLocationCode === "" ||
+                  ele.LOCATION_CODE == searchLocationCode,
+              )
+              .map((item) => item["VENDOR"])
+              .filter(Boolean),
+          ),
+        ]
+      : [];
 
-  const newVendorList = records.length > 0? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))] : []
-  const combinedVendorList = [...new Set([...existingVendorList, ...newVendorList])]
+  const newVendorList =
+    records.length > 0
+      ? [...new Set(records.map((item) => item["vendor"]).filter(Boolean))]
+      : [];
+  const combinedVendorList = [
+    ...new Set([...existingVendorList, ...newVendorList]),
+  ];
 
-  const existingTTList = masterList.length > 0 ? [
-                    ...new Set(
-                      masterList
-                        .filter(
-                          (ele) => searchLocationCode === "" || ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["TT"]).filter(Boolean)
-                    ),
-                  ]
-                : []
-                  const newTTList = records.length > 0? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))] : []
-  const combinedTTList = [
-  ...new Set([...existingTTList, ...newTTList]),
-];
-  const filteredRecords = records.filter((record) => record['vendor'] && record['vendor'].toLowerCase().includes(searchVendor.toLowerCase()) && record['tt_no'] && record['tt_no'].toLowerCase().includes(searchTT.toLowerCase()));
+  const existingTTList =
+    masterList.length > 0
+      ? [
+          ...new Set(
+            masterList
+              .filter(
+                (ele) =>
+                  searchLocationCode === "" ||
+                  ele.LOCATION_CODE == searchLocationCode,
+              )
+              .map((item) => item["TT"])
+              .filter(Boolean),
+          ),
+        ]
+      : [];
+  const newTTList =
+    records.length > 0
+      ? [...new Set(records.map((item) => item["tt_no"]).filter(Boolean))]
+      : [];
+  const combinedTTList = [...new Set([...existingTTList, ...newTTList])];
+  const filteredRecords = records.filter(
+    (record) =>
+      record["vendor"] &&
+      record["vendor"].toLowerCase().includes(searchVendor.toLowerCase()) &&
+      record["tt_no"] &&
+      record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
+  );
 
   return (
     <div
@@ -495,7 +515,14 @@ const existingVendorList =
         </Button>
       </div>
 
-      <div className="d-flex flex-column justify-content-start align-items-center" style={{ border: "1px solid black", width: "100%", height: 'fit-content' }}>
+      <div
+        className="d-flex flex-column justify-content-start align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+          height: "fit-content",
+        }}
+      >
         <Typography
           variant="h4"
           className="w-75 d-flex justify-content-center align-items-center"
@@ -702,7 +729,9 @@ const existingVendorList =
                   : setCrewName("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setCrewName(newValue.trim()) : setCrewName("");
+                newValue !== null
+                  ? setCrewName(newValue.trim())
+                  : setCrewName("");
               }}
               selectOnFocus
               clearOnBlur
@@ -769,11 +798,15 @@ const existingVendorList =
               value={ttNo !== "" ? ttNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setTTNo(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
+                  ? setTTNo(
+                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                    )
                   : setTTNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setTTNo(newValue.trim().replace(/\s/g, "")) : setTTNo("");
+                newValue !== null
+                  ? setTTNo(newValue.trim().replace(/\s/g, ""))
+                  : setTTNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -839,10 +872,14 @@ const existingVendorList =
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
               onInputChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue.trim().replace(/\s/g, "")) : setMobileNo("");
+                newValue !== null
+                  ? setMobileNo(newValue.trim().replace(/\s/g, ""))
+                  : setMobileNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue.trim().replace(/\s/g, "")) : setMobileNo("");
+                newValue !== null
+                  ? setMobileNo(newValue.trim().replace(/\s/g, ""))
+                  : setMobileNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -912,11 +949,15 @@ const existingVendorList =
               value={aadhaarNo !== "" ? aadhaarNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setAadhaarNo(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
+                  ? setAadhaarNo(
+                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                    )
                   : setAadhaarNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setAadhaarNo(newValue.trim().replace(/\s/g, "")) : setAadhaarNo("");
+                newValue !== null
+                  ? setAadhaarNo(newValue.trim().replace(/\s/g, ""))
+                  : setAadhaarNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -985,7 +1026,9 @@ const existingVendorList =
               value={drivingLicence !== "" ? drivingLicence : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue.toLocaleUpperCase().trim().replace(/\s/g, ""))
+                  ? setDrivingLicence(
+                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                    )
                   : setDrivingLicence("");
               }}
               onChange={(event, newValue) => {
@@ -1236,7 +1279,7 @@ const existingVendorList =
       <Typography
         variant="h4"
         className="w-75 d-flex justify-content-center align-items-start mt-3"
-        style={{ borderBottom: "1px dashed black"}}
+        style={{ borderBottom: "1px dashed black" }}
       >
         Existing Request
       </Typography>
@@ -1425,7 +1468,7 @@ const existingVendorList =
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            fetchRecords(e,'search');
+            fetchRecords(e, "search");
             setShowRecords(true);
           }}
         >
@@ -1472,7 +1515,10 @@ const existingVendorList =
           </thead>
           <tbody>
             {Array.from(
-              { length: filteredRecords.length > 0 ? filteredRecords.length : 100 },
+              {
+                length:
+                  filteredRecords.length > 0 ? filteredRecords.length : 100,
+              },
               (_, i) => {
                 const record = filteredRecords[i];
                 const getLink = (value) => {
@@ -1513,28 +1559,30 @@ const existingVendorList =
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["location_code"] : ""}
+                      {record && showRecords ? record["location_code"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["crew_type"] : ""}
+                      {record && showRecords ? record["crew_type"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["crew_name"] : ""}
+                      {record && showRecords ? record["crew_name"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["vendor"] : ""}
+                      {record && showRecords ? record["vendor"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["tt_no"] : ""}
+                      {record && showRecords ? record["tt_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["mobile_no"] : ""}
+                      {record && showRecords ? record["mobile_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["govt_id"] : ""}
+                      {record && showRecords ? record["govt_id"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? record["driving_licence_no"] : ""}
+                      {record && showRecords
+                        ? record["driving_licence_no"]
+                        : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record && showRecords
@@ -1563,7 +1611,7 @@ const existingVendorList =
                         : ""}
                     </td>
                     <td style={{ textAlign: "center", minWidth: 180 }}>
-                      {record && showRecords? (
+                      {record && showRecords ? (
                         <div className="d-flex justify-content-center align-items-center gap-2 text-nowrap">
                           <Button
                             size="small"
@@ -1575,7 +1623,8 @@ const existingVendorList =
                                 : "contained"
                             }
                             color="success"
-                            disabled={userType == "user" ||
+                            disabled={
+                              userType == "user" ||
                               approvingId === record.Id ||
                               parseApprovalHistory(
                                 record.approval_history,
@@ -1614,13 +1663,19 @@ const existingVendorList =
                       )}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? getLink(record.request_letter_path) : ""}
+                      {record && showRecords
+                        ? getLink(record.request_letter_path)
+                        : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? getLink(record.id_proof_path) : ""}
+                      {record && showRecords
+                        ? getLink(record.id_proof_path)
+                        : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords? getLink(record.driving_licence_path) : ""}
+                      {record && showRecords
+                        ? getLink(record.driving_licence_path)
+                        : ""}
                     </td>
                   </tr>
                 );
