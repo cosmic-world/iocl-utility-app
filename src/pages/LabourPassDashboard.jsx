@@ -442,8 +442,8 @@ export default function tempPassDashboard() {
         <Button
           variant={
             navBarComponent === "contractor_masterData"
-              ? "outlined"
-              : "contained"
+              ? "contained"
+              : "outlined"
           }
           color="warning"
           sx={{
@@ -1452,8 +1452,8 @@ export default function tempPassDashboard() {
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
-                      {<Checkbox />}
-                      {i + 1}
+                      {record ? <Checkbox /> : ""}
+                      {record ? i + 1 : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record ? record["LABOUR_NAME"] : ""}

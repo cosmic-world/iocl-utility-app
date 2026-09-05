@@ -198,8 +198,8 @@ export default function MasterData() {
         <Button
           variant={
             navBarComponent === "contractor_masterData"
-              ? "outlined"
-              : "contained"
+              ? "contained"
+              : "outlined"
           }
           color="warning"
           sx={{

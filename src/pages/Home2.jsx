@@ -183,7 +183,7 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
         >
           <CardActionArea
-            disabled
+            // disabled
             onClick={() => {
               setSelectedCard("Labour Entry");
               setModalShow(true);
