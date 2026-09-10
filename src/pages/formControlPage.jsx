@@ -27,13 +27,13 @@ class DraggableModalDialog extends React.Component {
   }
 }
 
-export default function formControlPage() {
+export default function formControlPage({ show, setShow }) {
   const dispatch = useDispatch();
   const { selectedTerminal, officerList, locationCode } = useSelector(
     (state) => state.myApp,
   );
   const [saveLoader, setSaveLoader] = useState(false);
-  const [show, setShow] = useState(false);
+  // const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
   const [workDesc, setWorkDesc] = useState("");
   const [workLocation, setWorkLocation] = useState("");
@@ -116,460 +116,442 @@ export default function formControlPage() {
   };
 
   return (
-    <>
-      <Modal
-        dialogAs={DraggableModalDialog}
-        show={show}
-        onHide={() => {
-          handleCloseModal();
-        }}
-        size="lg"
-        backdrop="static"
-        centered
-        style={{ userSelect: "none" }}
-      >
-        <Modal.Header style={{ cursor: "move" }}>
-          <Modal.Title
-            style={{
-              fontSize: "25px",
-              fontFamily: "Lucida Sans",
-              fontWeight: "bolder",
-              color: "black",
-              width: "100%",
-              height: 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            Fill All Fields
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body
+    <Modal
+      dialogAs={DraggableModalDialog}
+      show={show}
+      onHide={() => {
+        handleCloseModal();
+      }}
+      size="lg"
+      backdrop="static"
+      centered
+      style={{ userSelect: "none" }}
+    >
+      <Modal.Header style={{ cursor: "move" }}>
+        <Modal.Title
           style={{
+            fontSize: "25px",
+            fontFamily: "Lucida Sans",
+            fontWeight: "bolder",
+            color: "black",
+            width: "100%",
+            height: 20,
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
-            position: "relative",
+            justifyContent: "center",
           }}
         >
-          {saveLoader ? (
-            <CircularProgress
-              color="success"
-              sx={{
-                position: "fixed",
-                zIndex: 2000,
-                transform: "translate(-50%, -50%)",
-                left: "45%",
-                top: "40%",
-                zoom: 3,
-              }}
-            />
-          ) : null}
-          <div className="row w-100">
-            <div
-              className="col-4 text-right border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Permit Type
-            </div>
-            <div className="col-8">
-              <Autocomplete
-                className="w-100"
-                options={[
-                  "Hot Work",
-                  "Cold Work",
-                  "Height + Hot Work",
-                  "Height + Cold Work",
-                  "Electrical Work",
-                ]}
-                name="TTNo"
-                value={permitType !== "" ? permitType : null}
-                isOptionEqualToValue={(option, value) => option === value}
-                onChange={(e, newValue) =>
-                  newValue !== null
-                    ? setPermitType(newValue)
-                    : setPermitType("")
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={permitType == ""}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: {
-                        fontFamily: "Lucida Sans",
-                        fontSize: 20,
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Work Description
-            </div>
-            <div className="col-8">
-              <TextField
-                className="w-100"
-                style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-                value={workDesc}
-                error={workDesc == ""}
-                onChange={(e) => setWorkDesc(e.target.value)}
-                InputProps={{
-                  sx: {
-                    fontFamily: "Lucida Sans",
-                    fontSize: "20px",
-                  },
-                  inputProps: { autoComplete: "off" },
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Work Location
-            </div>
-            <div className="col-8">
-              <TextField
-                className="w-100"
-                style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-                value={workLocation}
-                error={workLocation == ""}
-                onChange={(e) => setWorkLocation(e.target.value)}
-                InputProps={{
-                  sx: {
-                    fontFamily: "Lucida Sans",
-                    fontSize: "20px",
-                  },
-                  inputProps: { autoComplete: "off" },
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Officer Name
-            </div>
-            <div className="col-8">
-              <Autocomplete
-                className="w-100"
-                options={officerListForLocation.map(
-                  (officer) => officer["OFFICER_NAME"],
-                )}
-                name="receiverName"
-                value={receiverName !== "" ? receiverName : null}
-                isOptionEqualToValue={(option, value) => option === value}
-                onChange={(e, newValue) =>
-                  newValue !== null
-                    ? setReceiverName(newValue)
-                    : setReceiverName("")
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={receiverName == ""}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: {
-                        fontFamily: "Lucida Sans",
-                        fontSize: 20,
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Clearance From
-            </div>
-            <div className="col-8">
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoItem>
-                  <TimePicker
-                    defaultValue={dayjs()}
-                    type="time"
-                    name="clr-start-time"
-                    value={clrStart}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        sx: {
-                          "& .MuiInputBase-input": {
-                            fontSize: "20px",
-                            fontFamily: "Lucida Sans",
-                            color: "black",
-                          },
-                        },
-                      },
-                    }}
-                    onChange={(newValue) => {
-                      if (newValue) {
-                        setClrStart(newValue.format("HH:mm"));
-                      }
-                    }}
-                  />
-                </DemoItem>
-              </LocalizationProvider>
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Clearance Till
-            </div>
-            <div className="col-8">
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoItem>
-                  <TimePicker
-                    defaultValue={dayjs()}
-                    type="time"
-                    name="clr-end-time"
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        sx: {
-                          "& .MuiInputBase-input": {
-                            fontSize: "20px",
-                            fontFamily: "Lucida Sans",
-                            color: "black",
-                          },
-                        },
-                      },
-                    }}
-                    value={clrEnd}
-                    onChange={(newValue) => {
-                      if (newValue) {
-                        setClrEnd(newValue.format("HH:mm"));
-                      }
-                    }}
-                  />
-                </DemoItem>
-              </LocalizationProvider>
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Contractor Name
-            </div>
-            <div className="col-8">
-              <TextField
-                className="w-100"
-                style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-                value={contractorName}
-                error={contractorName == ""}
-                onChange={(e) => setContractorName(e.target.value)}
-                InputProps={{
-                  sx: {
-                    fontFamily: "Lucida Sans",
-                    fontSize: "20px",
-                  },
-                  inputProps: { autoComplete: "off" },
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Contractor Supervisor
-            </div>
-            <div className="col-8">
-              <TextField
-                className="w-100"
-                style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-                value={supervisorName}
-                error={supervisorName == ""}
-                onChange={(e) => setSupervisorName(e.target.value)}
-                InputProps={{
-                  sx: {
-                    fontFamily: "Lucida Sans",
-                    fontSize: "20px",
-                  },
-                  inputProps: { autoComplete: "off" },
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="row w-100 mt-2 mb-4">
-            <div
-              className="col-4 border-bottom"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Lucida Sans",
-                color: "black",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              Division
-            </div>
-            <div className="col-8">
-              <Autocomplete
-                className="w-100"
-                options={["Marketing", "Pipeline"]}
-                name="division"
-                value={division !== "" ? division : null}
-                isOptionEqualToValue={(option, value) => option === value}
-                onChange={(e, newValue) =>
-                  newValue !== null ? setDivision(newValue) : setDivision("")
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={division == ""}
-                    InputProps={{
-                      ...params.InputProps,
-                      style: {
-                        fontFamily: "Lucida Sans",
-                        fontSize: 20,
-                      },
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          <Button
+          Fill All Fields
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
+        {saveLoader ? (
+          <CircularProgress
             color="success"
-            variant="contained"
-            style={{
-              margin: "6px 5px 0px 5px",
-              height: "48px",
-              width: "200px",
-              fontSize: "20px",
-              fontWeight: "normal",
-              fontFamily: "Lucida Sans",
+            sx={{
+              position: "fixed",
+              zIndex: 2000,
+              transform: "translate(-50%, -50%)",
+              left: "45%",
+              top: "40%",
+              zoom: 3,
             }}
-            onClick={(e) => {
-              handlePostData(e);
-            }}
-          >
-            SUBMIT
-          </Button>
-        </Modal.Body>
-        <Modal.Footer className="d-flex justify-content-center">
-          <Button
-            variant="contained"
+          />
+        ) : null}
+        <div className="row w-100">
+          <div
+            className="col-4 text-right border-bottom"
             style={{
-              width: 150,
               fontSize: "18px",
               fontFamily: "Lucida Sans",
-              fontWeight: "normal",
-            }}
-            onClick={() => {
-              handleCloseModal();
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
             }}
           >
-            <Close style={{ marginRight: "5px" }} />
-            CLOSE
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <div className="d-flex flex-column justify-content-center align-items-center h-100">
+            Permit Type
+          </div>
+          <div className="col-8">
+            <Autocomplete
+              className="w-100"
+              options={[
+                "Hot Work",
+                "Cold Work",
+                "Height + Hot Work",
+                "Height + Cold Work",
+                "Electrical Work",
+              ]}
+              name="TTNo"
+              value={permitType !== "" ? permitType : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onChange={(e, newValue) =>
+                newValue !== null ? setPermitType(newValue) : setPermitType("")
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={permitType == ""}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      fontSize: 20,
+                    },
+                  }}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Work Description
+          </div>
+          <div className="col-8">
+            <TextField
+              className="w-100"
+              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
+              value={workDesc}
+              error={workDesc == ""}
+              onChange={(e) => setWorkDesc(e.target.value)}
+              InputProps={{
+                sx: {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "20px",
+                },
+                inputProps: { autoComplete: "off" },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Work Location
+          </div>
+          <div className="col-8">
+            <TextField
+              className="w-100"
+              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
+              value={workLocation}
+              error={workLocation == ""}
+              onChange={(e) => setWorkLocation(e.target.value)}
+              InputProps={{
+                sx: {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "20px",
+                },
+                inputProps: { autoComplete: "off" },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Officer Name
+          </div>
+          <div className="col-8">
+            <Autocomplete
+              className="w-100"
+              options={officerListForLocation.map(
+                (officer) => officer["OFFICER_NAME"],
+              )}
+              name="receiverName"
+              value={receiverName !== "" ? receiverName : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onChange={(e, newValue) =>
+                newValue !== null
+                  ? setReceiverName(newValue)
+                  : setReceiverName("")
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={receiverName == ""}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      fontSize: 20,
+                    },
+                  }}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Clearance From
+          </div>
+          <div className="col-8">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoItem>
+                <TimePicker
+                  type="time"
+                  name="clr-start-time"
+                  value={
+                    clrStart != ""
+                      ? dayjs()
+                          .hour(clrStart.split(":")[0])
+                          .minute(clrStart.split(":")[1])
+                      : dayjs("")
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      sx: {
+                        "& .MuiInputBase-input": {
+                          fontSize: "20px",
+                          fontFamily: "Lucida Sans",
+                          color: "black",
+                        },
+                      },
+                    },
+                  }}
+                  onChange={(newValue) => {
+                    if (newValue) {
+                      setClrStart(newValue.format("HH:mm"));
+                    }
+                  }}
+                />
+              </DemoItem>
+            </LocalizationProvider>
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Clearance Till
+          </div>
+          <div className="col-8">
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoItem>
+                <TimePicker
+                  type="time"
+                  name="clr-end-time"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      sx: {
+                        "& .MuiInputBase-input": {
+                          fontSize: "20px",
+                          fontFamily: "Lucida Sans",
+                          color: "black",
+                        },
+                      },
+                    },
+                  }}
+                  value={
+                    clrEnd != ""
+                      ? dayjs()
+                          .hour(clrEnd.split(":")[0])
+                          .minute(clrEnd.split(":")[1])
+                      : dayjs("")
+                  }
+                  onChange={(newValue) => {
+                    if (newValue) {
+                      setClrEnd(newValue.format("HH:mm"));
+                    }
+                  }}
+                />
+              </DemoItem>
+            </LocalizationProvider>
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Contractor Name
+          </div>
+          <div className="col-8">
+            <TextField
+              className="w-100"
+              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
+              value={contractorName}
+              error={contractorName == ""}
+              onChange={(e) => setContractorName(e.target.value)}
+              InputProps={{
+                sx: {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "20px",
+                },
+                inputProps: { autoComplete: "off" },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Contractor Supervisor
+          </div>
+          <div className="col-8">
+            <TextField
+              className="w-100"
+              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
+              value={supervisorName}
+              error={supervisorName == ""}
+              onChange={(e) => setSupervisorName(e.target.value)}
+              InputProps={{
+                sx: {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "20px",
+                },
+                inputProps: { autoComplete: "off" },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2 mb-4">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Division
+          </div>
+          <div className="col-8">
+            <Autocomplete
+              className="w-100"
+              options={["Marketing", "Pipeline"]}
+              name="division"
+              value={division !== "" ? division : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onChange={(e, newValue) =>
+                newValue !== null ? setDivision(newValue) : setDivision("")
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={division == ""}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      fontSize: 20,
+                    },
+                  }}
+                />
+              )}
+            />
+          </div>
+        </div>
+
+        <Button
+          color="success"
+          variant="contained"
+          style={{
+            margin: "6px 5px 0px 5px",
+            height: "48px",
+            width: "200px",
+            fontSize: "20px",
+            fontWeight: "normal",
+            fontFamily: "Lucida Sans",
+          }}
+          onClick={(e) => {
+            handlePostData(e);
+          }}
+        >
+          SUBMIT
+        </Button>
+      </Modal.Body>
+      <Modal.Footer className="d-flex justify-content-center">
         <Button
           variant="contained"
-          size="large"
-          sx={{ margin: 5, width: 200 }}
-          onClick={() => setShow(true)}
+          style={{
+            width: 150,
+            fontSize: "18px",
+            fontFamily: "Lucida Sans",
+            fontWeight: "normal",
+          }}
+          onClick={() => {
+            handleCloseModal();
+          }}
         >
-          Open Form
+          <Close style={{ marginRight: "5px" }} />
+          CLOSE
         </Button>
-        <Button
-          variant="contained"
-          size="large"
-          color="secondary"
-          sx={{ width: 200 }}
-          onClick={() => (
-            <>
-              {dispatch(NavBarComponent("permitDisplay"))}
-              {dispatch(SetSelectedApplication("Permit Display Table View"))}
-            </>
-          )}
-        >
-          Go To Display
-        </Button>
-      </div>
-    </>
+      </Modal.Footer>
+    </Modal>
   );
 }

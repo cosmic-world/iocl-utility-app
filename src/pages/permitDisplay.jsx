@@ -4,6 +4,8 @@ import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import { Button } from "@mui/material";
+import { Sync } from "@mui/icons-material";
+import FormControlPage from "./formControlPage";
 
 export default function PermitDisplay() {
   const dispatch = useDispatch();
@@ -17,7 +19,7 @@ export default function PermitDisplay() {
   const $thead_height = $thead ? $thead.clientHeight : 50;
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45) - 1;
   const step = tbody_rows_count;
-
+  const [show, setShow] = useState(false);
   const [clock, setClock] = React.useState(0);
 
   useEffect(() => {
@@ -51,6 +53,8 @@ export default function PermitDisplay() {
         backgroundColor: "#dee4ea",
       }}
     >
+      <FormControlPage show={show} setShow={setShow} />
+
       <div
         className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
@@ -69,11 +73,24 @@ export default function PermitDisplay() {
               navBarComponent === "formControl" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("Permit Request Form"));
-            dispatch(NavBarComponent("formControl"));
+            setShow(true);
           }}
         >
           Permit Request Form
+        </Button>
+        <Button
+          variant={"contained"}
+          color="secondary"
+          startIcon={<Sync />}
+          sx={{
+            my: 1,
+            mx: 5,
+          }}
+          onClick={() => {
+            // handleExtractDataFromMail();
+          }}
+        >
+          Extract Data from Mail
         </Button>
         <Button
           variant={
@@ -87,9 +104,7 @@ export default function PermitDisplay() {
               navBarComponent === "permitDisplay" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(
-              SetSelectedApplication("Permit Display Table View"),
-            );
+            dispatch(SetSelectedApplication("Permit Display Table View"));
             dispatch(NavBarComponent("permitDisplay"));
           }}
         >

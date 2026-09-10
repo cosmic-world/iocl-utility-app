@@ -13,6 +13,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import { Sync } from "@mui/icons-material";
+import FormControlPage from "./formControlPage";
 
 export default function PermitDisplay({ state }) {
   const dispatch = useDispatch();
@@ -32,7 +34,7 @@ export default function PermitDisplay({ state }) {
   const $thead_height = $thead ? $thead.clientHeight : 50;
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 50);
   const step = tbody_rows_count;
-
+  const [show, setShow] = useState(false);
   const [clock, setClock] = React.useState(0);
 
   useEffect(() => {
@@ -233,99 +235,114 @@ export default function PermitDisplay({ state }) {
           "d-flex flex-column h-100 w-100 justify-content-start align-items-center"
         }
       >
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          border: "1px solid black",
-          width: "100%",
-          borderTop: "none",
-        }}
-      >
-        <Button
-          variant={navBarComponent === "formControl" ? "contained" : "outlined"}
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "formControl" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Permit Request Form"));
-            dispatch(NavBarComponent("formControl"));
+        <FormControlPage show={show} setShow={setShow} />
+
+        <div
+          className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+          style={{
+            border: "1px solid black",
+            width: "100%",
+            borderTop: "none",
           }}
         >
-          Permit Request Form
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "permitDisplay" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "permitDisplay" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(
-              SetSelectedApplication("Permit Display Table View"),
-            );
-            dispatch(NavBarComponent("permitDisplay"));
-          }}
-        >
-          Permit Table View
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "layoutDisplay" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "layoutDisplay" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Permit Display Layout View"));
-            dispatch(NavBarComponent("layoutDisplay"));
-          }}
-          disabled={window.innerWidth < 768}
-        >
-          Permit Layout View (Desktop Only)
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "modifyRecords" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "modifyRecords" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Modify Permit Records"));
-            dispatch(NavBarComponent("modifyRecords"));
-          }}
-          disabled={userType == "user"}
-        >
-          Modify Records (Admin Only)
-        </Button>
-      </div>
+          <Button
+            variant={
+              navBarComponent === "formControl" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "formControl" ? "null" : "white",
+            }}
+            onClick={() => {
+              setShow(true);
+            }}
+          >
+            Permit Request Form
+          </Button>
+          <Button
+            variant={"contained"}
+            color="secondary"
+            startIcon={<Sync />}
+            sx={{
+              my: 1,
+              mx: 5,
+            }}
+            onClick={() => {
+              // handleExtractDataFromMail();
+            }}
+          >
+            Extract Data from Mail
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "permitDisplay" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "permitDisplay" ? "null" : "white",
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Permit Display Table View"));
+              dispatch(NavBarComponent("permitDisplay"));
+            }}
+          >
+            Permit Table View
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "layoutDisplay" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "layoutDisplay" ? "null" : "white",
+              "&:disabled": {
+                cursor: "not-allowed",
+                backgroundColor: "white",
+                pointerEvents: "all !important",
+              },
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Permit Display Layout View"));
+              dispatch(NavBarComponent("layoutDisplay"));
+            }}
+            disabled={window.innerWidth < 768}
+          >
+            Permit Layout View (Desktop Only)
+          </Button>
+          <Button
+            variant={
+              navBarComponent === "modifyRecords" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "modifyRecords" ? "null" : "white",
+              "&:disabled": {
+                cursor: "not-allowed",
+                backgroundColor: "white",
+                pointerEvents: "all !important",
+              },
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Modify Permit Records"));
+              dispatch(NavBarComponent("modifyRecords"));
+            }}
+            disabled={userType == "user"}
+          >
+            Modify Records (Admin Only)
+          </Button>
+        </div>
 
         <div
           className={

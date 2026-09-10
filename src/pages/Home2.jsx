@@ -108,11 +108,14 @@ export default function contacts() {
       dispatch(SetSelectedApplication("TT Crew Temporary Pass"));
       dispatch(NavBarComponent("tempPassDashboard"));
     } else if (selectedCard === "Permit Dashboard") {
-      dispatch(SetSelectedApplication("Permit Dashboard"));
-      dispatch(NavBarComponent("formControl"));
+      dispatch(SetSelectedApplication("Permit Display Table View"));
+      dispatch(NavBarComponent("permitDisplay"));
     } else if (selectedCard === "Labour Entry") {
       dispatch(SetSelectedApplication("Labour Entry"));
       dispatch(NavBarComponent("labourPassDashboard"));
+    } else if (selectedCard === "TT IN-OUT") {
+      dispatch(SetSelectedApplication("TT IN-OUT"));
+      dispatch(NavBarComponent("ttInOutDashboard"));
     }
     setModalShow(false);
   };
@@ -205,6 +208,88 @@ export default function contacts() {
               <Typography className="app-name">
                 <GridView color="primary" sx={{ zoom: 3, mb: 1 }} />
                 <span style={{ opacity: 0.7 }}>Labour Entry</span>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    color: "gray",
+                    opacity: 0.7,
+                  }}
+                >
+                  Under Development
+                </span>
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
+
+        <Card
+          style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
+        >
+          <CardActionArea
+            disabled
+            onClick={() => {
+              setSelectedCard("Material Mangement");
+              setModalShow(true);
+            }}
+            data-active={selectedApplication === "Material Mangement"}
+            sx={{
+              height: "100%",
+              backgroundColor: "white",
+              transition: "background-color 0.3s",
+              "&.MuiButtonBase-root, &.MuiCardActionArea-root": {
+                backgroundColor:
+                  selectedApplication === "Material Mangement"
+                    ? "action.selected"
+                    : "white !important",
+              },
+            }}
+          >
+            <CardContent className="w-100 h-100 text-center">
+              <Typography className="app-name">
+                <GridView color="primary" sx={{ zoom: 3, mb: 1 }} />
+                <span style={{ opacity: 0.7 }}>Material Mangement</span>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    color: "gray",
+                    opacity: 0.7,
+                  }}
+                >
+                  Under Development
+                </span>
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
+
+        <Card
+          style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
+        >
+          <CardActionArea
+            disabled
+            onClick={() => {
+              setSelectedCard("TT IN-OUT");
+              setModalShow(true);
+            }}
+            data-active={selectedApplication === "TT IN-OUT"}
+            sx={{
+              height: "100%",
+              backgroundColor: "white",
+              transition: "background-color 0.3s",
+              "&.MuiButtonBase-root, &.MuiCardActionArea-root": {
+                backgroundColor:
+                  selectedApplication === "TT IN-OUT"
+                    ? "action.selected"
+                    : "white !important",
+              },
+            }}
+          >
+            <CardContent className="w-100 h-100 text-center">
+              <Typography className="app-name">
+                <GridView color="primary" sx={{ zoom: 3, mb: 1 }} />
+                <span style={{ opacity: 0.7 }}>TT IN-OUT</span>
                 <span
                   style={{
                     display: "block",

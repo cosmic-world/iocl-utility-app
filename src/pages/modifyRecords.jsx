@@ -11,6 +11,7 @@ import {
   GridToolbarExport,
   GridToolbarQuickFilter,
 } from "@mui/x-data-grid";
+import { Sync } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CircularProgress } from "@mui/material";
@@ -21,6 +22,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import UserConfirmationModalWithoutPin from "./UserConfirmationModalWithoutPin";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import FormControlPage from "./formControlPage";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -61,6 +63,7 @@ const ModifyRecords = () => {
   const [pageSize, setPageSize] = React.useState(100);
   const [selectedId, setSelectedId] = useState("");
   const [saveLoader, setSaveLoader] = useState(false);
+  const [show, setShow] = useState(false);
   const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
@@ -173,7 +176,7 @@ const ModifyRecords = () => {
     }
   };
 
-  const [show, setShow] = useState(false);
+  const [userFormshow, setUserFormShow] = useState(false);
 
   const handleCancelClick = (id) => () => {
     setRowModesModel({
@@ -410,10 +413,13 @@ const ModifyRecords = () => {
     <>
       <UserConfirmationModalWithoutPin
         handleAction={handleDeleteClick}
-        show={show}
-        setShow={setShow}
+        show={userFormshow}
+        setShow={setUserFormShow}
         selectedId={selectedId}
       />
+
+      <FormControlPage show={show} setShow={setShow} />
+
       <div
         className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
         style={{
@@ -432,11 +438,24 @@ const ModifyRecords = () => {
               navBarComponent === "formControl" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("Permit Request Form"));
-            dispatch(NavBarComponent("formControl"));
+            setShow(true);
           }}
         >
           Permit Request Form
+        </Button>
+        <Button
+          variant={"contained"}
+          color="secondary"
+          startIcon={<Sync />}
+          sx={{
+            my: 1,
+            mx: 5,
+          }}
+          onClick={() => {
+            // handleExtractDataFromMail();
+          }}
+        >
+          Extract Data from Mail
         </Button>
         <Button
           variant={
@@ -450,9 +469,7 @@ const ModifyRecords = () => {
               navBarComponent === "permitDisplay" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(
-              SetSelectedApplication("Permit Display Table View"),
-            );
+            dispatch(SetSelectedApplication("Permit Display Table View"));
             dispatch(NavBarComponent("permitDisplay"));
           }}
         >
@@ -507,7 +524,7 @@ const ModifyRecords = () => {
           Modify Records (Admin Only)
         </Button>
       </div>
-      
+
       {saveLoader ? (
         <CircularProgress
           color="success"
