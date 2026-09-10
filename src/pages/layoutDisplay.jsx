@@ -233,103 +233,99 @@ export default function PermitDisplay({ state }) {
           "d-flex flex-column h-100 w-100 justify-content-start align-items-center"
         }
       >
-        <div
-          className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-          style={{
-            border: "1px solid black",
-            width: "100%",
-            borderTop: "none",
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+          borderTop: "none",
+        }}
+      >
+        <Button
+          variant={navBarComponent === "formControl" ? "contained" : "outlined"}
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "formControl" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Permit Request Form"));
+            dispatch(NavBarComponent("formControl"));
           }}
         >
-          <Button
-            variant={
-              navBarComponent === "formControl" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "formControl" ? "null" : "white",
-            }}
-            onClick={() => {
-              dispatch(
-                SetSelectedApplication("TT Crew Temporary Pass Request"),
-              );
-              dispatch(NavBarComponent("formControl"));
-            }}
-          >
-            Permit Request Form
-          </Button>
-          <Button
-            variant={
-              navBarComponent === "permitDisplay" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "permitDisplay" ? "null" : "white",
-            }}
-            onClick={() => {
-              dispatch(
-                SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
-              );
-              dispatch(NavBarComponent("permitDisplay"));
-            }}
-          >
-            Permit Table View
-          </Button>
-          <Button
-            variant={
-              navBarComponent === "layoutDisplay" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "layoutDisplay" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("TT Crew Master Data"));
-              dispatch(NavBarComponent("layoutDisplay"));
-            }}
-            disabled={window.innerWidth < 768}
-          >
-            Permit Layout View (Desktop Only)
-          </Button>
-          <Button
-            variant={
-              navBarComponent === "modifyRecords" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "modifyRecords" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("Modify Records"));
-              dispatch(NavBarComponent("modifyRecords"));
-            }}
-            disabled={userType == "user"}
-          >
-            Modify Records (Admin Only)
-          </Button>
-        </div>
+          Permit Request Form
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "permitDisplay" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "permitDisplay" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(
+              SetSelectedApplication("Permit Display Table View"),
+            );
+            dispatch(NavBarComponent("permitDisplay"));
+          }}
+        >
+          Permit Table View
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "layoutDisplay" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "layoutDisplay" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Permit Display Layout View"));
+            dispatch(NavBarComponent("layoutDisplay"));
+          }}
+          disabled={window.innerWidth < 768}
+        >
+          Permit Layout View (Desktop Only)
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "modifyRecords" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "modifyRecords" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Modify Permit Records"));
+            dispatch(NavBarComponent("modifyRecords"));
+          }}
+          disabled={userType == "user"}
+        >
+          Modify Records (Admin Only)
+        </Button>
+      </div>
 
         <div
           className={

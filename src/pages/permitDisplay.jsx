@@ -69,7 +69,7 @@ export default function PermitDisplay() {
               navBarComponent === "formControl" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
+            dispatch(SetSelectedApplication("Permit Request Form"));
             dispatch(NavBarComponent("formControl"));
           }}
         >
@@ -88,7 +88,7 @@ export default function PermitDisplay() {
           }}
           onClick={() => {
             dispatch(
-              SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
+              SetSelectedApplication("Permit Display Table View"),
             );
             dispatch(NavBarComponent("permitDisplay"));
           }}
@@ -112,7 +112,7 @@ export default function PermitDisplay() {
             },
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Master Data"));
+            dispatch(SetSelectedApplication("Permit Display Layout View"));
             dispatch(NavBarComponent("layoutDisplay"));
           }}
           disabled={window.innerWidth < 768}
@@ -136,7 +136,7 @@ export default function PermitDisplay() {
             },
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("Modify Records"));
+            dispatch(SetSelectedApplication("Modify Permit Records"));
             dispatch(NavBarComponent("modifyRecords"));
           }}
           disabled={userType == "user"}

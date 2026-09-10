@@ -563,7 +563,7 @@ export default function formControlPage() {
           onClick={() => (
             <>
               {dispatch(NavBarComponent("permitDisplay"))}
-              {dispatch(SetSelectedApplication("Permit Table View"))}
+              {dispatch(SetSelectedApplication("Permit Display Table View"))}
             </>
           )}
         >
