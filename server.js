@@ -385,6 +385,11 @@ const sanitizeValue = (val) => {
   return cleaned;
 };
 
+const normalizeOfficerEmpId = (value, role) => {
+  const empId = sanitizeValue(value)?.toLowerCase();
+  return empId && role !== 'SECURITY' ? empId.padStart(8, '0') : empId;
+};
+
 
 
 // Using a dedicated multer uploadExcel middleware for the incoming Excel file
@@ -807,26 +812,28 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
     for (const row of sheetData) {
         try{
             const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const officerName     = sanitizeValue(row['OFFICER NAME']).toLocaleUpperCase();
-                const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
+                const name     = sanitizeValue(row['NAME']).toLocaleUpperCase();
                 const mobile         = sanitizeValue(row['MOBILE NO']);
-                const officerRole = String(sanitizeValue(row['ROLE']) || 'ADMIN').toUpperCase();
+                const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
+                const role = String(sanitizeValue(row['ROLE'])).toUpperCase();
 
-                if (!['ADMIN', 'SUPER_ADMIN', 'SECURITY'].includes(officerRole)) {
+                if (!['ADMIN', 'SUPER_ADMIN', 'SECURITY'].includes(role)) {
                   throw new Error(
-                    `Invalid ROLE for officer ${officerName || '(unknown)'}: ${officerRole}`,
+                    `Invalid ROLE for officer ${name || '(unknown)'}: ${role}`,
                   );
                 }
+                const empID = normalizeOfficerEmpId(row['EMPLOYEE ID'], role);
 
                 await pool.request()
                 .input('locationCode', sql.VarChar, locationCode)
-                .input('officerName', sql.VarChar, officerName)
-                .input('mailID', sql.VarChar, mailID)
+                .input('name', sql.VarChar, name)
+                .input('empID', sql.VarChar, empID)
                 .input('mobile', sql.VarChar, mobile)
-                .input('role', sql.VarChar, officerRole)
+                .input('mailID', sql.VarChar, mailID)
+                .input('role', sql.VarChar, role)
                 .query(`
-                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO, [ROLE])
-                VALUES (@locationCode, @officerName, @mailID, @mobile, @role)
+                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE])
+                VALUES (@locationCode, @name, @empID, @mobile, @mailID, @role)
                 `)
     }
     catch (err) {
@@ -873,19 +880,20 @@ app.post("/api/upload-officer-single",
       };
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('officerName', sql.NVarChar, bodyData['officerName'].toUpperCase() || null);
-      request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
-      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
-      const officerRole = String(bodyData['role'] || "ADMIN").toUpperCase();
-      if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(officerRole)) {
+      const role = String(bodyData['role'] || "ADMIN").toUpperCase();
+      if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(role)) {
         return res.status(400).json({ error: "Invalid officer role." });
       }
-      request.input('role', sql.NVarChar, officerRole);
+      request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
+      request.input('name', sql.NVarChar, bodyData['name'].toUpperCase() || null);
+      request.input('empID', sql.NVarChar, normalizeOfficerEmpId(bodyData['empID'], role));
+      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
+      request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
+      request.input('role', sql.NVarChar, role);
       
       const insertSql = `INSERT INTO dbo.OfficerCredentials (
-        LOCATION_CODE, OFFICER_NAME, MAIL_ID, MOBILE_NO, [ROLE]) 
-        VALUES (@locationCode, @officerName, @mailID, @mobileNo, @role)`;
+        LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE]) 
+        VALUES (@locationCode, @name, @empID, @mobileNo, @mailID, @role)`;
       await request.query(insertSql)
       
       await sql.close();
@@ -937,6 +945,41 @@ app.delete("/api/officer-master-data/:id", async (req, res) => {
     return res.status(200).json({ success: true, id: officerId });
   } catch (error) {
     console.error("Officer delete error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch("/api/officer-master-data/:id/role", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super admin can change officer roles." });
+    }
+
+    const officerId = Number(req.params.id);
+    const role = String(req.body?.role || "").trim().toUpperCase();
+    if (!Number.isInteger(officerId) || officerId <= 0) {
+      return res.status(400).json({ error: "Invalid officer id." });
+    }
+    if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(role)) {
+      return res.status(400).json({ error: "Invalid officer role." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, officerId);
+    request.input("role", sql.NVarChar, role);
+    const result = await request.query(
+      "UPDATE dbo.OfficerCredentials SET [ROLE] = @role WHERE ID = @id"
+    );
+    await sql.close();
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Officer record not found." });
+    }
+
+    return res.status(200).json({ success: true, id: officerId, role });
+  } catch (error) {
+    console.error("Officer role update error:", error);
     res.status(500).json({ error: error.message });
   }
 });

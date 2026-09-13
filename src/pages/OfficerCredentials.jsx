@@ -18,7 +18,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Visibility, Download, Delete } from "@mui/icons-material";
+import { Visibility, Download, Delete, SwapHoriz } from "@mui/icons-material";
 import {
   SetOfficerMasterList,
   NavBarComponent,
@@ -41,9 +41,11 @@ export default function MasterData() {
   const [file, setFile] = useState(null);
   const [locationCode, setLocationCode] = useState("");
   const [mailID, setMailID] = useState("");
-  const [officerName, setOfficerName] = useState("");
+  const [name, setName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
+  const [empID, setEmpID] = useState("");
   const [role, setRole] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState({});
   const [searchLocationCode, setSearchLocationCode] = useState(
     selectedLocationCode || "",
   );
@@ -96,13 +98,18 @@ export default function MasterData() {
       return;
     }
 
-    if (!officerName) {
+    if (!name) {
       alert("Please enter Officer Name.");
       return;
     }
 
-    if (!mailID) {
-      alert("Please enter Mail ID.");
+        if (!empID && role!='SECURITY') {
+      alert("Please enter Emp ID");
+      return;
+    }
+
+    if (!/^[0-9]{8}$/.test(empID) && role!='SECURITY') {
+      alert("Emp ID should be exactly 8 digits.");
       return;
     }
 
@@ -116,11 +123,16 @@ export default function MasterData() {
       return;
     }
 
+        if (!mailID) {
+      alert("Please enter Mail ID.");
+      return;
+    }
+
     setSaveLoader(true);
     setSubmitting(true);
 
     try {
-      const payload = { locationCode, officerName, mailID, mobileNo, role };
+      const payload = { locationCode, name, empID, mobileNo, mailID, role };
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-officer-single"), {
         method: "POST",
@@ -136,7 +148,8 @@ export default function MasterData() {
         // Reset form
         setLocationCode("");
         setMailID("");
-        setOfficerName("");
+        setEmpID("")
+        setName("");
         setMobileNo("");
         setRole("");
         handleSync(); // Refresh officer list after submission
@@ -217,6 +230,50 @@ export default function MasterData() {
       );
       alert("Officer record deleted successfully.");
       handleSync(); // Refresh officer list after deletion
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
+  const handleChangeRole = async (officer, selectedRole) => {
+    if (!isSuperAdmin) {
+      alert("Only a super admin can change officer roles.");
+      return;
+    }
+
+    if (!selectedRole || selectedRole === officer.ROLE) return;
+    if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(selectedRole)) {
+      alert("Role must be ADMIN, SUPER_ADMIN, or SECURITY.");
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/officer-master-data/${officer.ID}/role`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ role: selectedRole }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to change officer role.");
+      }
+
+      await handleSync();
+            setSelectedRoles((currentRoles) => {
+              const nextRoles = { ...currentRoles };
+              delete nextRoles[officer.ID];
+              return nextRoles;
+            });
+      alert("Officer role changed successfully.");
     } catch (error) {
       alert("Error: " + error.message);
     } finally {
@@ -314,6 +371,7 @@ export default function MasterData() {
               variant="outlined"
               style={{ backgroundColor: "white" }}
               value={locationCode}
+              type="number"
               onChange={(e) =>
                 setLocationCode(e.target.value?.toUpperCase() || "")
               }
@@ -331,15 +389,37 @@ export default function MasterData() {
           </div>
 
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Officer Name</Typography>
+            <Typography>Name</Typography>
             <TextField
               fullWidth
               variant="outlined"
-              value={officerName}
+              value={name}
               style={{ backgroundColor: "white" }}
               onChange={(e) =>
-                setOfficerName(e.target.value?.toUpperCase() || "")
+                setName(e.target.value?.toUpperCase() || "")
               }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  paddingTop: "10px !important", // Reducer top whitespace
+                  paddingBottom: "10px !important", // Keeps it centered vertically
+                  textTransform: "uppercase",
+                },
+              }}
+            />
+          </div>
+
+          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+            <Typography>Emp ID</Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              type="number"
+              value={empID}
+              style={{ backgroundColor: "white" }}
+              onChange={(e) => setEmpID(e.target.value?.toUpperCase() || "")}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -416,8 +496,10 @@ export default function MasterData() {
                 },
               }}
             >
+              <option value="" disabled>
+                Select Role
+              </option>
               <option value="ADMIN">ADMIN</option>
-              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
               <option value="SECURITY">SECURITY</option>
             </TextField>
           </div>
@@ -438,7 +520,7 @@ export default function MasterData() {
       </div>
 
       <Typography variant="h6" sx={{ mt: 2 }}>
-        Existing Officers
+        Existing Users
       </Typography>
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
         <TextField
@@ -485,8 +567,9 @@ export default function MasterData() {
           <tr>
             <th>LOCATION CODE</th>
             <th>NAME</th>
-            <th>MAIL ID</th>
+            <th>EMP ID</th>
             <th>MOBILE NO</th>
+            <th>MAIL ID</th>
             <th>ROLE</th>
             <th>ACTION</th>
           </tr>
@@ -496,23 +579,65 @@ export default function MasterData() {
             <tr key={officer.ID}>
               <td>{officer.LOCATION_CODE}</td>
               <td>{officer.OFFICER_NAME}</td>
-              <td>{officer.MAIL_ID}</td>
+              <td>{officer.Emp_ID}</td>
               <td>{officer.MOBILE_NO}</td>
-              <td>{officer.ROLE}</td>
+              <td>{officer.MAIL_ID}</td>
+              <td>
+                <TextField
+                  select
+                  size="small"
+                  value={selectedRoles[officer.ID] || officer.ROLE}
+                  onChange={(event) =>
+                    setSelectedRoles((currentRoles) => ({
+                      ...currentRoles,
+                      [officer.ID]: event.target.value,
+                    }))
+                  }
+                  disabled={saveLoader || !isSuperAdmin}
+                  fullWidth
+                  SelectProps={{ native: true }}
+                >
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                  <option value="SECURITY">SECURITY</option>
+                </TextField>
+              </td>
               <td style={{ textAlign: "center" }}>
                 <span
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    width: "100%",
+                  }}
                   title={
                     isSuperAdmin
-                      ? "Delete officer"
-                      : "Only a super admin can delete officers"
+                      ? null
+                      : "Only a super admin can perform these actions"
                   }
                 >
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    startIcon={<SwapHoriz />}
+                    onClick={() =>
+                      handleChangeRole(officer, selectedRoles[officer.ID])
+                    }
+                    disabled={
+                      saveLoader ||
+                      !isSuperAdmin ||
+                      !selectedRoles[officer.ID]
+                    }
+                    sx={{ flex: 1 }}
+                  >
+                    Change Role
+                  </Button>
                   <Button
                     color="error"
                     variant="outlined"
                     startIcon={<Delete />}
                     onClick={() => handleDeleteOfficer(officer.ID)}
                     disabled={saveLoader || !isSuperAdmin}
+                    sx={{ flex: 1 }}
                   >
                     Delete
                   </Button>
