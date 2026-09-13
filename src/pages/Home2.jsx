@@ -114,7 +114,7 @@ export default function contacts() {
       dispatch(SetSelectedApplication("Labour Entry"));
       dispatch(NavBarComponent("labourPassDashboard"));
     } else if (selectedCard === "TT IN-OUT") {
-      dispatch(SetSelectedApplication("TT IN-OUT"));
+      dispatch(SetSelectedApplication("TT In-Out"));
       dispatch(NavBarComponent("ttInOutDashboard"));
     }
     setModalShow(false);

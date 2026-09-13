@@ -55,7 +55,7 @@ export default function contacts() {
     }
     dispatch(SetUserType(item));
     dispatch(NavBarComponent("home2"));
-    dispatch(SetSelectedApplication("APPLICATION SELECTION"));
+    dispatch(SetSelectedApplication("Application Selection"));
   };
 
   const handleSendOtp = async () => {
@@ -140,7 +140,7 @@ export default function contacts() {
 
       dispatch(SetUserType(data.role));
       dispatch(NavBarComponent("home2"));
-      dispatch(SetSelectedApplication("APPLICATION SELECTION"));
+      dispatch(SetSelectedApplication("Application Selection"));
       setShowAdminForm(false);
       setMessage({ type: "success", text: data.message || "Admin verified." });
     } catch (error) {

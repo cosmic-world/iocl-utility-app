@@ -28,7 +28,7 @@ function App() {
   useEffect(() => {
     if (progress === 100) {
       dispatch(NavBarComponent("home"));
-      dispatch(SetSelectedApplication("USER TYPE"));
+      dispatch(SetSelectedApplication("User Role"));
     }
   }, [progress]);
 

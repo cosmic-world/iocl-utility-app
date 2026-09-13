@@ -57,7 +57,7 @@ export default function Header({}) {
               selected={navBarComponent == "home"}
               onClick={() => {
                 dispatch(NavBarComponent("home"));
-                dispatch(SetSelectedApplication("USER TYPE"));
+                dispatch(SetSelectedApplication("User Role"));
                 setAnchorE1(null);
               }}
               className="d-flex justify-content-center"
@@ -69,7 +69,7 @@ export default function Header({}) {
               selected={navBarComponent == "home2"}
               onClick={() => {
                 dispatch(NavBarComponent("home2"));
-                dispatch(SetSelectedApplication("APPLICATION SELECTION"));
+                dispatch(SetSelectedApplication("Application Selection"));
                 setAnchorE1(null);
               }}
               disabled={userType == "" ? true : false}
@@ -84,7 +84,7 @@ export default function Header({}) {
               disabled={userType == "user"}
               onClick={() => {
                 dispatch(NavBarComponent("officer_cred"));
-                dispatch(SetSelectedApplication("ADMIN CONTROL"));
+                dispatch(SetSelectedApplication("Admin Control"));
                 setAnchorE1(null);
               }}
             >
@@ -96,7 +96,7 @@ export default function Header({}) {
               className="d-flex justify-content-center"
               onClick={() => {
                 dispatch(NavBarComponent("contacts"));
-                dispatch(SetSelectedApplication("CONTACTS"));
+                dispatch(SetSelectedApplication("Contacts"));
                 setAnchorE1(null);
               }}
             >
