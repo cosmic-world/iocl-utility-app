@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   NavBarComponent,
   SetPermitList,
-  SelectedTerminal,
+  SetFetchList,
 } from "./action/userSlice";
 
 function formatDate(date1) {
@@ -25,9 +25,13 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList } = useSelector(
-    (state) => state.myApp,
-  );
+  const { navBarComponent, selectedTerminal, PermitList, fetchList } =
+    useSelector((state) => state.myApp);
+  const permitListRef = useRef(PermitList);
+
+  useEffect(() => {
+    permitListRef.current = PermitList;
+  }, [PermitList]);
 
   useEffect(() => {
     if (navBarComponent == "") {
@@ -35,7 +39,83 @@ function App() {
     }
   }, []);
 
+  const handleReadMail = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/permits");
+      const result = await response.json();
+
+      if (!result.success || !Array.isArray(result.data)) {
+        return;
+      }
+
+      const currentPermitList = permitListRef.current;
+
+      const zlist = result.data
+        .map((item) => item["json"])
+        .filter(Boolean)
+        .filter((ele) => {
+          const clearanceTill = ele["Clearance Till"];
+          return clearanceTill > new Date().toLocaleTimeString("en-GB");
+        });
+
+      const ylist = zlist.filter((ele) => {
+        const permitNo = ele["Permit No"];
+        return currentPermitList.every(
+          (existingEle) =>
+            existingEle["Permit No"] != permitNo,
+        );
+      });
+
+      if (ylist.length > 0) {
+  const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
+
+        for (const item of ylist) {
+          try {
+            await fetch(sheet_url, {
+              method: "POST",
+              mode: "no-cors",
+              body: new URLSearchParams({
+                data: JSON.stringify({
+                  "Permit Type": item["Permit Type"],
+                  "Work Description": item["Work Description"],
+                  "Work Location": item["Work Location"],
+                  "Receiver Name": item["Receiver Name"],
+                  "Clearance From": item["Clearance From"],
+                  "Clearance Till": item["Clearance Till"],
+                  "Contractor Name": item["Contractor Name"],
+                  "Permit No": item["Permit No"],
+                  "Location Name": selectedTerminal[1],
+                }),
+              }),
+            });
+          } catch (error) {
+            console.log(
+              "error form...",
+              `${error} and also check internet connection`,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load permits:", error);
+    }
+  };
+
+  useEffect(() => {
+    let intervalId;
+    if (selectedTerminal !== "") {
+      handleReadMail();
+      intervalId = setInterval(handleReadMail, 10000);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [selectedTerminal]);
+
   const locationName = selectedTerminal[selectedTerminal.length - 1];
+
   const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
 
   useEffect(() => {
@@ -86,7 +166,6 @@ function App() {
           "Clearance From": formatTime(item["Clearance From"]),
           "Clearance Till": formatTime(item["Clearance Till"]),
         }));
-
         const filteredData = filteredData2.map((obj) =>
           Object.fromEntries(
             Object.entries(obj).filter(
@@ -100,8 +179,7 @@ function App() {
           "Hot Work ",
           "Cold Work ",
           "Electrical Work ",
-          "Height + Hot Work ",
-          "Height + Cold Work ",
+          "Height Work "
         ];
         const series = permit_labels.map((type) => {
           return permit_type_array.filter((item) => item == type.trim()).length;
@@ -135,8 +213,7 @@ function App() {
     "Hot Work ",
     "Cold Work ",
     "Electrical Work ",
-    "Height + Hot Work ",
-    "Height + Cold Work ",
+    "Height Work",
   ];
   const series = permit_labels.map((type) => {
     return permit_type_array.filter((item) => item == type.trim()).length;
@@ -152,7 +229,7 @@ function App() {
       legend: {
         show: false,
       },
-      colors: ["#e7028c", "#d9d90b", "#6ccded", "#6ccded", "#6ccded"],
+      colors: ["#e7028c", "#d9d90b", "#6ccded", "#575656"],
       fill: {
         type: "gradient",
         gradient: {
@@ -160,9 +237,8 @@ function App() {
           gradientToColors: [
             "#e7028c", // solid
             "#d9d90b", // solid
-            "#6ccded", // gradient slice 3
-            "#e7028c", // gradient slice 4
-            "#d9d90b", // solid
+            "#6ccded",
+            "#575656",
           ],
           stops: [0, 100],
         },
@@ -203,7 +279,12 @@ function App() {
       <Header />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage state={state} />} />
+          <Route
+            path="/"
+            element={
+              <LandingPage state={state} handleReadMail={handleReadMail} />
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

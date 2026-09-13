@@ -6,6 +6,9 @@ const fs = require("fs");
 const cors = require("cors");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const sql = require("mssql");
+const cron = require('node-cron');
+const imaps = require('imap-simple');
+const { simpleParser } = require('mailparser');
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -122,7 +125,6 @@ app.post("/api/admin/request-otp", async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}: ${otp}`);
     return res.status(200).json({
       success: true,
       message: "OTP sent to the registered officer email address.",
@@ -157,7 +159,6 @@ app.post("/api/admin/verify-otp", async (req, res) => {
     }
 
     delete otpStore[email];
-    console.log('storedEntry',storedEntry)
     return res.status(200).json({
       success: true,
       message: "Admin verified successfully.",
@@ -1107,7 +1108,6 @@ app.post("/api/upload-labour-pass",
       };
 
       await sql.connect(sqlConfig);
-      console.log(bodyData)
       const request = new sql.Request();
       request.input('location_code', sql.NVarChar, bodyData['location_code'] || null);
       request.input('labourName', sql.NVarChar, bodyData['labourName'] || null);
@@ -1135,12 +1135,8 @@ app.post("/api/upload-labour-pass",
         TIME_IN: bodyData['timeIn'], // Standardized string
         CREATED_AT: new Date()
         };
-        
         const officerEmailAddress = bodyData['mailID']; // Fetch from database
-        console.log(`Sending approval email to: ${officerEmailAddress}`);
-
         sendApprovalEmail(officerEmailAddress, mail_content);
-
         } catch (error) {
             console.log("error: ",error.message);
         }
@@ -1165,7 +1161,170 @@ app.post("/api/upload-labour-pass",
   }
 );
 
+let permitEmails = [];
 
+const permitImapConfig = {
+  imap: {
+    user: process.env.PERMIT_EMAIL_USER,
+    password: process.env.PERMIT_EMAIL_PASSWORD,
+    host: process.env.PERMIT_EMAIL_HOST || 'imap.gmail.com',
+    port: Number(process.env.PERMIT_EMAIL_PORT || 993),
+    tls: process.env.PERMIT_EMAIL_TLS !== 'false',
+    authTimeout: 20000,
+    tlsOptions: { rejectUnauthorized: false },
+  },
+};
+
+function getEmailSender(parsedMail) {
+  if (!parsedMail) return '';
+
+  if (parsedMail.from && parsedMail.from.text) return parsedMail.from.text;
+  if (parsedMail.from && parsedMail.from.value && parsedMail.from.value.length) {
+    return parsedMail.from.value[0].address || parsedMail.from.value[0].name || '';
+  }
+
+  return '';
+}
+
+function normalizeMailText(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\r/g, '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+\n/g, '\n')
+    .replace(/\n\s+/g, '\n')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function extractValue(pattern, text) {
+  const match = text.match(pattern);
+  return match && match[1] ? match[1].trim() : '';
+}
+
+const regex = /(\d{2}:\d{2}:\d{2}).*?(\d{2}:\d{2}:\d{2})/;
+
+function parsePermitMailContent(rawText, fallbackSubject = '') {
+  const text = normalizeMailText(rawText || fallbackSubject || '');
+  const clearanceTime = extractValue(/Clearance Timing\s*[:\-]?\s*([^\n]+)/i, text)
+  const permitNo = extractValue(/Permit Request no.\s*[:#-]?\s*([A-Za-z0-9\-/]+)/i, text)
+  const permitType = permitNo.includes('H')?"Hot Work":permitNo.includes('C')?"Cold Work":permitNo.includes('W')?"Height Work":"";
+  const permitData = {
+    Date: new Date().toLocaleDateString("en-GB").replace(",", "").replaceAll("/", "-"),
+    'Permit No': permitNo,
+    'Permit Type': permitType,
+    'Work Description': extractValue(/Job detail\s*[:\-]?\s*([^\n]+)/i, text),
+    'Work Location': extractValue(/location\s*[:\-]?\s*([^\n]+)/i, text),
+    'Receiver Name': extractValue(/Permit Requestor\s*[:\-]?\s*([^\n]+)/i, text),
+    'Clearance From': clearanceTime.match(regex)?clearanceTime.match(regex)[1]:null,
+    'Clearance Till': clearanceTime.match(regex)?clearanceTime.match(regex)[2]:null,
+    'Contractor Name': extractValue(/Vendor Name\s*[:\-]?\s*([^\n]+)/i, text),
+  };
+
+  if (!permitData.permitType && fallbackSubject) {
+    permitData.permitType = fallbackSubject;
+  }
+
+  return permitData;
+}
+
+function isPermitMail(parsedMail) {
+  const sender = getEmailSender(parsedMail).toLowerCase();
+  const subject = String(parsedMail?.subject || '').toLowerCase();
+  const bodyText = String(parsedMail?.text || parsedMail?.html || '').toLowerCase();
+
+  return (
+    sender.includes('roym1') ||
+    sender.includes('noreply') ||
+    subject.includes('permit') ||
+    bodyText.includes('permit') ||
+    bodyText.includes('clearance')
+  );
+}
+
+async function fetchTodayPermitEmails() {
+  let connection;
+
+  try {
+    if (!permitImapConfig.imap.user || !permitImapConfig.imap.password) {
+      console.warn('Permit email IMAP credentials are missing. Set PERMIT_EMAIL_USER and PERMIT_EMAIL_PASSWORD in the environment.');
+      permitEmails = [];
+      return;
+    }
+
+    connection = await imaps.connect({ imap: permitImapConfig.imap });
+    await connection.openBox('INBOX');
+
+// Filter for emails received today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const searchCriteria = [
+      ['SINCE', today]
+    ];
+    const fetchOptions = {
+      bodies: ['HEADER', 'TEXT', ''],
+      struct: true,
+    };
+
+    const messages = await connection.search(searchCriteria, fetchOptions);
+    const parsedEmails = [];
+
+    for (const item of messages || []) {
+      try {
+        const bodyPart = (item.parts || []).find((part) => part.which === '') || item.parts?.[0];
+        if (!bodyPart || !bodyPart.body) continue;
+
+        const parsed = await simpleParser(bodyPart.body);
+        if (!isPermitMail(parsed)) continue;
+
+        const permitData = parsePermitMailContent(parsed.text || parsed.html || '', parsed.subject || '');
+
+        parsedEmails.push({
+          id: item.attributes?.uid || parsed.messageId,
+          subject: parsed.subject,
+          from: getEmailSender(parsed),
+          date: parsed.date,
+          text: parsed.text,
+          html: parsed.html,
+          json: permitData,
+        });
+      } catch (innerError) {
+        console.error('Error parsing permit email item:', innerError);
+      }
+    }
+
+    permitEmails = parsedEmails;
+  } catch (error) {
+    const msg = String(error?.message || '');
+    console.error('Error fetching permit emails:', error);
+
+    permitEmails = [];
+  } finally {
+    if (connection) {
+      connection.end();
+    }
+  }
+}
+
+cron.schedule('*/10 * * * *', () => {
+  fetchTodayPermitEmails();
+});
+
+fetchTodayPermitEmails();
+
+app.get('/api/permits', async (req, res) => {
+  try {
+    await fetchTodayPermitEmails();
+    res.json({ success: true, count: permitEmails.length, data: permitEmails });
+  } catch (error) {
+    console.error('Failed to read permit emails:', error);
+    res.status(500).json({ success: false, message: error.message || 'Unable to read permit mail.' });
+  }
+});
 
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, "0.0.0.0", () => {

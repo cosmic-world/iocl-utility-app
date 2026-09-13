@@ -16,9 +16,9 @@ import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import { Sync } from "@mui/icons-material";
 import FormControlPage from "./formControlPage";
 
-export default function PermitDisplay({ state }) {
+export default function PermitDisplay({ state, handleReadMail }) {
   const dispatch = useDispatch();
-  const { PermitList, selectedTerminal, navBarComponent, userType } =
+  const { PermitList, selectedTerminal, navBarComponent, userType, officerList, locationCode } =
     useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
@@ -36,6 +36,9 @@ export default function PermitDisplay({ state }) {
   const step = tbody_rows_count;
   const [show, setShow] = useState(false);
   const [clock, setClock] = React.useState(0);
+  const officerListForLocation = officerList.filter(
+    (officer) => officer["LOCATION_CODE"] == locationCode,
+  );
 
   useEffect(() => {
     setInterval(() => {
@@ -101,8 +104,8 @@ export default function PermitDisplay({ state }) {
         body: new URLSearchParams({
           row: rowNumber,
           updates: JSON.stringify([
-            { col: 13, value: mark === "existing" ? y : markerPosition.mouseY },
-            { col: 14, value: mark === "existing" ? x : markerPosition.mouseX },
+            { col: 12, value: mark === "existing" ? y : markerPosition.mouseY },
+            { col: 13, value: mark === "existing" ? x : markerPosition.mouseX },
           ]),
         }),
       });
@@ -122,8 +125,8 @@ export default function PermitDisplay({ state }) {
           body: new URLSearchParams({
             row: oldrowNumber,
             updates: JSON.stringify([
+              { col: 12, value: "" },
               { col: 13, value: "" },
-              { col: 14, value: "" },
             ]),
           }),
         });
@@ -145,7 +148,17 @@ export default function PermitDisplay({ state }) {
     img.onload = () => setImgExists(true);
     img.onerror = () => setImgExists(false);
   }, [imagePath]);
-
+const findOfficerName = (item) => {
+    const filteredOfficerName = officerListForLocation.find(
+      (officer) => officer["Emp_ID"] == item,
+    );
+    if (filteredOfficerName) {
+      return filteredOfficerName["OFFICER_NAME"];
+    }
+    else {
+      return item;
+    }
+  }
   return (
     <>
       {saveLoader ? (
@@ -186,15 +199,19 @@ export default function PermitDisplay({ state }) {
             {PermitList.filter(
               (val) => val.page_left == "" && val.page_top == "",
             ).map((val, idx) => {
-              const text = Object.entries(val)
-                .filter(
-                  ([key]) =>
-                    key !== "Unique ID" &&
-                    key !== "" &&
-                    key !== "page_top" &&
-                    key !== "page_left",
-                )
-                .map(([key, value]) => `${key} : ${value}`)
+              const text = [
+                                "Date",
+                                "Permit Type",
+                                "Permit No",
+                                "Contractor Name",
+                                "Work Description",
+                                "Work Location",
+                                "Receiver Name",
+                                "Clearance From",
+                                "Clearance Till",
+                              ].map((key) => `${key} : ${key === "Receiver Name"
+                                      ? findOfficerName(val[key])
+                                      : val[key] || ""}`)
                 .join("\n");
               return (
                 <MenuItem
@@ -271,7 +288,7 @@ export default function PermitDisplay({ state }) {
               mx: 5,
             }}
             onClick={() => {
-              // handleExtractDataFromMail();
+              handleReadMail();
             }}
           >
             Extract Data from Mail
@@ -409,28 +426,13 @@ export default function PermitDisplay({ state }) {
                         width: 20,
                         height: 20,
                         borderRadius: "50%",
-                        background: `linear-gradient(to right, #e7028c 50%, #6ccded 50%)`,
+                        backgroundColor: "#b9b5b5",
                         marginTop: 2,
                         textAlign: "center",
                       }}
                     ></div>
                   </td>
-                  <td>Height + Hot Work</td>
-                </tr>
-                <tr>
-                  <td className="d-flex justify-content-center">
-                    <div
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        background: `linear-gradient(to right, #d9d90b 50%, #6ccded 50%)`,
-                        marginTop: 2,
-                        textAlign: "center",
-                      }}
-                    ></div>
-                  </td>
-                  <td>Height + Cold Work</td>
+                  <td>Height Work</td>
                 </tr>
                 <tr>
                   <td className="d-flex justify-content-center">
@@ -530,20 +532,26 @@ export default function PermitDisplay({ state }) {
                         title={
                           <Table bordered>
                             <tbody>
-                              {Object.entries(val)
-                                .filter(
-                                  ([key]) =>
-                                    key !== "Unique ID" &&
-                                    key !== "" &&
-                                    key !== "page_top" &&
-                                    key !== "page_left",
-                                )
-                                .map(([key, value], index) => (
-                                  <tr key={index} style={{}}>
-                                    <td>{key}</td>
-                                    <td>{value}</td>
-                                  </tr>
-                                ))}
+                              {[
+                                "Date",
+                                "Permit Type",
+                                "Permit No",
+                                "Contractor Name",
+                                "Work Description",
+                                "Work Location",
+                                "Receiver Name",
+                                "Clearance From",
+                                "Clearance Till",
+                              ].map((key) => (
+                                <tr key={key}>
+                                  <td>{key}</td>
+                                  <td>
+                                    {key === "Receiver Name"
+                                      ? findOfficerName(val[key])
+                                      : val[key] || ""}
+                                  </td>
+                                </tr>
+                              ))}
                             </tbody>
                           </Table>
                         }
@@ -574,11 +582,8 @@ export default function PermitDisplay({ state }) {
                                   ? "#d9d90b"
                                   : val["Permit Type"] == "Electrical Work"
                                     ? "#6ccded"
-                                    : val["Permit Type"] == "Height + Hot Work"
-                                      ? `linear-gradient(to right, #e7028c 50%, #6ccded 50%)`
-                                      : val["Permit Type"] ==
-                                          "Height + Cold Work"
-                                        ? `linear-gradient(to right, yellow 50%, #6ccded 50%)`
+                                    : val["Permit Type"] == "Height Work"
+                                      ? "#b9b5b5"
                                         : "#ccc",
                           }}
                         >
@@ -613,17 +618,15 @@ export default function PermitDisplay({ state }) {
             <thead className="table-head">
               <tr>
                 <th>SL NO</th>
-                <th>DATE</th>
-                <th>PERMIT TYPE</th>
-                <th>WORK DESCRIPTION</th>
-                <th>WORK LOCATION</th>
-                <th>OFFICER NAME</th>
-                <th>CLEARANCE FROM</th>
-                <th>CLEARANCE TILL</th>
-                <th>CONTRACTOR NAME</th>
-                <th>CONTRACTOR SUPERVISOR</th>
-                <th>LOCATION NAME</th>
-                <th>DIVISION</th>
+              <th>DATE</th>
+              <th>PERMIT TYPE</th>
+              <th>PERMIT NO</th>
+              <th>CONTRACTOR NAME</th>
+              <th>WORK DESCRIPTION</th>
+              <th>WORK LOCATION</th>
+              <th>OFFICER NAME</th>
+              <th>CLEARANCE FROM</th>
+              <th>CLEARANCE TILL</th>
               </tr>
             </thead>
             <tbody
@@ -638,39 +641,33 @@ export default function PermitDisplay({ state }) {
                     <td style={{ textAlign: "center" }}>
                       {permit ? i + 1 : ""}
                     </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Date"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Permit Type"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Work Description"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Work Location"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Receiver Name"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Clearance From"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Clearance Till"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Contractor Name"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Contractor Supervisor"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Location Name"] : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {permit ? permit["Division"] : ""}
-                    </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Date"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Permit Type"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Permit No"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Contractor Name"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Work Description"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Work Location"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? findOfficerName(permit["Receiver Name"]) : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Clearance From"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Clearance Till"] : ""}
+                  </td>
                   </tr>
                 );
               })}

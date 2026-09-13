@@ -41,7 +41,7 @@ export default function formControlPage({ show, setShow }) {
   const [clrStart, setClrStart] = useState("");
   const [clrEnd, setClrEnd] = useState("");
   const [contractorName, setContractorName] = useState("");
-  const [supervisorName, setSupervisorName] = useState("");
+  const [permitNo, setPermitNo] = useState("");
   const [division, setDivision] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const officerListForLocation = officerList.filter(
@@ -57,7 +57,7 @@ export default function formControlPage({ show, setShow }) {
     setClrStart("");
     setClrEnd("");
     setContractorName("");
-    setSupervisorName("");
+    setPermitNo("");
     setDivision("");
   };
 
@@ -66,46 +66,47 @@ export default function formControlPage({ show, setShow }) {
     setShow(false);
   };
 
-  const sheet_url = `https://script.google.com/macros/s/AKfycbydZTOReHp3uRY08gjk9cFxzFNoH3-gAGEewExoWhJDMtJZ9NYXDD6XWVMer5aoLcGg/exec`;
+  const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
 
   const handlePostData = async () => {
     if (
       permitType == "" ||
+      permitNo == "" ||
       workDesc == "" ||
       workLocation == "" ||
       receiverName == "" ||
       clrStart == "" ||
       clrEnd == "" ||
-      contractorName == "" ||
-      supervisorName == "" ||
-      division == ""
+      contractorName == "" 
     ) {
       alert("All fields must be filled");
       return;
     }
     setSaveLoader(true);
     try {
-      await fetch(sheet_url, {
+      const payload = {
+        "Permit Type": permitType,
+        "Work Description": workDesc,
+        "Work Location": workLocation,
+        "Receiver Name": receiverName,
+        "Clearance From": clrStart,
+        "Clearance Till": clrEnd,
+        "Contractor Name": contractorName,
+        "Permit No": permitNo,
+        "Location Name": locationName,
+      };
+
+      const response = await fetch(sheet_url, {
         method: "POST",
         mode: "no-cors",
+        credentials: "omit",
         body: new URLSearchParams({
-          data: JSON.stringify({
-            "Permit Type": permitType,
-            "Work Description": workDesc,
-            "Work Location": workLocation,
-            "Receiver Name": receiverName,
-            "Clearance From": clrStart,
-            "Clearance Till": clrEnd,
-            "Contractor Name": contractorName,
-            "Contractor Supervisor": supervisorName,
-            "Location Name": locationName,
-            Division: division,
-          }),
+          data: JSON.stringify(payload),
         }),
       });
       setSaveLoader(false);
-      handleResetForm();
       alert("Data submitted successfully");
+      handleResetForm();
     } catch (error) {
       setSaveLoader(false);
       console.log(
@@ -184,8 +185,7 @@ export default function formControlPage({ show, setShow }) {
               options={[
                 "Hot Work",
                 "Cold Work",
-                "Height + Hot Work",
-                "Height + Cold Work",
+                "Height Work",
                 "Electrical Work",
               ]}
               name="TTNo"
@@ -207,6 +207,37 @@ export default function formControlPage({ show, setShow }) {
                   }}
                 />
               )}
+            />
+          </div>
+        </div>
+
+        <div className="row w-100 mt-2">
+          <div
+            className="col-4 border-bottom"
+            style={{
+              fontSize: "18px",
+              fontFamily: "Lucida Sans",
+              color: "black",
+              textAlign: "center",
+              alignContent: "center",
+            }}
+          >
+            Permit No
+          </div>
+          <div className="col-8">
+            <TextField
+              className="w-100"
+              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
+              value={permitNo}
+              error={permitNo == ""}
+              onChange={(e) => setPermitNo(e.target.value.toUpperCase())}
+              InputProps={{
+                sx: {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "20px",
+                },
+                inputProps: { autoComplete: "off" },
+              }}
             />
           </div>
         </div>
@@ -446,38 +477,7 @@ export default function formControlPage({ show, setShow }) {
           </div>
         </div>
 
-        <div className="row w-100 mt-2">
-          <div
-            className="col-4 border-bottom"
-            style={{
-              fontSize: "18px",
-              fontFamily: "Lucida Sans",
-              color: "black",
-              textAlign: "center",
-              alignContent: "center",
-            }}
-          >
-            Contractor Supervisor
-          </div>
-          <div className="col-8">
-            <TextField
-              className="w-100"
-              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-              value={supervisorName}
-              error={supervisorName == ""}
-              onChange={(e) => setSupervisorName(e.target.value)}
-              InputProps={{
-                sx: {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "20px",
-                },
-                inputProps: { autoComplete: "off" },
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="row w-100 mt-2 mb-4">
+        {/* <div className="row w-100 mt-2 mb-4">
           <div
             className="col-4 border-bottom"
             style={{
@@ -515,7 +515,7 @@ export default function formControlPage({ show, setShow }) {
               )}
             />
           </div>
-        </div>
+        </div> */}
 
         <Button
           color="success"

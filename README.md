@@ -148,3 +148,30 @@ ADD [ROLE] NVARCHAR(20) NOT NULL
 UPDATE dbo.temp_pass_records
 SET vendor = LTRIM(RTRIM(vendor))
 WHERE vendor IS NOT NULL;
+
+outlook credentials
+Password:
+zxsgjzdqgknvrjgz
+Password name:
+ioclUtilityApp
+
+SELECT
+    'INDEX' AS ObjectType,
+    i.name AS ObjectName,
+    CASE
+        WHEN i.is_primary_key = 1 THEN 'PRIMARY KEY INDEX'
+        WHEN i.is_unique = 1 THEN 'UNIQUE INDEX'
+        ELSE 'INDEX'
+    END AS ObjectTypeDetail,
+    c.name AS ColumnName
+FROM sys.indexes i
+INNER JOIN sys.index_columns ic
+    ON i.object_id = ic.object_id
+    AND i.index_id = ic.index_id
+INNER JOIN sys.columns c
+    ON ic.object_id = c.object_id
+    AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID('dbo.OfficerCredentials')
+  AND i.type > 0
+
+ORDER BY ObjectType, ObjectName;

@@ -7,9 +7,8 @@ import { Menu, MenuItem, Divider } from "@mui/material";
 
 export default function Header({}) {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedApplication, userType } = useSelector(
-    (state) => state.myApp,
-  );
+  const { navBarComponent, selectedApplication, userType, selectedTerminal } =
+    useSelector((state) => state.myApp);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
@@ -137,7 +136,7 @@ export default function Header({}) {
         className={`header-locationName h-100 flex-grow-1
       d-none d-xxl-flex justify-content-center align-items-center text-white user-select-none`}
       >
-        {selectedApplication}
+        {`${selectedApplication} - ${selectedTerminal[1] || ""}`}
       </div>
 
       <div

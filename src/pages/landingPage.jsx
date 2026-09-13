@@ -15,7 +15,7 @@ import PermitDisplay from "./permitDisplay";
 import LayoutDisplay from "./layoutDisplay";
 import ModifyRecords from "./modifyRecords";
 
-export default function LandingPage({ state }) {
+export default function LandingPage({ state, handleReadMail }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
   return (
     <div
@@ -38,11 +38,15 @@ export default function LandingPage({ state }) {
       {navBarComponent === "officer_cred" ? <OfficerCredentials /> : null}
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}
-      {navBarComponent === "permitDisplay" ? <PermitDisplay /> : null}
-      {navBarComponent === "layoutDisplay" ? (
-        <LayoutDisplay state={state} />
+      {navBarComponent === "permitDisplay" ? (
+        <PermitDisplay handleReadMail={handleReadMail} />
       ) : null}
-      {navBarComponent === "modifyRecords" ? <ModifyRecords /> : null}
+      {navBarComponent === "layoutDisplay" ? (
+        <LayoutDisplay state={state} handleReadMail={handleReadMail} />
+      ) : null}
+      {navBarComponent === "modifyRecords" ? (
+        <ModifyRecords handleReadMail={handleReadMail} />
+      ) : null}
     </div>
   );
 }

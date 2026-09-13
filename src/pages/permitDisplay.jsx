@@ -7,11 +7,10 @@ import { Button } from "@mui/material";
 import { Sync } from "@mui/icons-material";
 import FormControlPage from "./formControlPage";
 
-export default function PermitDisplay() {
+export default function PermitDisplay({ handleReadMail }) {
   const dispatch = useDispatch();
-  const { PermitList, navBarComponent, userType } = useSelector(
-    (state) => state.myApp,
-  );
+  const { PermitList, navBarComponent, userType, officerList, locationCode } =
+    useSelector((state) => state.myApp);
   const [startIndex, setstartIndex] = useState(0);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;
@@ -21,6 +20,9 @@ export default function PermitDisplay() {
   const step = tbody_rows_count;
   const [show, setShow] = useState(false);
   const [clock, setClock] = React.useState(0);
+  const officerListForLocation = officerList.filter(
+    (officer) => officer["LOCATION_CODE"] == locationCode,
+  );
 
   useEffect(() => {
     setInterval(() => {
@@ -41,7 +43,17 @@ export default function PermitDisplay() {
       prevState + step < PermitList.length ? prevState + step : 0,
     );
   }, [clock]);
-
+const findOfficerName = (item) => {
+    const filteredOfficerName = officerListForLocation.find(
+      (officer) => officer["Emp_ID"] == item,
+    );
+    if (filteredOfficerName) {
+      return filteredOfficerName["OFFICER_NAME"];
+    }
+    else {
+      return item;
+    }
+  }
   return (
     <div
       className={
@@ -87,7 +99,7 @@ export default function PermitDisplay() {
             mx: 5,
           }}
           onClick={() => {
-            // handleExtractDataFromMail();
+            handleReadMail();
           }}
         >
           Extract Data from Mail
@@ -166,15 +178,13 @@ export default function PermitDisplay() {
             <tr>
               <th>DATE</th>
               <th>PERMIT TYPE</th>
+              <th>PERMIT NO</th>
+              <th>CONTRACTOR NAME</th>
               <th>WORK DESCRIPTION</th>
               <th>WORK LOCATION</th>
               <th>OFFICER NAME</th>
               <th>CLEARANCE FROM</th>
               <th>CLEARANCE TILL</th>
-              <th>CONTRACTOR NAME</th>
-              <th>CONTRACTOR SUPERVISOR</th>
-              <th>LOCATION NAME</th>
-              <th>DIVISION</th>
             </tr>
           </thead>
           <tbody
@@ -193,31 +203,25 @@ export default function PermitDisplay() {
                     {permit ? permit["Permit Type"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Permit No"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? permit["Contractor Name"] : ""}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
                     {permit ? permit["Work Description"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Work Location"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Receiver Name"] : ""}
+                    {permit ? findOfficerName(permit["Receiver Name"]) : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Clearance From"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Clearance Till"] : ""}
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Contractor Name"] : ""}
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Contractor Supervisor"] : ""}
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Location Name"] : ""}
-                  </td>
-                  <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Division"] : ""}
                   </td>
                 </tr>
               );

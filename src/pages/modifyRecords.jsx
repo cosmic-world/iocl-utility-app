@@ -49,7 +49,7 @@ function formatTime(dateStr) {
   return `${hour}:${minute}`;
 }
 
-const ModifyRecords = () => {
+const ModifyRecords = ({ handleReadMail }) => {
   const dispatch = useDispatch();
   const { selectedTerminal, userType, navBarComponent } = useSelector(
     (state) => state.myApp,
@@ -208,7 +208,7 @@ const ModifyRecords = () => {
             { col: 6, value: newRow["Clearance From"] },
             { col: 7, value: newRow["Clearance Till"] },
             { col: 8, value: newRow["Contractor Name"] },
-            { col: 9, value: newRow["Contractor Supervisor"] },
+            { col: 9, value: newRow["Permit No"] },
           ]),
         }),
       });
@@ -349,8 +349,8 @@ const ModifyRecords = () => {
       headerAlign: "center",
     },
     {
-      field: "Contractor Supervisor",
-      headerName: "Contractor Supervisor",
+      field: "Permit No",
+      headerName: "Permit No",
       width: 180,
       editable: true,
       align: "center",
@@ -452,7 +452,7 @@ const ModifyRecords = () => {
             mx: 5,
           }}
           onClick={() => {
-            // handleExtractDataFromMail();
+            handleReadMail();
           }}
         >
           Extract Data from Mail
