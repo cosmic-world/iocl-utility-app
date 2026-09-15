@@ -9,8 +9,6 @@ import {
   CircularProgress,
   Autocomplete,
   Typography,
-  Box,
-  IconButton,
   ButtonGroup,
   Checkbox,
 } from "@mui/material";
@@ -74,6 +72,9 @@ export default function tempPassDashboard() {
   const [searchLocationCode, setSearchLocationCode] = useState("");
   const [searchContractor, setSearchContractor] = useState("");
   const [approvingOfficer_1, setApprovingOfficer_1] = useState("");
+  const [multiPurpose, setMultiPurpose] = useState("");
+  const [multiTimeIn, setMultiTimeIn] = useState("");
+  const [selectedLabourIds, setSelectedLabourIds] = useState([]);
 
   const [syncing, setSyncing] = useState(false);
   const [seaching, setSearching] = useState(false);
@@ -164,6 +165,76 @@ export default function tempPassDashboard() {
         : officerList.find((item) => item.OFFICER_NAME === approvingOfficer)
             ?.MAIL_ID || ""
       : "";
+
+  const selectedOfficerName =
+    approvingOfficer_1 !== ""
+      ? checkIfOfficerListHasDuplicates
+        ? approvingOfficer_1.split("-")[0].trim()
+        : approvingOfficer_1
+      : "";
+  const selectedOfficerMail =
+    approvingOfficer_1 !== ""
+      ? checkIfOfficerListHasDuplicates
+        ? approvingOfficer_1.split("-").slice(1).join("-").trim()
+        : officerList.find((item) => item.OFFICER_NAME === approvingOfficer_1)
+            ?.MAIL_ID || ""
+      : "";
+
+  const toggleLabourSelection = (record) => {
+    setSelectedLabourIds((current) =>
+      current.includes(record.ID)
+        ? current.filter((id) => id !== record.ID)
+        : [...current, record.ID],
+    );
+  };
+
+  const submitSelectedLabours = async () => {
+    const selectedLabours = records.filter((record) =>
+      selectedLabourIds.includes(record.ID),
+    );
+    if (!selectedLabours.length) return alert("Select at least one labour.");
+    const requestOfficerName = selectedOfficerName || officerName;
+    const requestOfficerMail = selectedOfficerMail || mailID;
+    const requestLocationCode = searchLocationCode || locationCode;
+    const requestContractor = searchContractor || contractor;
+    if (!multiPurpose || !multiTimeIn || !requestOfficerName || !requestOfficerMail) {
+      return alert("Enter purpose, time in and select an approving officer first.");
+    }
+
+    setSubmitting_1(true);
+    setSaveLoader(true);
+    try {
+      const response = await fetch(apiUrl("/api/labour-pass-requests"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locationCode: requestLocationCode,
+          contractor: requestContractor,
+          purpose: multiPurpose,
+          timeIn: multiTimeIn,
+          approvingOfficer: requestOfficerName,
+          mailID: requestOfficerMail,
+          labours: selectedLabours.map((record) => ({
+            labourName: record.LABOUR_NAME,
+            mobileNo: record.MOBILE_NO,
+            aadhaarNo: record.AADHAAR_NO,
+            address: record.ADDRESS,
+          })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Unable to submit request.");
+      alert(`Request sent to ${requestOfficerName} for approval.`);
+      setSelectedLabourIds([]);
+      setMultiPurpose("");
+      setMultiTimeIn("");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
+      setSubmitting_1(false);
+    }
+  };
 
   const fetchRecords = async () => {
     setSaveLoader(true);
@@ -333,35 +404,6 @@ export default function tempPassDashboard() {
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean);
-  };
-
-  const handleApproveToday = async (recordId) => {
-    setSaveLoader(true);
-    setApprovingId(recordId);
-    try {
-      const response = await fetch(apiUrl(`/api/records/${recordId}/approve`), {
-        method: "POST",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update approval history");
-      }
-
-      setRecords((prevRecords) =>
-        prevRecords.map((item) =>
-          item.id === recordId
-            ? { ...item, approval_history: data.approval_history }
-            : item,
-        ),
-      );
-      fetchRecords();
-      alert("Approval given successfully for the request");
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setSaveLoader(false);
-      setApprovingId(null);
-    }
   };
 
   const fileInputRefs = useRef([]);
@@ -1152,12 +1194,10 @@ export default function tempPassDashboard() {
             variant="contained"
             sx={{ m: 2 }}
             style={{ width: 200 }}
-            disabled={submitting}
-            onClick={(e) => {
-              handlePostData(e, approvingOfficer, "single");
-            }}
+            disabled={submitting_1}
+            onClick={submitSelectedLabours}
           >
-            {submitting ? "Submitting..." : "SUBMIT"}
+            {submitting_1 ? "Submitting..." : "SUBMIT SELECTED"}
           </Button>
           <Button
             variant="outlined"
@@ -1183,6 +1223,29 @@ export default function tempPassDashboard() {
       </Typography>
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
+        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Purpose of Request</Typography>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            value={multiPurpose}
+            placeholder="Type purpose of multi-labour request..."
+            onChange={(event) => setMultiPurpose(event.target.value.toUpperCase())}
+            sx={{ backgroundColor: "white" }}
+          />
+        </div>
+        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Time In</Typography>
+          <TextField
+            fullWidth
+            type="time"
+            value={multiTimeIn}
+            onChange={(event) => setMultiTimeIn(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ backgroundColor: "white" }}
+          />
+        </div>
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
           <Autocomplete
             className="w-100"
@@ -1339,8 +1402,8 @@ export default function tempPassDashboard() {
           onClick={(e) => {
             setRecords([]);
             setSearchLocationCode("");
-            setSearchTT("");
             setSearchContractor("");
+            setSelectedLabourIds([]);
           }}
         >
           CLEAR VIEW
@@ -1404,27 +1467,21 @@ export default function tempPassDashboard() {
           sx={{ m: 2 }}
           style={{ width: 200 }}
           disabled={submitting_1}
-          onClick={(e) => {
-            handlePostData(e, approvingOfficer_1, "bulk");
+          onClick={submitSelectedLabours}
+        >
+          {submitting_1 ? "Submitting..." : "SUBMIT SELECTED"}
+        </Button>
+        <Button
+          color="secondary"
+          variant="outlined"
+          sx={{ m: 2 }}
+          style={{ width: 220, backgroundColor: "white" }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassApproval"));
           }}
         >
-          {submitting_1 ? "Submitting..." : "SUBMIT"}
-        </Button>
-      </div>
-
-      <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
-        <Button
-          color="error"
-          variant="contained"
-          style={{ width: 200 }}
-          // onClick={(e) => {
-          //   setRecords([]);
-          //   setSearchLocationCode("");
-          //   setSearchTT("");
-          //   setSearchContractor("");
-          // }}
-        >
-          APPROVE TODAY
+          APPROVAL CENTRE
         </Button>
       </div>
 
@@ -1432,10 +1489,18 @@ export default function tempPassDashboard() {
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>
-              <th style={{ width: 80 }}>SELECT</th>
+              <th style={{ width: 80 }}>
+                SELECT
+                <Checkbox
+                  size="small"
+                  checked={records.length > 0 && selectedLabourIds.length === records.length}
+                  indeterminate={selectedLabourIds.length > 0 && selectedLabourIds.length < records.length}
+                  onChange={(event) => setSelectedLabourIds(event.target.checked ? records.map((record) => record.ID) : [])}
+                />
+              </th>
               <th>LABOUR NAME</th>
               <th>MOBILE NO</th>
-              <th>AADHAAR</th>
+              <th>AADHAAR NO</th>
               <th style={{ flex: 1 }}>ADDRESS</th>
               {/* <th style={{ width: 300}}>GATE PASS NO</th> */}
             </tr>
@@ -1452,7 +1517,12 @@ export default function tempPassDashboard() {
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
-                      {record ? <Checkbox /> : ""}
+                      {record ? (
+                        <Checkbox
+                          checked={selectedLabourIds.includes(record.ID)}
+                          onChange={() => toggleLabourSelection(record)}
+                        />
+                      ) : ""}
                       {record ? i + 1 : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
@@ -1467,32 +1537,6 @@ export default function tempPassDashboard() {
                     <td style={{ textAlign: "center" }}>
                       {record ? record["ADDRESS"] : ""}
                     </td>
-                    {/* <td style={{ textAlign: "center", display: "flex", alignItems: "center", border: '1px solid red' }}>
-                      <DropdownButton id="dropdown-basic-button" title={passType==""?"Select Pass Type":passType}>
-                        <Dropdown.Item onClick={()=>setPassType('Red')}>Red</Dropdown.Item>
-                        <Dropdown.Item onClick={()=>setPassType('Yellow')}>Yellow</Dropdown.Item>
-                        <Dropdown.Item onClick={()=>setPassType('Green')}>Green</Dropdown.Item>
-                      </DropdownButton>
-                      <TextField
-                        fullWidth
-                        variant="outlined"
-                        value={gatePassNo}
-                        style={{ backgroundColor: "white" }}
-                        onChange={(e) =>
-                          setGatePassNo(e.target.value?.toUpperCase() || "")
-                        }
-                        sx={{
-                          // 1. Increase font size of the placeholder/input text
-                          "& .MuiInputBase-input": {
-                            fontSize: "1rem",
-                            fontFamily: "Lucida Sans",
-                            paddingTop: "10px !important", // Reducer top whitespace
-                            paddingBottom: "10px !important", // Keeps it centered vertically
-                            textTransform: "uppercase",
-                          },
-                        }}
-                      />
-                    </td> */}
                   </tr>
                 );
               },

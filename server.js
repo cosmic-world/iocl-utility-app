@@ -3,6 +3,7 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 const cors = require("cors");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const sql = require("mssql");
@@ -390,8 +391,6 @@ const normalizeOfficerEmpId = (value, role) => {
   return empId && role !== 'SECURITY' ? empId.padStart(8, '0') : empId;
 };
 
-
-
 // Using a dedicated multer uploadExcel middleware for the incoming Excel file
 app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
@@ -523,8 +522,6 @@ app.post("/api/upload-master",
     }
   }
 );
-
-
 
 app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
@@ -664,8 +661,6 @@ app.get("/api/labour-master-data", (req, res) => {
   })();
 });
 
-
-
 app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -783,8 +778,6 @@ app.get("/api/contractor-master-data", (req, res) => {
     }
   })();
 });
-
-
 
 app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
@@ -984,8 +977,6 @@ app.patch("/api/officer-master-data/:id/role", async (req, res) => {
   }
 });
 
-
-
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -994,6 +985,270 @@ const transporter = nodemailer.createTransport({
     user: 'ioclcbe4149@gmail.com',
     pass: 'wfsv hvdb gqqh prqb'
     // pass: 'levf jhhk ggix zebi'
+  }
+});
+
+const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
+
+async function ensureLabourWorkflowColumns(pool) {
+  await pool.request().query(`
+    IF COL_LENGTH('dbo.LabourEntryRecord', 'REQUEST_TOKEN') IS NULL
+      ALTER TABLE dbo.LabourEntryRecord ADD REQUEST_TOKEN NVARCHAR(100) NULL;
+    IF COL_LENGTH('dbo.LabourEntryRecord', 'REQUEST_STATUS') IS NULL
+      ALTER TABLE dbo.LabourEntryRecord ADD REQUEST_STATUS NVARCHAR(20) NOT NULL CONSTRAINT DF_LabourEntryRecord_RequestStatus DEFAULT 'PENDING';
+    IF COL_LENGTH('dbo.LabourEntryRecord', 'APPROVED_AT') IS NULL
+      ALTER TABLE dbo.LabourEntryRecord ADD APPROVED_AT DATETIME2 NULL;
+    IF COL_LENGTH('dbo.LabourEntryRecord', 'APPROVED_BY') IS NULL
+      ALTER TABLE dbo.LabourEntryRecord ADD APPROVED_BY NVARCHAR(150) NULL;
+  `);
+}
+
+function escapePdfText(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function createLabourApprovalPdf(rows, token) {
+  const lines = [
+    "IOCL | LABOUR ENTRY APPROVAL",
+    "Temporary Pass Request",
+    `Request reference: ${token.slice(0, 12).toUpperCase()}`,
+    `Status: APPROVED    Approved at: ${new Date().toLocaleString("en-GB")}`,
+    "",
+  ];
+  rows.forEach((row, index) => {
+    lines.push(`${index + 1}. ${row.LABOUR_NAME || ""}`);
+    lines.push(`   Contractor: ${row.CONTRACTOR || ""} | Mobile: ${row.MOBILE_NO || ""}`);
+    lines.push(`   ID proof: ${row.AADHAAR_NO || ""}`);
+    lines.push(`   Address: ${row.ADDRESS || ""}`);
+    lines.push(`   Purpose: ${row.PURPOSE || ""} | Time in: ${row.TIME_IN || ""}`);
+    lines.push("");
+  });
+  lines.push("This document confirms approval of the labour entry request.");
+
+  const content = ["BT", "/F1 18 Tf", "50 760 Td", `(${escapePdfText(lines[0])}) Tj`, "/F1 11 Tf"];
+  lines.slice(1).forEach((line) => content.push("0 -20 Td", `(${escapePdfText(line)}) Tj`));
+  content.push("ET");
+  const stream = content.join("\n");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    `<< /Length ${Buffer.byteLength(stream, "utf8")} >>\nstream\n${stream}\nendstream`,
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(Buffer.byteLength(pdf, "utf8"));
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = Buffer.byteLength(pdf, "utf8");
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => { pdf += `${String(offset).padStart(10, "0")} 00000 n \n`; });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(pdf, "utf8");
+}
+
+async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
+  const applicationLink = `${labourWorkflowBaseUrl}/approve-labour/${requestToken}`;
+  const first = rows[0] || {};
+  await transporter.sendMail({
+    from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+    to: officerEmail,
+    subject: `Action required: Labour pass request for ${first.CONTRACTOR || "contractor"}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Labour entry approval</h2><p>A request for <strong>${rows.length} labour${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><strong>Purpose:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p><p style="font-size:12px;color:#64748b">Request reference: ${requestToken.slice(0, 12).toUpperCase()}</p></div>`,
+  });
+}
+
+app.post("/api/labour-pass-requests", async (req, res) => {
+  const { locationCode, contractor, purpose, timeIn, approvingOfficer, mailID, labours } = req.body || {};
+  if (!locationCode || !contractor || !purpose || !timeIn || !approvingOfficer || !mailID || !Array.isArray(labours) || labours.length === 0) {
+    return res.status(400).json({ success: false, message: "Location, contractor, purpose, time, approver and at least one labour are required." });
+  }
+  let pool;
+  try {
+    pool = await sql.connect(getSqlConfig());
+    await ensureLabourWorkflowColumns(pool);
+    const requestToken = crypto.randomBytes(32).toString("hex");
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+      for (const labour of labours) {
+        const request = new sql.Request(transaction);
+        request.input("locationCode", sql.NVarChar, locationCode);
+        request.input("labourName", sql.NVarChar, labour.labourName || null);
+        request.input("contractor", sql.NVarChar, contractor);
+        request.input("mobileNo", sql.NVarChar, labour.mobileNo || null);
+        request.input("aadhaarNo", sql.NVarChar, labour.aadhaarNo || null);
+        request.input("address", sql.NVarChar, labour.address || null);
+        request.input("purpose", sql.NVarChar, purpose);
+        request.input("timeIn", sql.NVarChar, timeIn);
+        request.input("approvingOfficer", sql.NVarChar, approvingOfficer);
+        request.input("requestToken", sql.NVarChar, requestToken);
+        await request.query(`INSERT INTO dbo.LabourEntryRecord (LOCATION_CODE, LABOUR_NAME, CONTRACTOR, MOBILE_NO, AADHAAR_NO, ADDRESS, PURPOSE, TIME_IN, APPROVING_OFFICER, REQUEST_TOKEN, REQUEST_STATUS, CREATED_AT) VALUES (@locationCode, @labourName, @contractor, @mobileNo, @aadhaarNo, @address, @purpose, @timeIn, @approvingOfficer, @requestToken, 'PENDING', SYSUTCDATETIME())`);
+      }
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+    await sendLabourWorkflowEmail(mailID, requestToken, labours.map((labour) => ({ ...labour, CONTRACTOR: contractor, PURPOSE: purpose })));
+    return res.status(201).json({ success: true, requestToken, count: labours.length });
+  } catch (error) {
+    console.error("Labour pass request failed:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.get("/api/labour-pass-requests/:token", async (req, res) => {
+  try {
+    await sql.connect(getSqlConfig());
+    const request = new sql.Request();
+    request.input("token", sql.NVarChar, req.params.token);
+    const result = await request.query("SELECT ID, LABOUR_NAME, CONTRACTOR, MOBILE_NO, AADHAAR_NO, ADDRESS, PURPOSE, TIME_IN, APPROVING_OFFICER, REQUEST_STATUS, CREATED_AT, APPROVED_AT FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID");
+    if (!result.recordset.length) return res.status(404).json({ message: "Approval request was not found or has expired." });
+    return res.json({ rows: result.recordset, status: result.recordset[0].REQUEST_STATUS });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/api/labour-pass-requests", async (req, res) => {
+  try {
+    await sql.connect(getSqlConfig());
+      const { fetchdate } = req.query;
+      let whereClauses = [];
+      let result = await sql.query(`
+      SELECT REQUEST_TOKEN, CONTRACTOR, APPROVING_OFFICER, PURPOSE, TIME_IN,
+        REQUEST_STATUS, CREATED_AT, APPROVED_AT, LABOUR_NAME
+      FROM dbo.LabourEntryRecord
+      ORDER BY CREATED_AT DESC
+    `)
+      whereClauses.push('REQUEST_TOKEN IS NOT NULL')
+      if (fetchdate) {
+      whereClauses.push(`request_from >= '${fetchdate.replace(/'/g, "''")}'`)
+      }
+    result += " WHERE " + whereClauses.join(" AND ");
+    const requests = new Map();
+    result.recordset.forEach((row) => {
+      const current = requests.get(row.REQUEST_TOKEN) || {
+        REQUEST_TOKEN: row.REQUEST_TOKEN,
+        CONTRACTOR: row.CONTRACTOR,
+        APPROVING_OFFICER: row.APPROVING_OFFICER,
+        PURPOSE: row.PURPOSE,
+        TIME_IN: row.TIME_IN,
+        CREATED_AT: row.CREATED_AT,
+        LABOUR_COUNT: 0,
+        statuses: [],
+      };
+      current.LABOUR_COUNT += 1;
+      current.statuses.push(row.REQUEST_STATUS);
+      requests.set(row.REQUEST_TOKEN, current);
+    });
+    return res.json([...requests.values()].map((request) => ({
+      ...request,
+      REQUEST_STATUS: request.statuses.every((status) => status === "APPROVED")
+        ? "APPROVED"
+        : request.statuses.every((status) => status === "REJECTED")
+          ? "REJECTED"
+          : request.statuses.some((status) => status !== "PENDING")
+            ? "PARTIALLY DECIDED"
+            : "PENDING",
+    })));
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/labour-pass-requests/:token/labours/:labourId/decision", async (req, res) => {
+  try {
+    await sql.connect(getSqlConfig());
+    const labourId = Number(req.params.labourId);
+    const decision = String(req.body?.decision || "").toUpperCase();
+    if (!Number.isInteger(labourId) || !["APPROVE", "REJECT"].includes(decision)) {
+      return res.status(400).json({ message: "A valid labour and decision are required." });
+    }
+    const request = new sql.Request();
+    request.input("token", sql.NVarChar, req.params.token);
+    request.input("labourId", sql.Int, labourId);
+    const result = await request.query("SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token AND ID = @labourId");
+    if (!result.recordset.length) return res.status(404).json({ message: "Approval request was not found." });
+    if (result.recordset[0].REQUEST_STATUS !== "PENDING") return res.status(409).json({ message: "This labour has already been decided." });
+    const update = new sql.Request();
+    update.input("token", sql.NVarChar, req.params.token);
+    update.input("labourId", sql.Int, labourId);
+    update.input("decision", sql.NVarChar, decision === "APPROVE" ? "APPROVED" : "REJECTED");
+    update.input("decidedBy", sql.NVarChar, req.body?.decidedBy || result.recordset[0].APPROVING_OFFICER);
+    await update.query("UPDATE dbo.LabourEntryRecord SET REQUEST_STATUS = @decision, APPROVED_AT = CASE WHEN @decision = 'APPROVED' THEN SYSUTCDATETIME() ELSE NULL END, APPROVED_BY = @decidedBy WHERE REQUEST_TOKEN = @token AND ID = @labourId");
+
+    const allRequestRows = new sql.Request();
+    allRequestRows.input("token", sql.NVarChar, req.params.token);
+    const rowsResult = await allRequestRows.query("SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID");
+    const rows = rowsResult.recordset;
+    const status = rows.every((row) => row.REQUEST_STATUS === "APPROVED")
+      ? "APPROVED"
+      : rows.every((row) => row.REQUEST_STATUS === "REJECTED")
+        ? "REJECTED"
+        : rows.some((row) => row.REQUEST_STATUS !== "PENDING")
+          ? "PARTIALLY DECIDED"
+          : "PENDING";
+    const approvedRows = rows.filter((row) => row.REQUEST_STATUS === "APPROVED");
+    return res.json({
+      success: true,
+      status,
+      pdfBase64: approvedRows.length ? createLabourApprovalPdf(approvedRows, req.params.token).toString("base64") : null,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/labour-pass-requests/:token/decision", async (req, res) => {
+  try {
+    await sql.connect(getSqlConfig());
+    const labourIds = Array.isArray(req.body?.labourIds)
+      ? req.body.labourIds.map(Number).filter((id) => Number.isInteger(id))
+      : [];
+    const decision = String(req.body?.decision || "").toUpperCase();
+    if (!labourIds.length || !["APPROVE", "REJECT"].includes(decision)) {
+      return res.status(400).json({ message: "Select at least one labour and choose approve or reject." });
+    }
+
+    const request = new sql.Request();
+    request.input("token", sql.NVarChar, req.params.token);
+    const rowsResult = await request.query("SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID");
+    const rows = rowsResult.recordset;
+    if (!rows.length) return res.status(404).json({ message: "Approval request was not found." });
+
+    const selectedRows = rows.filter((row) => labourIds.includes(row.ID));
+    if (selectedRows.length !== labourIds.length) return res.status(400).json({ message: "One or more selected labours do not belong to this request." });
+    if (selectedRows.some((row) => row.REQUEST_STATUS !== "PENDING")) return res.status(409).json({ message: "One or more selected labours have already been decided." });
+
+    for (const labourId of labourIds) {
+      const update = new sql.Request();
+      update.input("token", sql.NVarChar, req.params.token);
+      update.input("labourId", sql.Int, labourId);
+      update.input("decision", sql.NVarChar, decision === "APPROVE" ? "APPROVED" : "REJECTED");
+      update.input("decidedBy", sql.NVarChar, req.body?.decidedBy || rows[0].APPROVING_OFFICER);
+      await update.query("UPDATE dbo.LabourEntryRecord SET REQUEST_STATUS = @decision, APPROVED_AT = CASE WHEN @decision = 'APPROVED' THEN SYSUTCDATETIME() ELSE NULL END, APPROVED_BY = @decidedBy WHERE REQUEST_TOKEN = @token AND ID = @labourId AND REQUEST_STATUS = 'PENDING'");
+    }
+
+    const refreshed = new sql.Request();
+    refreshed.input("token", sql.NVarChar, req.params.token);
+    const updatedRows = (await refreshed.query("SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID")).recordset;
+    const status = updatedRows.every((row) => row.REQUEST_STATUS === "APPROVED")
+      ? "APPROVED"
+      : updatedRows.every((row) => row.REQUEST_STATUS === "REJECTED")
+        ? "REJECTED"
+        : updatedRows.some((row) => row.REQUEST_STATUS !== "PENDING")
+          ? "PARTIALLY DECIDED"
+          : "PENDING";
+    const approvedRows = updatedRows.filter((row) => row.REQUEST_STATUS === "APPROVED");
+    return res.json({ success: true, status, pdfBase64: approvedRows.length ? createLabourApprovalPdf(approvedRows, req.params.token).toString("base64") : null });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 

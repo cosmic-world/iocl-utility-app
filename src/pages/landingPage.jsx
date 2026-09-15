@@ -14,6 +14,7 @@ import FormControlPage from "./formControlPage";
 import PermitDisplay from "./permitDisplay";
 import LayoutDisplay from "./layoutDisplay";
 import ModifyRecords from "./modifyRecords";
+import LabourApprovalDashboard from "./LabourApprovalDashboard";
 
 export default function LandingPage({ state, handleReadMail }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
@@ -30,6 +31,9 @@ export default function LandingPage({ state, handleReadMail }) {
       {navBarComponent === "masterData" ? <MasterData /> : null}
       {navBarComponent === "labourPassDashboard" ? (
         <LabourPassDashboard />
+      ) : null}
+      {navBarComponent === "labourPassApproval" ? (
+        <LabourApprovalDashboard />
       ) : null}
       {navBarComponent === "contractor_masterData" ? (
         <LabourMasterData />
