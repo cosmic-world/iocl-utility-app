@@ -1,11 +1,13 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useEffect, useState, useRef } from "react";
+import { apiUrl } from "./api";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Header from "./pages/Header";
 import LandingPage from "./pages/landingPage";
 import { useDispatch, useSelector } from "react-redux";
+import LabourApproval from "./pages/LabourApproval";
 import {
   NavBarComponent,
   SetPermitList,
@@ -41,7 +43,7 @@ function App() {
 
   const handleReadMail = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/permits");
+      const response = await fetch(apiUrl("/api/permits"));
       const result = await response.json();
 
       if (!result.success || !Array.isArray(result.data)) {
@@ -279,6 +281,7 @@ function App() {
       <Header />
       <BrowserRouter>
         <Routes>
+          <Route path="/approve-labour/:token" element={<LabourApproval />} />
           <Route
             path="/"
             element={
