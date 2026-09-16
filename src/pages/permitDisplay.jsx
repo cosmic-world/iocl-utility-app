@@ -54,6 +54,8 @@ const findOfficerName = (item) => {
       return item;
     }
   }
+  const uniquePermitList = [...new Map(PermitList.map(item => [item["Permit No"], item])).values()];
+
   return (
     <div
       className={
@@ -193,7 +195,7 @@ const findOfficerName = (item) => {
             }}
           >
             {Array.from({ length: tbody_rows_count }, (_, i) => {
-              const permit = PermitList[i + startIndex];
+              const permit = uniquePermitList[i + startIndex];
               return (
                 <tr key={i}>
                   <td style={{ textAlign: "center" }}>

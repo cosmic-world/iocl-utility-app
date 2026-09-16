@@ -159,6 +159,7 @@ const findOfficerName = (item) => {
       return item;
     }
   }
+  const uniquePermitList = [...new Map(PermitList.map(item => [item["Permit No"], item])).values()];
   return (
     <>
       {saveLoader ? (
@@ -196,7 +197,7 @@ const findOfficerName = (item) => {
             size="small"
             style={{ width: 300, fontFamily: "Lucida Sans", fontSize: 14 }}
           >
-            {PermitList.filter(
+            {uniquePermitList.filter(
               (val) => val.page_left == "" && val.page_top == "",
             ).map((val, idx) => {
               const text = [
@@ -505,7 +506,7 @@ const findOfficerName = (item) => {
                       display: "block",
                     }}
                   />
-                  {PermitList.filter(
+                  {uniquePermitList.filter(
                     (val) => val.page_left && val.page_top,
                   ).map((val, index) => {
                     return (
@@ -635,7 +636,7 @@ const findOfficerName = (item) => {
               }}
             >
               {Array.from({ length: tbody_rows_count }, (_, i) => {
-                const permit = PermitList[i + startIndex];
+                const permit = uniquePermitList[i + startIndex];
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
