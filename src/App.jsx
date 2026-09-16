@@ -45,13 +45,10 @@ function App() {
     try {
       const response = await fetch(apiUrl("/api/permits"));
       const result = await response.json();
-
       if (!result.success || !Array.isArray(result.data)) {
         return;
       }
-
       const currentPermitList = permitListRef.current;
-
       const zlist = result.data
         .map((item) => item["json"])
         .filter(Boolean)
@@ -59,7 +56,6 @@ function App() {
           const clearanceTill = ele["Clearance Till"];
           return clearanceTill > new Date().toLocaleTimeString("en-GB");
         });
-
       const ylist = zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
         return currentPermitList.every(
@@ -67,10 +63,8 @@ function App() {
             existingEle["Permit No"] != permitNo,
         );
       });
-
       if (ylist.length > 0) {
   const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
-
         for (const item of ylist) {
           try {
             await fetch(sheet_url, {

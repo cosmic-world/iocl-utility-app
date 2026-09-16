@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const cors = require("cors");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const sql = require("mssql");
-const cron = require('node-cron');
+// const cron = require('node-cron');
 const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
 
@@ -1545,14 +1545,12 @@ function isPermitMail(parsedMail) {
 
 async function fetchTodayPermitEmails() {
   let connection;
-
   try {
     if (!permitImapConfig.imap.user || !permitImapConfig.imap.password) {
       console.warn('Permit email IMAP credentials are missing. Set PERMIT_EMAIL_USER and PERMIT_EMAIL_PASSWORD in the environment.');
       permitEmails = [];
       return;
     }
-
     connection = await imaps.connect({ imap: permitImapConfig.imap });
     await connection.openBox('INBOX');
 
@@ -1607,12 +1605,6 @@ async function fetchTodayPermitEmails() {
     }
   }
 }
-
-cron.schedule('*/10 * * * *', () => {
-  fetchTodayPermitEmails();
-});
-
-fetchTodayPermitEmails();
 
 app.get('/api/permits', async (req, res) => {
   try {
