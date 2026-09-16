@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { apiUrl } from "./api";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -30,6 +30,7 @@ function App() {
   const { navBarComponent, selectedTerminal, PermitList, fetchList } =
     useSelector((state) => state.myApp);
   const permitListRef = useRef(PermitList);
+  const isReadingMailRef = useRef(false);
 
   useEffect(() => {
     permitListRef.current = PermitList;
@@ -41,7 +42,12 @@ function App() {
     }
   }, []);
 
-  const handleReadMail = async () => {
+  const handleReadMail = useCallback(async () => {
+    if (isReadingMailRef.current) {
+      return;
+    }
+
+    isReadingMailRef.current = true;
     try {
       const response = await fetch(apiUrl("/api/permits"));
       const result = await response.json();
@@ -58,8 +64,7 @@ function App() {
         .filter((ele) => {
           const clearanceTill = ele["Clearance Till"];
           return clearanceTill > new Date().toLocaleTimeString("en-GB");
-        });
-
+        });  
       const ylist = zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
         return currentPermitList.every(
@@ -67,7 +72,6 @@ function App() {
             existingEle["Permit No"] != permitNo,
         );
       });
-
       if (ylist.length > 0) {
   const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
 
@@ -100,21 +104,29 @@ function App() {
       }
     } catch (error) {
       console.error("Failed to load permits:", error);
+    } finally {
+      isReadingMailRef.current = false;
     }
-  };
+  }, [selectedTerminal]);
 
   useEffect(() => {
-    let intervalId;
-    if (selectedTerminal !== "") {
-      handleReadMail();
-      intervalId = setInterval(handleReadMail, 10000);
+    const hasSelectedTerminal =
+      Array.isArray(selectedTerminal) && selectedTerminal.length > 0;
+
+    if (!hasSelectedTerminal) {
+      return undefined;
     }
+
+    let intervalId;
+    void handleReadMail();
+    intervalId = setInterval(() => {
+      void handleReadMail();
+    }, 10000);
+
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      clearInterval(intervalId);
     };
-  }, [selectedTerminal]);
+  }, [selectedTerminal, handleReadMail]);
 
   const locationName = selectedTerminal[selectedTerminal.length - 1];
 
