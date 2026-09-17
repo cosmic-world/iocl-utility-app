@@ -1531,11 +1531,7 @@ function parsePermitMailContent(rawText, fallbackSubject = '') {
 
 function isPermitMail(parsedMail) {
   const subject = String(parsedMail?.subject || '').toLowerCase();
-  // const bodyText = String(parsedMail?.text || parsedMail?.html || '').toLowerCase();
-
-  return (
-    subject.includes('Clearance no') || subject.includes('clearance no')
-  );
+  return subject.includes('clearance no');
 }
 
 async function fetchTodayPermitEmails() {
