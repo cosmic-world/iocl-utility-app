@@ -56,6 +56,7 @@ function App() {
           const clearanceTill = ele["Clearance Till"];
           return clearanceTill > new Date().toLocaleTimeString("en-GB");
         });
+        console.log('zlist',zlist);
       const ylist = zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
         return currentPermitList.every(
@@ -63,6 +64,7 @@ function App() {
             existingEle["Permit No"] != permitNo,
         );
       });
+      console.log('ylist',ylist);
       if (ylist.length > 0) {
   const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
