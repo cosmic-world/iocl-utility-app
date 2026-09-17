@@ -1530,16 +1530,11 @@ function parsePermitMailContent(rawText, fallbackSubject = '') {
 }
 
 function isPermitMail(parsedMail) {
-  const sender = getEmailSender(parsedMail).toLowerCase();
   const subject = String(parsedMail?.subject || '').toLowerCase();
-  const bodyText = String(parsedMail?.text || parsedMail?.html || '').toLowerCase();
+  // const bodyText = String(parsedMail?.text || parsedMail?.html || '').toLowerCase();
 
   return (
-    sender.includes('roym1') ||
-    sender.includes('noreply') ||
-    subject.includes('permit') ||
-    bodyText.includes('permit') ||
-    bodyText.includes('clearance')
+    subject.includes('Clearance no') || subject.includes('clearance no')
   );
 }
 
