@@ -1463,9 +1463,9 @@ let permitEmails = [];
 
 const permitImapConfig = {
   imap: {
-    user: process.env.PERMIT_EMAIL_USER?.trim(),
-    password: process.env.PERMIT_EMAIL_PASSWORD?.trim(),
-    host: process.env.PERMIT_EMAIL_HOST?.trim() || 'imap.gmail.com',
+    user: process.env.PERMIT_EMAIL_USER,
+    password: process.env.PERMIT_EMAIL_PASSWORD,
+    host: process.env.PERMIT_EMAIL_HOST || 'imap.gmail.com',
     port: Number(process.env.PERMIT_EMAIL_PORT || 993),
     tls: process.env.PERMIT_EMAIL_TLS !== 'false',
     authTimeout: 20000,
@@ -1538,14 +1538,14 @@ async function fetchTodayPermitEmails() {
   let connection;
   try {
     if (!permitImapConfig.imap.user || !permitImapConfig.imap.password) {
-      throw new Error('Permit email IMAP credentials are missing on the server.');
+      console.warn('Permit email IMAP credentials are missing. Set PERMIT_EMAIL_USER and PERMIT_EMAIL_PASSWORD in the environment.');
+      permitEmails = [];
+      return;
     }
     connection = await imaps.connect({ imap: permitImapConfig.imap });
     await connection.openBox('INBOX');
 
-    // Include the previous day to tolerate timezone differences between EC2 and Gmail.
     const since = new Date();
-    since.setDate(since.getDate() - 1);
     since.setHours(0, 0, 0, 0);
     const searchCriteria = [['SINCE', since]];
     const fetchOptions = {
@@ -1554,7 +1554,6 @@ async function fetchTodayPermitEmails() {
     };
 
     const messages = await connection.search(searchCriteria, fetchOptions);
-    console.log(`Permit IMAP search returned ${messages.length} messages.`);
     const parsedEmails = [];
 
     for (const item of messages || []) {
@@ -1585,7 +1584,6 @@ async function fetchTodayPermitEmails() {
   } catch (error) {
     console.error('Error fetching permit emails:', error);
     permitEmails = [];
-    throw error;
   } finally {
     if (connection) {
       connection.end();
