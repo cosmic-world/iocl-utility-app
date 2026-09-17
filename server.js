@@ -1463,9 +1463,9 @@ let permitEmails = [];
 
 const permitImapConfig = {
   imap: {
-    user: process.env.PERMIT_EMAIL_USER,
-    password: process.env.PERMIT_EMAIL_PASSWORD,
-    host: process.env.PERMIT_EMAIL_HOST || 'imap.gmail.com',
+    user: process.env.PERMIT_EMAIL_USER?.trim(),
+    password: process.env.PERMIT_EMAIL_PASSWORD?.trim(),
+    host: process.env.PERMIT_EMAIL_HOST?.trim() || 'imap.gmail.com',
     port: Number(process.env.PERMIT_EMAIL_PORT || 993),
     tls: process.env.PERMIT_EMAIL_TLS !== 'false',
     authTimeout: 20000,
