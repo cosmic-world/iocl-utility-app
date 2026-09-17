@@ -57,7 +57,7 @@ export default function Header({}) {
               selected={navBarComponent == "home"}
               onClick={() => {
                 dispatch(NavBarComponent("home"));
-                dispatch(SetSelectedApplication("User Role"));
+                dispatch(SetSelectedApplication("Role Selection"));
                 setAnchorE1(null);
               }}
               className="d-flex justify-content-center"
