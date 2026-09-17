@@ -1538,26 +1538,23 @@ async function fetchTodayPermitEmails() {
   let connection;
   try {
     if (!permitImapConfig.imap.user || !permitImapConfig.imap.password) {
-      console.warn('Permit email IMAP credentials are missing. Set PERMIT_EMAIL_USER and PERMIT_EMAIL_PASSWORD in the environment.');
-      permitEmails = [];
-      return;
+      throw new Error('Permit email IMAP credentials are missing on the server.');
     }
     connection = await imaps.connect({ imap: permitImapConfig.imap });
     await connection.openBox('INBOX');
 
-// Filter for emails received today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const searchCriteria = [
-      ['SINCE', today]
-    ];
+    // Include the previous day to tolerate timezone differences between EC2 and Gmail.
+    const since = new Date();
+    since.setDate(since.getDate() - 1);
+    since.setHours(0, 0, 0, 0);
+    const searchCriteria = [['SINCE', since]];
     const fetchOptions = {
       bodies: ['HEADER', 'TEXT', ''],
       struct: true,
     };
 
     const messages = await connection.search(searchCriteria, fetchOptions);
+    console.log(`Permit IMAP search returned ${messages.length} messages.`);
     const parsedEmails = [];
 
     for (const item of messages || []) {
@@ -1586,10 +1583,9 @@ async function fetchTodayPermitEmails() {
 
     permitEmails = parsedEmails;
   } catch (error) {
-    const msg = String(error?.message || '');
     console.error('Error fetching permit emails:', error);
-
     permitEmails = [];
+    throw error;
   } finally {
     if (connection) {
       connection.end();
