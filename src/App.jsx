@@ -56,7 +56,8 @@ function App() {
           const clearanceTill = ele["Clearance Till"];
           return clearanceTill > new Date().toLocaleTimeString("en-GB");
         });
-      const ylist = zlist.filter((ele) => {
+        const unique_zlist = [...new Map(zlist.map(item => [item["Permit No"], item])).values()];
+      const ylist = unique_zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
         return currentPermitList.every(
           (existingEle) =>

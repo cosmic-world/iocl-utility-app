@@ -122,7 +122,8 @@ const ModifyRecords = ({ handleReadMail }) => {
           ? filteredData.map((val) => val["Unique ID"])
           : [{ id: 0 }].map((val) => val["Unique ID"]);
       var result = Math.max(...res1);
-      setRows(filteredData.map((val, index) => ({ id: index, ...val })));
+      const unique_filteredData = [...new Map(filteredData.map(item => [item["Permit No"], item])).values()];
+      setRows(unique_filteredData.map((val, index) => ({ id: index, ...val })));
       setlocalID(result + 1);
     } catch (error) {
       console.log(

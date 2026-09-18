@@ -506,9 +506,7 @@ const findOfficerName = (item) => {
                       display: "block",
                     }}
                   />
-                  {uniquePermitList.filter(
-                    (val) => val.page_left && val.page_top,
-                  ).map((val, index) => {
+                  {uniquePermitList.map((val, index) => {
                     return (
                       <Tooltip
                         key={index}
@@ -565,6 +563,7 @@ const findOfficerName = (item) => {
                           }}
                           style={{
                             position: "absolute",
+                            visibility: val.page_left && val.page_top?'visible':'hidden',
                             zIndex: 1000,
                             cursor: "pointer",
                             zoom: 1,
