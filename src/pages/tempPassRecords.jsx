@@ -273,13 +273,40 @@ export default function tempPassDashboard() {
       if (documents[0]) formData.append("request_letter", documents[0]);
       if (documents[1]) formData.append("id_proof", documents[1]);
       if (documents[2]) formData.append("driving_licence", documents[2]);
-
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-temp-pass"), {
         method: "POST",
         body: formData,
       });
+        const uploadMaster = async () => {
+    try {
+      const payload = {
+        location_code: locationCode,
+        vendor: vendor,
+        crew_type: crewType,
+        crew_name: crewName,
+        tt_no: ttNo,
+        mobile_no: mobileNo,
+        govt_id: aadhaarNo,
+        driving_licence_no: drivingLicence,
+      };
 
+      await fetch(apiUrl("/api/upload-master"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setIsNew(false);
+      handleSync()
+    }
+  };
+  isNew?uploadMaster():null
       if (response.ok) {
         alert("Record submitted successfully!");
         // Reset form
@@ -435,7 +462,7 @@ export default function tempPassDashboard() {
       record["tt_no"] &&
       record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
   );
-
+  const [isNew, setIsNew] = useState(false)
   return (
     <div
       className={
@@ -657,9 +684,8 @@ export default function tempPassDashboard() {
               className="w-100"
               value={vendor !== "" ? vendor : null}
               onInputChange={(event, newValue) => {
-                newValue !== null
-                  ? setVendor(newValue.toLocaleUpperCase().trim())
-                  : setVendor("");
+                newValue !== null ? setVendor(newValue.toLocaleUpperCase().trim()) : setVendor("");
+                newValue !== null ? setIsNew(true) : setIsNew(false)
               }}
               onChange={(event, newValue) => {
                 newValue !== null ? setVendor(newValue.trim()) : setVendor("");
@@ -727,6 +753,7 @@ export default function tempPassDashboard() {
                 newValue !== null
                   ? setCrewName(newValue.toLocaleUpperCase().trim())
                   : setCrewName("");
+                  newValue !== null ? setIsNew(true) : setIsNew(false)
               }}
               onChange={(event, newValue) => {
                 newValue !== null
@@ -802,6 +829,7 @@ export default function tempPassDashboard() {
                       newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
                     )
                   : setTTNo("");
+                  newValue !== null ? setIsNew(true) : setIsNew(false)
               }}
               onChange={(event, newValue) => {
                 newValue !== null
