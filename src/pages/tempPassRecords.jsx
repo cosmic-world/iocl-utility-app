@@ -168,7 +168,7 @@ export default function tempPassDashboard() {
   const handlePostData = async (e) => {
     e.preventDefault();
     if (!locationCode) {
-      alert("Please select a Location Code.");
+      alert("Please select Location Code.");
       return;
     }
 
@@ -278,35 +278,34 @@ export default function tempPassDashboard() {
         method: "POST",
         body: formData,
       });
-        const uploadMaster = async () => {
-    try {
-      const payload = {
-        location_code: locationCode,
-        vendor: vendor,
-        crew_type: crewType,
-        crew_name: crewName,
-        tt_no: ttNo,
-        mobile_no: mobileNo,
-        govt_id: aadhaarNo,
-        driving_licence_no: drivingLicence,
+      const uploadMaster = async () => {
+        try {
+          const payload = {
+            location_code: locationCode,
+            vendor: vendor,
+            crew_type: crewType,
+            crew_name: crewName,
+            tt_no: ttNo,
+            mobile_no: mobileNo,
+            govt_id: aadhaarNo,
+            driving_licence_no: drivingLicence,
+          };
+
+          await fetch(apiUrl("/api/upload-master"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+        } catch (error) {
+          alert("Error: " + error.message);
+        } finally {
+          setIsNew(false);
+          handleSync();
+        }
       };
-
-      await fetch(apiUrl("/api/upload-master"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-    } catch (error) {
-      alert("Error: " + error.message);
-    } finally {
-      setIsNew(false);
-      handleSync()
-    }
-  };
-  isNew?uploadMaster():null
+      isNew ? uploadMaster() : null;
       if (response.ok) {
         alert("Record submitted successfully!");
         // Reset form
@@ -462,7 +461,7 @@ export default function tempPassDashboard() {
       record["tt_no"] &&
       record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
   );
-  const [isNew, setIsNew] = useState(false)
+  const [isNew, setIsNew] = useState(false);
   return (
     <div
       className={
@@ -683,9 +682,27 @@ export default function tempPassDashboard() {
               name="Vendor"
               className="w-100"
               value={vendor !== "" ? vendor : null}
-              onInputChange={(event, newValue) => {
-                newValue !== null ? setVendor(newValue.toLocaleUpperCase().trim()) : setVendor("");
-                newValue !== null ? setIsNew(true) : setIsNew(false)
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setVendor(newValue.toLocaleUpperCase().trim())
+                  : setVendor("");
+                if (reason === "input") {
+                  newValue !== null
+                    ? !(masterList.length > 0
+                        ? [
+                            ...new Set(
+                              masterList
+                                .filter(
+                                  (ele) => ele.LOCATION_CODE == locationCode,
+                                )
+                                .map((item) => item["VENDOR"]),
+                            ),
+                          ]
+                        : [].includes(newValue))
+                      ? setIsNew(true)
+                      : setIsNew(false)
+                    : setIsNew(false);
+                }
               }}
               onChange={(event, newValue) => {
                 newValue !== null ? setVendor(newValue.trim()) : setVendor("");
@@ -749,11 +766,29 @@ export default function tempPassDashboard() {
               name="CrewName"
               className="w-100"
               value={crewName !== "" ? crewName : null}
-              onInputChange={(event, newValue) => {
+              onInputChange={(event, newValue, reason) => {
                 newValue !== null
                   ? setCrewName(newValue.toLocaleUpperCase().trim())
                   : setCrewName("");
-                  newValue !== null ? setIsNew(true) : setIsNew(false)
+                if (reason === "input") {
+                  newValue !== null
+                    ? !(masterList.length > 0
+                        ? [
+                            ...new Set(
+                              masterList
+                                .filter(
+                                  (ele) =>
+                                    ele.LOCATION_CODE == locationCode &&
+                                    ele.VENDOR == vendor,
+                                )
+                                .map((item) => item["CREW_NAME"]),
+                            ),
+                          ]
+                        : [].includes(newValue))
+                      ? setIsNew(true)
+                      : setIsNew(false)
+                    : setIsNew(false);
+                }
               }}
               onChange={(event, newValue) => {
                 newValue !== null
@@ -829,7 +864,25 @@ export default function tempPassDashboard() {
                       newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
                     )
                   : setTTNo("");
-                  newValue !== null ? setIsNew(true) : setIsNew(false)
+                if (reason === "input") {
+                  newValue !== null
+                    ? !(masterList.length > 0
+                        ? [
+                            ...new Set(
+                              masterList
+                                .filter(
+                                  (ele) =>
+                                    ele.LOCATION_CODE == locationCode &&
+                                    ele.VENDOR == vendor,
+                                )
+                                .map((item) => item["TT_NO"]),
+                            ),
+                          ]
+                        : [].includes(newValue))
+                      ? setIsNew(true)
+                      : setIsNew(false)
+                    : setIsNew(false);
+                }
               }}
               onChange={(event, newValue) => {
                 newValue !== null
@@ -1289,7 +1342,7 @@ export default function tempPassDashboard() {
           >
             {submitting ? "Submitting..." : "SUBMIT"}
           </Button>
-          <Button
+          {/* <Button
             variant="outlined"
             color="secondary"
             sx={{ m: 2 }}
@@ -1300,7 +1353,7 @@ export default function tempPassDashboard() {
             }}
           >
             {syncing ? "Syncing Master..." : "SYNC MASTER"}
-          </Button>
+          </Button> */}
         </div>
       </div>
 
