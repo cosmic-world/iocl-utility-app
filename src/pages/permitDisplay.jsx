@@ -43,23 +43,24 @@ export default function PermitDisplay({ handleReadMail }) {
       prevState + step < PermitList.length ? prevState + step : 0,
     );
   }, [clock]);
-const findOfficerName = (item) => {
+  const findOfficerName = (item) => {
     const filteredOfficerName = officerListForLocation.find(
       (officer) => officer["Emp_ID"] == item,
     );
     if (filteredOfficerName) {
       return filteredOfficerName["OFFICER_NAME"];
-    }
-    else {
+    } else {
       return item;
     }
-  }
-  const uniquePermitList = [...new Map(PermitList.map(item => [item["Permit No"], item])).values()];
+  };
+  const uniquePermitList = [
+    ...new Map(PermitList.map((item) => [item["Permit No"], item])).values(),
+  ];
 
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-0"
+        "d-flex flex-column justify-content-start align-items-start w-100 h-100 p-0"
       }
       style={{
         overflow: "none",
@@ -174,19 +175,20 @@ const findOfficerName = (item) => {
         </Button>
       </div>
 
-      <div className="ttes_table_view m-0">
+      <div className="ttes_table_view h-100 m-0">
         <Table bordered hover className="ttes_table">
           <thead className="table-head">
             <tr>
-              <th>DATE</th>
-              <th>PERMIT TYPE</th>
-              <th>PERMIT NO</th>
-              <th>CONTRACTOR NAME</th>
+                              <th style={{width:100}}>SL NO</th>
+              <th  style={{width:150}}>DATE</th>
+              <th  style={{width:150}}>PERMIT TYPE</th>
+              <th  style={{width:150}}>PERMIT NO</th>
+              <th  style={{width:200}}>CONTRACTOR NAME</th>
               <th>WORK DESCRIPTION</th>
               <th>WORK LOCATION</th>
-              <th>OFFICER NAME</th>
-              <th>CLEARANCE FROM</th>
-              <th>CLEARANCE TILL</th>
+              <th  style={{width:200}}>OFFICER NAME</th>
+              <th style={{width:140}}>CLEARANCE FROM</th>
+              <th style={{width:140}}>CLEARANCE TILL</th>
             </tr>
           </thead>
           <tbody
@@ -198,6 +200,9 @@ const findOfficerName = (item) => {
               const permit = uniquePermitList[i + startIndex];
               return (
                 <tr key={i}>
+                                      <td style={{ textAlign: "center" }}>
+                      {permit ? i + 1 + startIndex: ""}
+                    </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Date"] : ""}
                   </td>
@@ -211,7 +216,7 @@ const findOfficerName = (item) => {
                     {permit ? permit["Contractor Name"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Work Description"] : ""}
+                    {permit ? (permit["Work Description"]?.split("/")[1] || permit["Work Description"])?.slice(0, 100) : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Work Location"] : ""}

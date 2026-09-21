@@ -39,9 +39,11 @@ export default function PermitDisplay({ state, handleReadMail }) {
   const officerListForLocation = officerList.filter(
     (officer) => officer["LOCATION_CODE"] == locationCode,
   );
+  const uniquePermitList = [...new Map(PermitList.map(item => [item["Permit No"], item])).values()];
 
   useEffect(() => {
     setInterval(() => {
+      console.log('clock',clock, new Date().toLocaleTimeString());
       if (clock > 5000) {
         setClock(0);
       } else {
@@ -50,15 +52,11 @@ export default function PermitDisplay({ state, handleReadMail }) {
     }, 10000);
   }, []);
 
-  // useEffect(() => {
-  //   if(clock == 0){
-  //   window.location.reload()
-  //   }
-  // }, []);
-
   useEffect(() => {
+    console.log('here',startIndex, step, new Date().toLocaleTimeString());
+    
     setstartIndex((prevState) =>
-      prevState + step < PermitList.length ? prevState + step : 0,
+      prevState + step < uniquePermitList.length ? prevState + step : 0,
     );
   }, [clock]);
 
@@ -91,7 +89,7 @@ export default function PermitDisplay({ state, handleReadMail }) {
 
   const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
   const handleSubmit = async () => {
-    const x_list = PermitList.filter(
+    const x_list = uniquePermitList.filter(
       (val) => val["Unique ID"] === oldrowNumber,
     );
     const x = x_list.length > 0 ? x_list[0].page_left : null;
@@ -159,7 +157,7 @@ const findOfficerName = (item) => {
       return item;
     }
   }
-  const uniquePermitList = [...new Map(PermitList.map(item => [item["Permit No"], item])).values()];
+  
   return (
     <>
       {saveLoader ? (
@@ -210,9 +208,15 @@ const findOfficerName = (item) => {
                                 "Receiver Name",
                                 "Clearance From",
                                 "Clearance Till",
-                              ].map((key) => `${key} : ${key === "Receiver Name"
-                                      ? findOfficerName(val[key])
-                                      : val[key] || ""}`)
+                              ].map((key) =>
+  `${key} : ${
+    key === "Receiver Name"
+      ? findOfficerName(val[key])
+      : key === "Work Description"
+        ? (val[key]?.split("/")[1] || val[key])?.slice(0, 100)
+        : val[key] || ""
+  }`
+)
                 .join("\n");
               return (
                 <MenuItem
@@ -492,7 +496,7 @@ const findOfficerName = (item) => {
                   style={{
                     position: "relative",
                     width: "100%",
-                    height: "100%",
+                    height: "98%",
                     cursor: "pointer",
                   }}
                   onDoubleClick={(e) => handleClick(e, "new")}
@@ -507,6 +511,8 @@ const findOfficerName = (item) => {
                     }}
                   />
                   {uniquePermitList.map((val, index) => {
+                    console.log('uniquePermitList',uniquePermitList);
+                    
                     return (
                       <Tooltip
                         key={index}
@@ -541,16 +547,15 @@ const findOfficerName = (item) => {
                                 "Receiver Name",
                                 "Clearance From",
                                 "Clearance Till",
-                              ].map((key) => (
-                                <tr key={key}>
-                                  <td>{key}</td>
-                                  <td>
-                                    {key === "Receiver Name"
-                                      ? findOfficerName(val[key])
-                                      : val[key] || ""}
-                                  </td>
-                                </tr>
-                              ))}
+                              ].map((key) =>
+  `${key} : ${
+    key === "Receiver Name"
+      ? findOfficerName(val[key])
+      : key === "Work Description"
+        ? (val[key]?.split("/")[1] || val[key])?.slice(0, 100)
+        : val[key] || ""
+  }`
+)}
                             </tbody>
                           </Table>
                         }
@@ -617,16 +622,16 @@ const findOfficerName = (item) => {
           <Table bordered hover className="ttes_table m-0">
             <thead className="table-head">
               <tr>
-                <th>SL NO</th>
-              <th>DATE</th>
-              <th>PERMIT TYPE</th>
-              <th>PERMIT NO</th>
-              <th>CONTRACTOR NAME</th>
+                <th style={{width:100}}>SL NO</th>
+              <th  style={{width:150}}>DATE</th>
+              <th  style={{width:150}}>PERMIT TYPE</th>
+              <th  style={{width:150}}>PERMIT NO</th>
+              <th  style={{width:200}}>CONTRACTOR NAME</th>
               <th>WORK DESCRIPTION</th>
               <th>WORK LOCATION</th>
-              <th>OFFICER NAME</th>
-              <th>CLEARANCE FROM</th>
-              <th>CLEARANCE TILL</th>
+              <th  style={{width:200}}>OFFICER NAME</th>
+              <th style={{width:100}}>CLEARANCE FROM</th>
+              <th style={{width:100}}>CLEARANCE TILL</th>
               </tr>
             </thead>
             <tbody
@@ -639,7 +644,7 @@ const findOfficerName = (item) => {
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
-                      {permit ? i + 1 : ""}
+                      {permit ? i + 1 + startIndex: ""}
                     </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Date"] : ""}
@@ -654,7 +659,7 @@ const findOfficerName = (item) => {
                     {permit ? permit["Contractor Name"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {permit ? permit["Work Description"] : ""}
+                    {permit ? (permit["Work Description"]?.split("/")[1] || permit["Work Description"])?.slice(0, 100) : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Work Location"] : ""}

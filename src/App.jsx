@@ -56,16 +56,17 @@ function App() {
           const clearanceTill = ele["Clearance Till"];
           return clearanceTill > new Date().toLocaleTimeString("en-GB");
         });
-        const unique_zlist = [...new Map(zlist.map(item => [item["Permit No"], item])).values()];
+      const unique_zlist = [
+        ...new Map(zlist.map((item) => [item["Permit No"], item])).values(),
+      ];
       const ylist = unique_zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
         return currentPermitList.every(
-          (existingEle) =>
-            existingEle["Permit No"] != permitNo,
+          (existingEle) => existingEle["Permit No"] != permitNo,
         );
       });
       if (ylist.length > 0) {
-  const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
+        const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
           try {
             await fetch(sheet_url, {
@@ -176,7 +177,7 @@ function App() {
           "Hot Work ",
           "Cold Work ",
           "Electrical Work ",
-          "Height Work "
+          "Height Work ",
         ];
         const series = permit_labels.map((type) => {
           return permit_type_array.filter((item) => item == type.trim()).length;
@@ -226,7 +227,7 @@ function App() {
       legend: {
         show: false,
       },
-      colors: ["#e7028c", "#d9d90b", "#6ccded", "#575656"],
+      colors: ["#e7028c", "#d9d90b", "#6ccded", "#b9b5b5"],
       fill: {
         type: "gradient",
         gradient: {
@@ -235,7 +236,7 @@ function App() {
             "#e7028c", // solid
             "#d9d90b", // solid
             "#6ccded",
-            "#575656",
+            "#b9b5b5",
           ],
           stops: [0, 100],
         },
