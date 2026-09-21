@@ -13,7 +13,6 @@ export const userSlice = createSlice({
     contractorList: [], // to store master data
     selectedTerminal: "", // to store selected material name
     PermitList: [], // to store Permit List data from Google Sheets
-    fetchList: [], // to store fetched Permit List data from Gmail
     locationList: [], // to store location list data from Google Sheets
     locationCode: "", // to store location code data from Google Sheets
   },
@@ -45,9 +44,6 @@ export const userSlice = createSlice({
     SetPermitList: (state, action) => {
       state.PermitList = action.payload;
     },
-    SetFetchList: (state, action) => {
-      state.fetchList = action.payload;
-    },
     SetLocationList: (state, action) => {
       state.locationList = action.payload;
     },
@@ -70,7 +66,6 @@ export const {
   SetPermitList,
   SetLocationList,
   SetLocationCode,
-  SetFetchList,
 } = userSlice.actions;
 
 export default userSlice.reducer;

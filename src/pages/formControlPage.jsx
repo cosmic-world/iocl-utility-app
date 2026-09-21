@@ -77,7 +77,7 @@ export default function formControlPage({ show, setShow }) {
       receiverName == "" ||
       clrStart == "" ||
       clrEnd == "" ||
-      contractorName == "" 
+      contractorName == ""
     ) {
       alert("All fields must be filled");
       return;

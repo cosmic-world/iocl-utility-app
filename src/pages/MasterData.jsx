@@ -23,18 +23,15 @@ import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 export default function MasterData() {
   const dispatch = useDispatch();
-  const { navBarComponent, userType } = useSelector((state) => state.myApp);
+  const { navBarComponent, userType, locationCode, selectedTerminal } = useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [file, setFile] = useState(null);
-  const [locationCode, setLocationCode] = useState("");
   const [crewType, setCrewType] = useState("");
   const [vendor, setVendor] = useState("");
   const [crewName, setCrewName] = useState("");
-
-  const crewTypeList = useState(["DRIVER", "HELPER"]);
-
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [ttNo, setTTNo] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const [aadhaarNo, setAadhaarNo] = useState("");
@@ -82,10 +79,6 @@ export default function MasterData() {
 
   const handlePostData = async (e) => {
     e.preventDefault();
-    if (!locationCode) {
-      alert("Please select a Location Code.");
-      return;
-    }
 
     if (!crewType) {
       alert("Please select Crew Type.");
@@ -155,7 +148,6 @@ export default function MasterData() {
       if (data.success) {
         alert("Record submitted successfully!");
         // Reset form
-        setLocationCode("");
         setVendor("");
         setCrewType("");
         setCrewName("");
@@ -317,14 +309,13 @@ export default function MasterData() {
       >
         <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Code</Typography>
+            <Typography>Location Name</Typography>
             <TextField
               fullWidth
               variant="outlined"
               style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setLocationCode(e.target.value?.toUpperCase() || "")
-              }
+              value={locationName}
+              disabled
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {

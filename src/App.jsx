@@ -11,7 +11,6 @@ import LabourApproval from "./pages/LabourApproval";
 import {
   NavBarComponent,
   SetPermitList,
-  SetFetchList,
 } from "./action/userSlice";
 
 function formatDate(date1) {
@@ -27,7 +26,7 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList, fetchList } =
+  const { navBarComponent, selectedTerminal, PermitList } =
     useSelector((state) => state.myApp);
   const permitListRef = useRef(PermitList);
 

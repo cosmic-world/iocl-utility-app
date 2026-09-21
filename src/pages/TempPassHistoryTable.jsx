@@ -85,9 +85,6 @@ function EditToolbar({ requestFrom, requestTill }) {
       <Typography variant="h4" align="center">
         TEMPORARY PASS HISTORY REPORT
       </Typography>
-      {/* <Typography variant="h5" align="center">
-        {`${requestFrom ? `FROM: ${requestFrom}` : ''} ${requestTill ? `TILL: ${requestTill}` : ''}`.trim()}
-      </Typography> */}
 
       <Box display="flex" justifyContent="center" gap={1}>
         {requestFrom && (
@@ -113,7 +110,7 @@ function EditToolbar({ requestFrom, requestTill }) {
 
 export default function ExportCustomToolbar({}) {
   const dispatch = useDispatch();
-  const { navBarComponent, userType } = useSelector((state) => state.myApp);
+  const { navBarComponent, userType, locationCode, selectedTerminal } = useSelector((state) => state.myApp);
   const [seaching, setSearching] = useState(false);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchLocationCode, setSearchLocationCode] = useState("");
@@ -124,6 +121,7 @@ export default function ExportCustomToolbar({}) {
   const [requestFrom, setRequestFrom] = useState("");
   const [requestTill, setRequestTill] = useState("");
   const [showRecords, setShowRecords] = useState(false);
+const locationName = selectedTerminal[selectedTerminal.length - 1];
 
   useEffect(() => {
     fetchRecords();
@@ -431,8 +429,7 @@ export default function ExportCustomToolbar({}) {
     setSearching(true);
     try {
       const params = new URLSearchParams();
-      if (searchLocationCode)
-        params.append("location_code", searchLocationCode);
+      params.append("location_code", locationCode);
       if (searchVendor) params.append("vendor", searchVendor);
       if (searchTT) params.append("tt_no", searchTT);
       if (requestFrom)
@@ -481,8 +478,7 @@ export default function ExportCustomToolbar({}) {
             masterList
               .filter(
                 (ele) =>
-                  searchLocationCode === "" ||
-                  ele.LOCATION_CODE == searchLocationCode,
+                  ele.LOCATION_CODE == locationCode,
               )
               .map((item) => item["VENDOR"])
               .filter(Boolean),
@@ -505,8 +501,7 @@ export default function ExportCustomToolbar({}) {
             masterList
               .filter(
                 (ele) =>
-                  searchLocationCode === "" ||
-                  ele.LOCATION_CODE == searchLocationCode,
+                  ele.LOCATION_CODE == locationCode,
               )
               .map((item) => item["TT"])
               .filter(Boolean),
@@ -614,57 +609,34 @@ export default function ExportCustomToolbar({}) {
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-          <Autocomplete
-            className="w-100"
-            options={
-              masterList.length > 0
-                ? [...new Set(masterList.map((item) => item["LOCATION_CODE"]))]
-                : []
-            }
-            name="Search Location Code"
-            value={searchLocationCode !== "" ? searchLocationCode : null}
-            isOptionEqualToValue={(option, value) => option === value}
-            onChange={(e, newValue) =>
-              newValue !== null
-                ? setSearchLocationCode(newValue)
-                : setSearchLocationCode("")
-            }
-            sx={{
-              // 1. Increase font size of the placeholder/input text
-              "& .MuiInputBase-input": {
-                fontSize: "1rem",
-              },
-              "& .MuiOutlinedInput-root": {
-                paddingTop: "2px !important", // Reducer top whitespace
-                paddingBottom: "2px !important", // Keeps it centered vertically
-              },
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Location Code"
-                placeholder="Select Location Code"
-                InputLabelProps={{
-                  ...params.InputLabelProps,
-                  shrink: true,
-                }}
-                InputProps={{
-                  ...params.InputProps,
-                  style: {
-                    fontFamily: "Lucida Sans",
-                    backgroundColor: "white",
-                  },
-                  sx: {
-                    "& input::placeholder": {
-                      fontFamily: "Lucida Sans",
-                      fontSize: "0.8rem", // Optional: adjust placeholder size
-                      fontStyle: "italic", // Optional: make placeholder italicized
-                    },
-                  },
-                }}
-              />
-            )}
-          />
+          <TextField
+              fullWidth
+              variant="outlined"
+              label="Location Name"
+              value={locationName}
+              style={{ backgroundColor: "white" }}
+              size="small"
+              disabled
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "1px !important", // Reducer top whitespace
+                  paddingBottom: "1px !important", // Keeps it centered vertically
+                },
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  backgroundColor: "white",
+                  textTransform: "uppercase",
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
+                },
+              }}
+            />
         </div>
 
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
@@ -690,7 +662,6 @@ export default function ExportCustomToolbar({}) {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            // disabled={searchLocationCode === ""}
             options={combinedVendorList}
             sx={{
               // 1. Increase font size of the placeholder/input text
@@ -707,9 +678,7 @@ export default function ExportCustomToolbar({}) {
                 {...params}
                 label="Vendor"
                 placeholder={
-                  searchLocationCode == ""
-                    ? "Select Location Code First or Type For New..."
-                    : "Select From Vendor Dropdown or Type For New..."
+                  "Select From Vendor Dropdown or Type For New..."
                 }
                 InputLabelProps={{
                   ...params.InputLabelProps,
@@ -757,7 +726,6 @@ export default function ExportCustomToolbar({}) {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            // disabled={searchLocationCode === "" || searchVendor === ""}
             options={combinedTTList}
             sx={{
               // 1. Increase font size of the placeholder/input text
