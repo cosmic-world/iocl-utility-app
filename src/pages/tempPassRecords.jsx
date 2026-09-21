@@ -34,9 +34,13 @@ import CameraModal from "./CameraModal";
 
 export default function tempPassDashboard() {
   const dispatch = useDispatch();
-  const { masterList, navBarComponent, userType, locationCode, selectedTerminal } = useSelector(
-    (state) => state.myApp,
-  );
+  const {
+    masterList,
+    navBarComponent,
+    userType,
+    locationCode,
+    selectedTerminal,
+  } = useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);
 
@@ -406,10 +410,7 @@ export default function tempPassDashboard() {
       ? [
           ...new Set(
             masterList
-              .filter(
-                (ele) =>
-                  ele.LOCATION_CODE == locationCode,
-              )
+              .filter((ele) => ele.LOCATION_CODE == locationCode)
               .map((item) => item["VENDOR"])
               .filter(Boolean),
           ),
@@ -429,10 +430,7 @@ export default function tempPassDashboard() {
       ? [
           ...new Set(
             masterList
-              .filter(
-                (ele) =>
-                  ele.LOCATION_CODE == locationCode,
-              )
+              .filter((ele) => ele.LOCATION_CODE == locationCode)
               .map((item) => item["TT"])
               .filter(Boolean),
           ),
@@ -1300,7 +1298,7 @@ export default function tempPassDashboard() {
           <Button
             color="primary"
             variant="contained"
-            sx={{ m: 2 }}
+            sx={{ m: 1 }}
             style={{ width: 200 }}
             disabled={submitting}
             onClick={(e) => {
@@ -1309,62 +1307,50 @@ export default function tempPassDashboard() {
           >
             {submitting ? "Submitting..." : "SUBMIT"}
           </Button>
-          {/* <Button
-            variant="outlined"
-            color="secondary"
-            sx={{ m: 2 }}
-            style={{ width: 200, backgroundColor: "white" }}
-            disabled={syncing}
-            onClick={(e) => {
-              handleSync(e);
-            }}
-          >
-            {syncing ? "Syncing Master..." : "SYNC MASTER"}
-          </Button> */}
         </div>
       </div>
 
       <Typography
         variant="h4"
-        className="w-75 d-flex justify-content-center align-items-start mt-3"
+        className="w-75 d-flex justify-content-center align-items-start m-3"
         style={{ borderBottom: "1px dashed black" }}
       >
         Existing Request
       </Typography>
 
-      <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+      <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
+        <div style={{ width: "100%", maxWidth: 350}}>
           <TextField
-              fullWidth
-              variant="outlined"
-              label="Location Name"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              size="small"
-              disabled
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "1px !important", // Reducer top whitespace
-                  paddingBottom: "1px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                  textTransform: "uppercase",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
+            fullWidth
+            variant="outlined"
+            label="Location Name"
+            value={locationName}
+            style={{ backgroundColor: "white" }}
+            size="small"
+            disabled
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                paddingTop: "1px !important", // Reducer top whitespace
+                paddingBottom: "1px !important", // Keeps it centered vertically
+              },
+              // 1. Increase font size of the placeholder/input text
+              "& .MuiInputBase-input": {
+                fontSize: "1rem",
+                fontFamily: "Lucida Sans",
+                backgroundColor: "white",
+                textTransform: "uppercase",
+              },
+              "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
+              },
+            }}
+          />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <Autocomplete
             name="Search Vendor"
             className="w-100"
@@ -1398,9 +1384,7 @@ export default function tempPassDashboard() {
               <TextField
                 {...params}
                 label="Vendor"
-                placeholder={
-                  "Select From Vendor Dropdown or Type For New..."
-                }
+                placeholder={"Select From Vendor Dropdown or Type For New..."}
                 InputLabelProps={{
                   ...params.InputLabelProps,
                   shrink: true,
@@ -1424,7 +1408,7 @@ export default function tempPassDashboard() {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <Autocomplete
             name="SearchTTNo"
             className="w-100"
@@ -1454,9 +1438,7 @@ export default function tempPassDashboard() {
               <TextField
                 {...params}
                 label="TT"
-                placeholder={
-                  "Select From TT Dropdown or Type For New..."
-                }
+                placeholder={"Select From TT Dropdown or Type For New..."}
                 InputLabelProps={{
                   ...params.InputLabelProps,
                   shrink: true,
@@ -1483,7 +1465,6 @@ export default function tempPassDashboard() {
         <Button
           color="primary"
           variant="contained"
-          sx={{ m: 2 }}
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {

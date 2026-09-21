@@ -103,12 +103,12 @@ export default function MasterData() {
       return;
     }
 
-        if (!empID && role!='SECURITY') {
+    if (!empID && role != "SECURITY") {
       alert("Please enter Emp ID");
       return;
     }
 
-    if (!/^[0-9]{8}$/.test(empID) && role!='SECURITY') {
+    if (!/^[0-9]{8}$/.test(empID) && role != "SECURITY") {
       alert("Emp ID should be exactly 8 digits.");
       return;
     }
@@ -123,7 +123,7 @@ export default function MasterData() {
       return;
     }
 
-        if (!mailID) {
+    if (!mailID) {
       alert("Please enter Mail ID.");
       return;
     }
@@ -148,7 +148,7 @@ export default function MasterData() {
         // Reset form
         setLocationCode("");
         setMailID("");
-        setEmpID("")
+        setEmpID("");
         setName("");
         setMobileNo("");
         setRole("");
@@ -268,11 +268,11 @@ export default function MasterData() {
       }
 
       await handleSync();
-            setSelectedRoles((currentRoles) => {
-              const nextRoles = { ...currentRoles };
-              delete nextRoles[officer.ID];
-              return nextRoles;
-            });
+      setSelectedRoles((currentRoles) => {
+        const nextRoles = { ...currentRoles };
+        delete nextRoles[officer.ID];
+        return nextRoles;
+      });
       alert("Officer role changed successfully.");
     } catch (error) {
       alert("Error: " + error.message);
@@ -395,9 +395,7 @@ export default function MasterData() {
               variant="outlined"
               value={name}
               style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setName(e.target.value?.toUpperCase() || "")
-              }
+              onChange={(e) => setName(e.target.value?.toUpperCase() || "")}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -623,9 +621,7 @@ export default function MasterData() {
                       handleChangeRole(officer, selectedRoles[officer.ID])
                     }
                     disabled={
-                      saveLoader ||
-                      !isSuperAdmin ||
-                      !selectedRoles[officer.ID]
+                      saveLoader || !isSuperAdmin || !selectedRoles[officer.ID]
                     }
                     sx={{ flex: 1 }}
                   >

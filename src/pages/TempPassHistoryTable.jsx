@@ -110,7 +110,8 @@ function EditToolbar({ requestFrom, requestTill }) {
 
 export default function ExportCustomToolbar({}) {
   const dispatch = useDispatch();
-  const { navBarComponent, userType, locationCode, selectedTerminal } = useSelector((state) => state.myApp);
+  const { navBarComponent, userType, locationCode, selectedTerminal } =
+    useSelector((state) => state.myApp);
   const [seaching, setSearching] = useState(false);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchLocationCode, setSearchLocationCode] = useState("");
@@ -121,7 +122,7 @@ export default function ExportCustomToolbar({}) {
   const [requestFrom, setRequestFrom] = useState("");
   const [requestTill, setRequestTill] = useState("");
   const [showRecords, setShowRecords] = useState(false);
-const locationName = selectedTerminal[selectedTerminal.length - 1];
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
 
   useEffect(() => {
     fetchRecords();
@@ -476,10 +477,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
       ? [
           ...new Set(
             masterList
-              .filter(
-                (ele) =>
-                  ele.LOCATION_CODE == locationCode,
-              )
+              .filter((ele) => ele.LOCATION_CODE == locationCode)
               .map((item) => item["VENDOR"])
               .filter(Boolean),
           ),
@@ -499,10 +497,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
       ? [
           ...new Set(
             masterList
-              .filter(
-                (ele) =>
-                  ele.LOCATION_CODE == locationCode,
-              )
+              .filter((ele) => ele.LOCATION_CODE == locationCode)
               .map((item) => item["TT"])
               .filter(Boolean),
           ),
@@ -607,39 +602,39 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
         />
       ) : null}
 
-      <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+      <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
+        <div style={{ width: "100%", maxWidth: 350}}>
           <TextField
-              fullWidth
-              variant="outlined"
-              label="Location Name"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              size="small"
-              disabled
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "1px !important", // Reducer top whitespace
-                  paddingBottom: "1px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                  textTransform: "uppercase",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
+            fullWidth
+            variant="outlined"
+            label="Location Name"
+            value={locationName}
+            style={{ backgroundColor: "white" }}
+            size="small"
+            disabled
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                paddingTop: "1px !important", // Reducer top whitespace
+                paddingBottom: "1px !important", // Keeps it centered vertically
+              },
+              // 1. Increase font size of the placeholder/input text
+              "& .MuiInputBase-input": {
+                fontSize: "1rem",
+                fontFamily: "Lucida Sans",
+                backgroundColor: "white",
+                textTransform: "uppercase",
+              },
+              "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
+              },
+            }}
+          />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <Autocomplete
             name="Search Vendor"
             className="w-100"
@@ -677,9 +672,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
               <TextField
                 {...params}
                 label="Vendor"
-                placeholder={
-                  "Select From Vendor Dropdown or Type For New..."
-                }
+                placeholder={"Select From Vendor Dropdown or Type For New..."}
                 InputLabelProps={{
                   ...params.InputLabelProps,
                   shrink: true,
@@ -703,7 +696,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <Autocomplete
             name="SearchTTNo"
             className="w-100"
@@ -769,7 +762,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <div style={{ backgroundColor: "white" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoItem>
@@ -810,7 +803,7 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
           </div>
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div style={{ width: "100%", maxWidth: 350}}>
           <div style={{ backgroundColor: "white" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoItem>
@@ -854,7 +847,6 @@ const locationName = selectedTerminal[selectedTerminal.length - 1];
         <Button
           color="primary"
           variant="contained"
-          sx={{ m: 2 }}
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {

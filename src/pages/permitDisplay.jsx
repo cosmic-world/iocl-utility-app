@@ -179,16 +179,16 @@ export default function PermitDisplay({ handleReadMail }) {
         <Table bordered hover className="ttes_table">
           <thead className="table-head">
             <tr>
-                              <th style={{width:100}}>SL NO</th>
-              <th  style={{width:150}}>DATE</th>
-              <th  style={{width:150}}>PERMIT TYPE</th>
-              <th  style={{width:150}}>PERMIT NO</th>
-              <th  style={{width:200}}>CONTRACTOR NAME</th>
+              <th style={{ width: 100 }}>SL NO</th>
+              <th style={{ width: 150 }}>DATE</th>
+              <th style={{ width: 150 }}>PERMIT TYPE</th>
+              <th style={{ width: 150 }}>PERMIT NO</th>
+              <th style={{ width: 200 }}>CONTRACTOR NAME</th>
               <th>WORK DESCRIPTION</th>
               <th>WORK LOCATION</th>
-              <th  style={{width:200}}>OFFICER NAME</th>
-              <th style={{width:140}}>CLEARANCE FROM</th>
-              <th style={{width:140}}>CLEARANCE TILL</th>
+              <th style={{ width: 200 }}>OFFICER NAME</th>
+              <th style={{ width: 140 }}>CLEARANCE FROM</th>
+              <th style={{ width: 140 }}>CLEARANCE TILL</th>
             </tr>
           </thead>
           <tbody
@@ -200,9 +200,9 @@ export default function PermitDisplay({ handleReadMail }) {
               const permit = uniquePermitList[i + startIndex];
               return (
                 <tr key={i}>
-                                      <td style={{ textAlign: "center" }}>
-                      {permit ? i + 1 + startIndex: ""}
-                    </td>
+                  <td style={{ textAlign: "center" }}>
+                    {permit ? i + 1 + startIndex : ""}
+                  </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Date"] : ""}
                   </td>
@@ -216,7 +216,12 @@ export default function PermitDisplay({ handleReadMail }) {
                     {permit ? permit["Contractor Name"] : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {permit ? (permit["Work Description"]?.split("/")[1] || permit["Work Description"])?.slice(0, 100) : ""}
+                    {permit
+                      ? (
+                          permit["Work Description"]?.split("/")[1] ||
+                          permit["Work Description"]
+                        )?.slice(0, 100)
+                      : ""}
                   </td>
                   <td style={{ textAlign: "center" }}>
                     {permit ? permit["Work Location"] : ""}

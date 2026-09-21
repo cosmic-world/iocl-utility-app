@@ -23,7 +23,8 @@ import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 export default function MasterData() {
   const dispatch = useDispatch();
-  const { navBarComponent, userType, locationCode, selectedTerminal } = useSelector((state) => state.myApp);
+  const { navBarComponent, userType, locationCode, selectedTerminal } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -307,8 +308,8 @@ export default function MasterData() {
         className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
         style={{ border: "1px dashed #ccc" }}
       >
-        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Location Name</Typography>
             <TextField
               fullWidth
@@ -329,7 +330,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Crew Type</Typography>
             <Autocomplete
               className="w-100"
@@ -373,7 +374,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Vendor</Typography>
             <TextField
               fullWidth
@@ -393,7 +394,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Crew Name</Typography>
             <TextField
               fullWidth
@@ -413,7 +414,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>TT No</Typography>
             <TextField
               fullWidth
@@ -433,7 +434,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Mobile No</Typography>
             <TextField
               fullWidth
@@ -454,7 +455,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>ID Proof No</Typography>
             <TextField
               fullWidth
@@ -476,7 +477,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350}}>
             <Typography>Driving Licence No</Typography>
             <TextField
               fullWidth
