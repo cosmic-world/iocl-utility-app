@@ -125,8 +125,8 @@ export default function Header({}) {
             >
               Contacts
             </MenuItem>
-            <Divider className="bg-dark" />
-            <Tooltip
+            {/* <Divider className="bg-dark" /> */}
+            {/* <Tooltip
               title={
                 manual
                   ? "Download user manual"
@@ -151,7 +151,7 @@ export default function Header({}) {
                   Help Manual
                 </Button>
               </MenuItem>
-            </Tooltip>
+            </Tooltip> */}
           </Menu>
         </>
       ) : null}
