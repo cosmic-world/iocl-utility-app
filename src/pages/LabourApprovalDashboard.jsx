@@ -57,7 +57,7 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
       zlist.length==0?alert("No records found"):null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
-      console.log("Failed to fetch records", error);
+      console.error("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
     }

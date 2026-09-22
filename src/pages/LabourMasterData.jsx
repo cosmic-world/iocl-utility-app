@@ -152,30 +152,6 @@ export default function LabourMasterData({handleSyncContractor}) {
     }
   };
 
-  const handleSync = async () => {
-    setSaveLoader(true);
-    setSyncing(true);
-    try {
-      const response = await fetch(apiUrl("/api/contractor-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetContractorMasterList(zlist));
-      zlist.length > 0
-        ? alert("Syncing completed successfully.")
-        : alert("No records found in the database.");
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    } finally {
-      setSaveLoader(false);
-      setSyncing(false);
-    }
-  };
-
   return (
     <div
       className={
