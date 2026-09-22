@@ -38,16 +38,15 @@ export default function LabourApprovalDashboard() {
   const [gatePassNo, setGatePassNo] = useState({});
   const handleSubmit = async () => {
     try {
-      const params = new URLSearchParams();
-      params.append("location_code", String(locationCode));
-      if (searchContractor) params.append("contractor", searchContractor);
-      params.append(
-        "fetchdate",
-        getTodayLabel().split("-").reverse().join("-"),
-      );
+      // const params = new URLSearchParams();
+      // params.append("location_code", String(locationCode));
+      // if (searchContractor) params.append("contractor", searchContractor);
+      // params.append(
+      //   "fetchdate",
+      //   getTodayLabel().split("-").reverse().join("-"),
+      // );
       // const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
-      const url = apiUrl(`/api/labour-pass-requests`);
-      const response = await fetch(url);
+      const response = await fetch(apiUrl("/api/labour-pass-requests"));
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
@@ -55,7 +54,7 @@ export default function LabourApprovalDashboard() {
       const zlist = Array.isArray(data) ? data : [];
       setRecordsLaborsEntry(zlist);
     } catch (error) {
-      console.error("Failed to fetch records", error);
+      console.log("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
     }

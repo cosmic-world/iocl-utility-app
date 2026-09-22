@@ -1312,21 +1312,21 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
 app.get("/api/labour-pass-requests", (req, res) => {
   (async () => {
     try {
-        const { location_code, contractor } = req.query;
-        let whereClauses = [];
+        // const { location_code, contractor } = req.query;
+        // let whereClauses = [];
       let query = "SELECT * FROM LabourEntryRecord";
       // if (fetchdate) {
       // whereClauses.push(`CAST(CREATED_AT AS DATE) = CONVERT(date, '${fetchdate.replace(/'/g, "''")}', 23)`)
       // }
-      if (location_code) {
-      whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
-      }
-      if (contractor) {
-      whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
-      }
-      if (whereClauses.length > 0) {
-        query += " WHERE " + whereClauses.join(" AND ");
-      }
+      // if (location_code) {
+      // whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
+      // }
+      // if (contractor) {
+      // whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
+      // }
+      // if (whereClauses.length > 0) {
+      //   query += " WHERE " + whereClauses.join(" AND ");
+      // }
 
       await sql.connect(sqlConfig);
       const result = await sql.query(query);
