@@ -12,14 +12,15 @@ export default function Header({}) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
+  
   const manual = String(selectedApplication || "").includes("TT Crew")
     ? {
-        href: "/manuals/tt-crew-temporary-pass.html",
+        href: `${process.env.PUBLIC_URL}/manuals/tt-crew-temporary-pass.html`,
         filename: "TT-Crew-Temporary-Pass-User-Manual.html",
       }
     : String(selectedApplication || "").includes("Permit")
       ? {
-          href: "/manuals/permit-dashboard.html",
+          href: `${process.env.PUBLIC_URL}/manuals/permit-dashboard.html`,
           filename: "Permit-Dashboard-User-Manual.html",
         }
       : [
@@ -30,7 +31,7 @@ export default function Header({}) {
             "Contractor Master",
           ].some((label) => String(selectedApplication || "").includes(label))
         ? {
-            href: "/manuals/worker-entry.html",
+            href: `${process.env.PUBLIC_URL}/manuals/worker-entry.html`,
             filename: "Worker-Entry-User-Manual.html",
           }
         : null;
