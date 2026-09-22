@@ -1,4 +1,5 @@
 require("dotenv").config();
+console.log("DEBUG APP_BASE_URL =", JSON.stringify(process.env.APP_BASE_URL));
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
