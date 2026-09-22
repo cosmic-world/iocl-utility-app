@@ -1314,7 +1314,8 @@ app.get("/api/labour-pass-requests", async (req, res) => {
   try {
     // const { fetchdate, location_code, contractor } = req.query;
     pool = await new sql.ConnectionPool(sqlConfig).connect();
-
+    console.log('here..');
+    
     const request = pool.request();
     const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
     // if (fetchdate) {
@@ -1335,8 +1336,10 @@ app.get("/api/labour-pass-requests", async (req, res) => {
         const result = await request.query(
       `SELECT * FROM dbo.LabourEntryRecord ORDER BY CREATED_AT DESC`,
     );
+    console.log('here2..');
     return res.json(Array.isArray(result.recordset) ? result.recordset : []);
   } catch (error) {
+    console.log('error',error);
     console.error("Labour request query failed:", {
       message: error.message,
       code: error.code,
