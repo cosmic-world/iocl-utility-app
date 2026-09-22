@@ -1007,6 +1007,7 @@ function escapePdfText(value) {
 }
 
 function createLabourApprovalPdf(rows, token) {
+  rows = Array.isArray(rows) ? rows : [];
   const lines = [
     "IOCL | LABOUR ENTRY APPROVAL",
     "Temporary Pass Request",
@@ -1071,6 +1072,7 @@ function drawReportCell(doc, text, x, y, width, height, options = {}) {
 }
 
 function createLabourPermissionReport(rows) {
+  rows = Array.isArray(rows) ? rows : [];
   const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 28 });
   const buffers = [];
   doc.on("data", (chunk) => buffers.push(chunk));
@@ -1154,6 +1156,7 @@ function createLabourPermissionReport(rows) {
 }
 
 function createLabourRegisterReport(rows) {
+  rows = Array.isArray(rows) ? rows : [];
   const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 24 });
   const buffers = [];
   doc.on("data", (chunk) => buffers.push(chunk));
@@ -1182,16 +1185,16 @@ function createLabourRegisterReport(rows) {
   let y = 88;
   const headerHeight = 38;
   let x = left;
-  columns.forEach(([label, columnWidth]) => {
+  (Array.isArray(columns) ? columns : []).forEach(([label, columnWidth]) => {
     const scaledWidth = columnWidth * scale;
     drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 6, align: "center" });
     x += scaledWidth;
   });
   const rowHeight = 25;
-  rows.forEach((row, index) => {
+  (Array.isArray(rows) ? rows : []).forEach((row, index) => {
     x = left;
     const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", row.APPROVING_OFFICER,];
-    columns.forEach(([, columnWidth], columnIndex) => {
+    (Array.isArray(columns) ? columns : []).forEach(([, columnWidth], columnIndex) => {
       const scaledWidth = columnWidth * scale;
       drawReportCell(doc, values[columnIndex], x, y + headerHeight + index * rowHeight, scaledWidth, rowHeight, {
         fontSize: 7,
@@ -1284,10 +1287,11 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
     const result = await request.query(
       "SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID",
     );
-    if (!result.recordset.length) {
+    const rows = Array.isArray(result.recordset) ? result.recordset : [];
+    if (!rows.length) {
       return res.status(404).json({ message: "Approval request was not found." });
     }
-    if (result.recordset.some((row) => row.REQUEST_STATUS !== "PENDING")) {
+    if (rows.some((row) => row.REQUEST_STATUS !== "PENDING")) {
       return res.status(409).json({ message: "Only pending labour requests can be forwarded." });
     }
 
@@ -1297,7 +1301,7 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
     await update.query(
       "UPDATE dbo.LabourEntryRecord SET APPROVING_OFFICER = @approvingOfficer WHERE REQUEST_TOKEN = @token AND REQUEST_STATUS = 'PENDING'",
     );
-    await sendLabourWorkflowEmail(mailID, req.params.token, result.recordset);
+    await sendLabourWorkflowEmail(mailID, req.params.token, rows);
     return res.json({ success: true, approvingOfficer });
   } catch (error) {
     console.error("Labour request forwarding error:", error);
@@ -1329,7 +1333,7 @@ app.get("/api/labour-pass-requests", async (req, res) => {
     const result = await request.query(
       `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
     );
-    return res.json(result.recordset);
+    return res.json(Array.isArray(result.recordset) ? result.recordset : []);
   } catch (error) {
     console.error("Labour request query failed:", error);
     return res.status(500).json({ message: error.message });
@@ -1367,7 +1371,7 @@ app.get("/api/labour-pass-reports", async (req, res) => {
       conditions.push("CONTRACTOR = @contractor");
     }
     const result = await request.query(`SELECT *, COALESCE(NULLIF(LTRIM(RTRIM(APPROVED_BY)), ''), APPROVING_OFFICER) AS APPROVER_NAME FROM dbo.LabourEntryRecord WHERE ${conditions.join(" AND ")} ORDER BY CREATED_AT, ID`);
-    const rows = result.recordset;
+    const rows = Array.isArray(result.recordset) ? result.recordset : [];
     if (!rows.length) {
       await sql.close();
       return res.status(404).json({ error: "No approved labour records found for the selected filters." });
