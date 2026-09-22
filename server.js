@@ -1329,8 +1329,11 @@ app.get("/api/labour-pass-requests", async (req, res) => {
       request.input("contractor", sql.NVarChar, String(contractor));
       whereClauses.push("CONTRACTOR = @contractor");
     }
-    const result = await request.query(
-      `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
+    // const result = await request.query(
+    //   `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
+    // );
+        const result = await request.query(
+      `SELECT * FROM dbo.LabourEntryRecord ORDER BY CREATED_AT DESC`,
     );
     return res.json(Array.isArray(result.recordset) ? result.recordset : []);
   } catch (error) {
