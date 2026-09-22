@@ -45,7 +45,8 @@ export default function LabourApprovalDashboard() {
         "fetchdate",
         getTodayLabel().split("-").reverse().join("-"),
       );
-      const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
+      // const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
+      const url = apiUrl(`/api/labour-pass-requests`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to load records");

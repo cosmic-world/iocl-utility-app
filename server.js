@@ -1312,23 +1312,23 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
 app.get("/api/labour-pass-requests", async (req, res) => {
   let pool;
   try {
-    const { fetchdate, location_code, contractor } = req.query;
+    // const { fetchdate, location_code, contractor } = req.query;
     pool = await new sql.ConnectionPool(sqlConfig).connect();
 
     const request = pool.request();
     const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
-    if (fetchdate) {
-      request.input("fetchdate", sql.Date, String(fetchdate));
-      whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
-    }
-    if (location_code) {
-      request.input("locationCode", sql.NVarChar, String(location_code));
-      whereClauses.push("LOCATION_CODE = @locationCode");
-    }
-    if (contractor) {
-      request.input("contractor", sql.NVarChar, String(contractor));
-      whereClauses.push("CONTRACTOR = @contractor");
-    }
+    // if (fetchdate) {
+    //   request.input("fetchdate", sql.Date, String(fetchdate));
+    //   whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
+    // }
+    // if (location_code) {
+    //   request.input("locationCode", sql.NVarChar, String(location_code));
+    //   whereClauses.push("LOCATION_CODE = @locationCode");
+    // }
+    // if (contractor) {
+    //   request.input("contractor", sql.NVarChar, String(contractor));
+    //   whereClauses.push("CONTRACTOR = @contractor");
+    // }
     // const result = await request.query(
     //   `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
     // );
