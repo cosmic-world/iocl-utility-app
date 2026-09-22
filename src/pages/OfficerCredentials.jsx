@@ -29,7 +29,8 @@ export default function MasterData() {
   const dispatch = useDispatch();
   const {
     officerList,
-    navBarComponent,
+    locationCode,
+    selectedTerminal,
     userType,
     locationCode: selectedLocationCode,
   } = useSelector((state) => state.myApp);
@@ -39,7 +40,6 @@ export default function MasterData() {
   const [submitting, setSubmitting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState(null);
-  const [locationCode, setLocationCode] = useState("");
   const [mailID, setMailID] = useState("");
   const [name, setName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
@@ -49,6 +49,7 @@ export default function MasterData() {
   const [searchLocationCode, setSearchLocationCode] = useState(
     selectedLocationCode || "",
   );
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [officersForLocation, setOfficersForLocation] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -93,10 +94,6 @@ export default function MasterData() {
 
   const handlePostData = async (e) => {
     e.preventDefault();
-    if (!locationCode) {
-      alert("Please select a Location Code.");
-      return;
-    }
 
     if (!name) {
       alert("Please enter Officer Name.");
@@ -132,7 +129,14 @@ export default function MasterData() {
     setSubmitting(true);
 
     try {
-      const payload = { locationCode, name, empID, mobileNo, mailID, role };
+      const payload = {
+        locationCode: String(locationCode),
+        name,
+        empID,
+        mobileNo,
+        mailID,
+        role,
+      };
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-officer-single"), {
         method: "POST",
@@ -146,7 +150,6 @@ export default function MasterData() {
         alert("Record submitted successfully!");
         await loadOfficerList();
         // Reset form
-        setLocationCode("");
         setMailID("");
         setEmpID("");
         setName("");
@@ -365,24 +368,31 @@ export default function MasterData() {
       >
         <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Code</Typography>
+            <Typography>Location Name</Typography>
             <TextField
               fullWidth
               variant="outlined"
+              value={locationName}
               style={{ backgroundColor: "white" }}
-              value={locationCode}
-              type="number"
-              onChange={(e) =>
-                setLocationCode(e.target.value?.toUpperCase() || "")
-              }
+              size="small"
+              disabled
               sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "1px !important", // Reducer top whitespace
+                  paddingBottom: "1px !important", // Keeps it centered vertically
+                },
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
+                  backgroundColor: "white",
                   textTransform: "uppercase",
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
                 },
               }}
             />

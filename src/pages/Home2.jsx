@@ -14,21 +14,16 @@ import {
   NavBarComponent,
   SelectedTerminal,
   SetLocationCode,
+  SetAuthorized,
 } from "../action/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Cascader } from "antd";
-import {
-  Button,
-  TextField,
-  Select,
-  InputAdornment,
-  OutlinedInput,
-} from "@mui/material";
+import { Button, TextField, InputAdornment } from "@mui/material";
 import { Modal } from "react-bootstrap";
 
 export default function contacts() {
   const dispatch = useDispatch();
-  const { selectedApplication, selectedTerminal, locationList, userType } =
+  const { selectedApplication, selectedTerminal, locationList, authorized } =
     useSelector((state) => state.myApp);
   const [pass, SetPass] = useState("");
   const [passcode, setPasscode] = useState("");
@@ -118,6 +113,7 @@ export default function contacts() {
       dispatch(NavBarComponent("ttInOutDashboard"));
     }
     setModalShow(false);
+    dispatch(SetAuthorized(true));
   };
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">
@@ -126,9 +122,9 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}
         >
           <CardActionArea
+            onMouseDown={() => setSelectedCard("TT Crew Temporary Pass")}
             onClick={() => {
-              setSelectedCard("TT Crew Temporary Pass");
-              setModalShow(true);
+              authorized ? handleSubmit() : setModalShow(true);
             }}
             data-active={selectedApplication === "TT Crew Temporary Pass"}
             sx={{
@@ -156,9 +152,9 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "pointer", margin: 10 }}
         >
           <CardActionArea
+            onMouseDown={() => setSelectedCard("Permit Dashboard")}
             onClick={() => {
-              setSelectedCard("Permit Dashboard");
-              setModalShow(true);
+              authorized ? handleSubmit() : setModalShow(true);
             }}
             data-active={selectedApplication === "Permit Dashboard"}
             sx={{
@@ -186,10 +182,10 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
         >
           <CardActionArea
-            disabled
+            // disabled
+            onMouseDown={() => setSelectedCard("Labour Entry")}
             onClick={() => {
-              setSelectedCard("Labour Entry");
-              setModalShow(true);
+              authorized ? handleSubmit() : setModalShow(true);
             }}
             data-active={selectedApplication === "Labour Entry"}
             sx={{
@@ -228,9 +224,9 @@ export default function contacts() {
         >
           <CardActionArea
             disabled
+            onMouseDown={() => setSelectedCard("Material Mangement")}
             onClick={() => {
-              setSelectedCard("Material Mangement");
-              setModalShow(true);
+              authorized ? handleSubmit() : setModalShow(true);
             }}
             data-active={selectedApplication === "Material Mangement"}
             sx={{
@@ -271,7 +267,7 @@ export default function contacts() {
             disabled
             onClick={() => {
               setSelectedCard("TT IN-OUT");
-              setModalShow(true);
+              authorized ? handleSubmit() : setModalShow(true);
             }}
             data-active={selectedApplication === "TT IN-OUT"}
             sx={{

@@ -430,7 +430,7 @@ export default function ExportCustomToolbar({}) {
     setSearching(true);
     try {
       const params = new URLSearchParams();
-      params.append("location_code", locationCode);
+      params.append("location_code", String(locationCode));
       if (searchVendor) params.append("vendor", searchVendor);
       if (searchTT) params.append("tt_no", searchTT);
       if (requestFrom)
@@ -603,7 +603,7 @@ export default function ExportCustomToolbar({}) {
       ) : null}
 
       <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <TextField
             fullWidth
             variant="outlined"
@@ -634,7 +634,7 @@ export default function ExportCustomToolbar({}) {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <Autocomplete
             name="Search Vendor"
             className="w-100"
@@ -696,7 +696,7 @@ export default function ExportCustomToolbar({}) {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <Autocomplete
             name="SearchTTNo"
             className="w-100"
@@ -762,7 +762,7 @@ export default function ExportCustomToolbar({}) {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <div style={{ backgroundColor: "white" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoItem>
@@ -803,7 +803,7 @@ export default function ExportCustomToolbar({}) {
           </div>
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <div style={{ backgroundColor: "white" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DemoItem>

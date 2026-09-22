@@ -136,7 +136,7 @@ export default function Header({}) {
         className={`header-locationName h-100 flex-grow-1
       d-none d-xxl-flex justify-content-center align-items-center text-white user-select-none`}
       >
-        {`${selectedApplication} - ${selectedTerminal[1] || ""}`}
+        {`${selectedApplication} ${selectedTerminal != "" ? "-" : ""} ${selectedTerminal[1] || ""}`}
       </div>
 
       <div

@@ -1,45 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
-import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
 import {
   Button,
   TextField,
   CircularProgress,
-  Autocomplete,
   Typography,
   Box,
 } from "@mui/material";
-import { DemoItem } from "@mui/x-date-pickers/internals/demo";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import dayjs from "dayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Visibility, Download } from "@mui/icons-material";
-import {
-  SetContractorMasterList,
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import { Download } from "@mui/icons-material";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 export default function MasterData() {
   const dispatch = useDispatch();
-  const { contractorList, navBarComponent, userType } = useSelector(
-    (state) => state.myApp,
-  );
+  const { navBarComponent, userType, locationCode, selectedTerminal } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState(null);
-  const [locationCode, setLocationCode] = useState("");
   const [mailID, setMailID] = useState("");
   const [contractorName, setContractorName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
-
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
   const fileInputRef = useRef(null);
 
   const handleExcelChange = (e) => {
@@ -82,10 +66,6 @@ export default function MasterData() {
 
   const handlePostData = async (e) => {
     e.preventDefault();
-    if (!locationCode) {
-      alert("Please select a Location Code.");
-      return;
-    }
 
     if (!contractorName) {
       alert("Please enter Contractor Name.");
@@ -111,7 +91,12 @@ export default function MasterData() {
     setSubmitting(true);
 
     try {
-      const payload = { locationCode, contractorName, mailID, mobileNo };
+      const payload = {
+        locationCode: String(locationCode),
+        contractorName,
+        mailID,
+        mobileNo,
+      };
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-contractor-single"), {
         method: "POST",
@@ -124,7 +109,6 @@ export default function MasterData() {
       if (data.success) {
         alert("Record submitted successfully!");
         // Reset form
-        setLocationCode("");
         setMailID("");
         setContractorName("");
         setMobileNo("");
@@ -136,30 +120,6 @@ export default function MasterData() {
     } finally {
       setSaveLoader(false);
       setSubmitting(false);
-    }
-  };
-
-  const handleSync = async () => {
-    setSaveLoader(true);
-    setSyncing(true);
-    try {
-      const response = await fetch(apiUrl("/api/contractor-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetContractorMasterList(zlist));
-      zlist.length > 0
-        ? alert("Syncing completed successfully.")
-        : alert("No records found in the database.");
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    } finally {
-      setSaveLoader(false);
-      setSyncing(false);
     }
   };
 
@@ -304,23 +264,31 @@ export default function MasterData() {
       >
         <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Code</Typography>
+            <Typography>Location Name</Typography>
             <TextField
               fullWidth
               variant="outlined"
-              value={locationCode}
+              value={locationName}
               style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setLocationCode(e.target.value?.toUpperCase() || "")
-              }
+              size="small"
+              disabled
               sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "1px !important", // Reducer top whitespace
+                  paddingBottom: "1px !important", // Keeps it centered vertically
+                },
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
+                  backgroundColor: "white",
                   textTransform: "uppercase",
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
                 },
               }}
             />

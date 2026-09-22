@@ -101,7 +101,7 @@ export default function tempPassDashboard() {
     setSearching(true);
     try {
       const params = new URLSearchParams();
-      params.append("location_code", locationCode);
+      params.append("location_code", String(locationCode));
       if (searchVendor) params.append("vendor", searchVendor);
       if (searchTT) params.append("tt_no", searchTT);
       params.append(
@@ -277,7 +277,7 @@ export default function tempPassDashboard() {
       const uploadMaster = async () => {
         try {
           const payload = {
-            location_code: locationCode,
+            location_code: String(locationCode),
             vendor: vendor,
             crew_type: crewType,
             crew_name: crewName,
@@ -1319,7 +1319,7 @@ export default function tempPassDashboard() {
       </Typography>
 
       <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <TextField
             fullWidth
             variant="outlined"
@@ -1350,7 +1350,7 @@ export default function tempPassDashboard() {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <Autocomplete
             name="Search Vendor"
             className="w-100"
@@ -1408,7 +1408,7 @@ export default function tempPassDashboard() {
           />
         </div>
 
-        <div style={{ width: "100%", maxWidth: 350}}>
+        <div style={{ width: "100%", maxWidth: 350 }}>
           <Autocomplete
             name="SearchTTNo"
             className="w-100"
