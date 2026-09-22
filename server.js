@@ -1309,48 +1309,33 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
   }
 });
 
-app.get("/api/labour-pass-requests", async (req, res) => {
-  let pool;
-  try {
-    // const { fetchdate, location_code, contractor } = req.query;
-    pool = await new sql.ConnectionPool(sqlConfig).connect();
-    console.log('here..');
-    
-    const request = pool.request();
-    const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
-    // if (fetchdate) {
-    //   request.input("fetchdate", sql.Date, String(fetchdate));
-    //   whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
-    // }
-    // if (location_code) {
-    //   request.input("locationCode", sql.NVarChar, String(location_code));
-    //   whereClauses.push("LOCATION_CODE = @locationCode");
-    // }
-    // if (contractor) {
-    //   request.input("contractor", sql.NVarChar, String(contractor));
-    //   whereClauses.push("CONTRACTOR = @contractor");
-    // }
-    // const result = await request.query(
-    //   `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
-    // );
-        const result = await request.query(
-      `SELECT * FROM dbo.LabourEntryRecord ORDER BY CREATED_AT DESC`,
-    );
-    console.log('here2..');
-    return res.json(Array.isArray(result.recordset) ? result.recordset : []);
-  } catch (error) {
-    console.log('error',error);
-    console.error("Labour request query failed:", {
-      message: error.message,
-      code: error.code,
-      fetchdate: req.query.fetchdate,
-      location_code: req.query.location_code,
-      contractor: req.query.contractor,
-    });
-    return res.status(500).json({ message: error.message });
-  } finally {
-    if (pool) await pool.close();
-  }
+app.get("/api/labour-pass-requests", (req, res) => {
+  (async () => {
+    try {
+        const { location_code, contractor } = req.query;
+        let whereClauses = [];
+      let query = "SELECT * FROM LabourEntryRecord";
+      // if (fetchdate) {
+      // whereClauses.push(`CAST(CREATED_AT AS DATE) = CONVERT(date, '${fetchdate.replace(/'/g, "''")}', 23)`)
+      // }
+      if (location_code) {
+      whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
+      }
+      if (contractor) {
+      whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
+      }
+      if (whereClauses.length > 0) {
+        query += " WHERE " + whereClauses.join(" AND ");
+      }
+
+      await sql.connect(sqlConfig);
+      const result = await sql.query(query);
+      res.json(result.recordset);
+    } catch (error) {
+      console.error("Query error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  })();
 });
 
 app.get("/api/labour-pass-reports", async (req, res) => {
