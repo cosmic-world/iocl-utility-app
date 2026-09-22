@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -18,7 +18,7 @@ import {
   SetSelectedApplication,
 } from "../action/userSlice";
 
-export default function LabourApprovalDashboard() {
+export default function LabourApprovalDashboard({handleSyncContractor}) {
   const { userType, locationCode, contractorList, navBarComponent } = useSelector(
     (state) => state.myApp,
   );
@@ -36,22 +36,25 @@ export default function LabourApprovalDashboard() {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [gatePassNo, setGatePassNo] = useState({});
+    useEffect(() => {
+      handleSyncContractor();
+    }, []);
   const handleSubmit = async () => {
     try {
-      // const params = new URLSearchParams();
-      // params.append("location_code", String(locationCode));
-      // if (searchContractor) params.append("contractor", searchContractor);
-      // params.append(
-      //   "fetchdate",
-      //   getTodayLabel().split("-").reverse().join("-"),
-      // );
-      // const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
-      const response = await fetch(apiUrl("/api/labour-pass-requests"));
+      const params = new URLSearchParams();
+      params.append("location_code", String(locationCode));
+      if (searchContractor) params.append("contractor", searchContractor);
+      params.append(
+        "fetchdate",
+        getTodayLabel().split("-").reverse().join("-"),
+      );
+      const response = await fetch(apiUrl(`/api/labour-pass-requests?${params.toString()}`));
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
+      zlist.length==0?alert("No records found"):null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.log("Failed to fetch records", error);

@@ -8,7 +8,7 @@ import Header from "./pages/Header";
 import LandingPage from "./pages/landingPage";
 import { useDispatch, useSelector } from "react-redux";
 import LabourApproval from "./pages/LabourApproval";
-import { NavBarComponent, SetPermitList } from "./action/userSlice";
+import { NavBarComponent, SetPermitList, SetContractorMasterList } from "./action/userSlice";
 
 function formatDate(date1) {
   const date = new Date(...date1.slice(5, -1).split(","));
@@ -269,6 +269,20 @@ function App() {
     },
   });
 
+    const handleSyncContractor = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/contractor-master-data"));
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetContractorMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
       <Header />
@@ -278,7 +292,7 @@ function App() {
           <Route
             path="/"
             element={
-              <LandingPage state={state} handleReadMail={handleReadMail} />
+              <LandingPage state={state} handleReadMail={handleReadMail} handleSyncContractor={handleSyncContractor} />
             }
           />
         </Routes>

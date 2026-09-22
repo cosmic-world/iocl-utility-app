@@ -642,14 +642,6 @@ app.get("/api/labour-pass-requests", async (req, res) => {
   let pool;
   try {
     const { fetchdate, location_code, contractor } = req.query;
-    console.log(`[${startedAt}] labour-pass start requestId=${requestId}`, {
-      fetchdate,
-      location_code,
-      contractor,
-      dbServer: sqlConfig.server,
-      dbName: sqlConfig.database,
-    });
-
     pool = await new sql.ConnectionPool(sqlConfig).connect();
     const request = pool.request();
     const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
@@ -668,7 +660,7 @@ app.get("/api/labour-pass-requests", async (req, res) => {
     const query = `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`;
     const result = await request.query(query);
     const rows = Array.isArray(result.recordset) ? result.recordset : [];
-    console.log(`[${new Date().toISOString()}] labour-pass success requestId=${requestId} rows=${rows.length}`);
+    // console.log(`[${new Date().toISOString()}] labour-pass success requestId=${requestId} rows=${rows.length}`);
     return res.json(rows);
   } catch (error) {
     const failedAt = new Date().toISOString();

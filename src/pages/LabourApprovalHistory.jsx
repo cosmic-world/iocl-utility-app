@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -19,7 +19,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-export default function LabourApprovalDashboard() {
+export default function LabourApprovalHistory({handleSyncContractor}) {
   const { userType, locationCode, contractorList, navBarComponent } = useSelector(
     (state) => state.myApp,
   );
@@ -33,6 +33,9 @@ export default function LabourApprovalDashboard() {
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
   const [creation_date, setCreation_date] = useState("");
+      useEffect(() => {
+      handleSyncContractor();
+    }, []);
   const handleFetch = async () => {
     try {
       const params = new URLSearchParams();
@@ -50,6 +53,7 @@ export default function LabourApprovalDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data.filter(item=>item.REQUEST_STATUS === "APPROVED") : [];
+      zlist.length==0?alert("No records found"):null; 
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.error("Failed to fetch records", error);

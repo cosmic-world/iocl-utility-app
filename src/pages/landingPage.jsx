@@ -17,7 +17,7 @@ import ModifyRecords from "./modifyRecords";
 import LabourApprovalDashboard from "./LabourApprovalDashboard";
 import LabourApprovalHistory from "./LabourApprovalHistory";
 
-export default function LandingPage({ state, handleReadMail }) {
+export default function LandingPage({ state, handleReadMail, handleSyncContractor }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
   return (
     <div
@@ -31,14 +31,14 @@ export default function LandingPage({ state, handleReadMail }) {
       {navBarComponent === "tempPassHistory" ? <TempPassHistoryTable /> : null}
       {navBarComponent === "masterData" ? <MasterData /> : null}
       {navBarComponent === "labourPassDashboard" ? (
-        <LabourPassDashboard />
+        <LabourPassDashboard handleSyncContractor={handleSyncContractor} />
       ) : null}
       {navBarComponent === "labourPassApproval" ? (
-        <LabourApprovalDashboard />
+        <LabourApprovalDashboard handleSyncContractor={handleSyncContractor} />
       ) : null}
-      {navBarComponent == 'labourPassHistory'?<LabourApprovalHistory/>:null}
+      {navBarComponent == 'labourPassHistory'?<LabourApprovalHistory handleSyncContractor={handleSyncContractor} />:null}
       {navBarComponent === "contractor_masterData" ? (
-        <LabourMasterData />
+        <LabourMasterData handleSyncContractor={handleSyncContractor}/>
       ) : null}
       {navBarComponent === "contractor_cred" ? <ContractorCredentials /> : null}
       {navBarComponent === "officer_cred" ? <OfficerCredentials /> : null}

@@ -24,7 +24,7 @@ import {
   SetContractorMasterList,
 } from "../action/userSlice";
 
-export default function tempPassDashboard() {
+export default function LabourPassDashboard({handleSyncContractor}) {
   const dispatch = useDispatch();
   const {
     labour_masterList,
@@ -71,7 +71,7 @@ export default function tempPassDashboard() {
   const FinalOfficerList = checkIfOfficerListHasDuplicates
     ? [
         ...new Set(
-          officerList.map(
+          officerList.filter(item=>['ADMIN','SUPER_ADMIN'].includes(item.ROLE)).map(
             (item) => `${item["OFFICER_NAME"]} - ${item["MAIL_ID"]}`,
           ),
         ),
@@ -119,22 +119,6 @@ export default function tempPassDashboard() {
       console.error("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
-    }
-  };
-
-  const handleSyncContractor = async () => {
-    try {
-      const response = await fetch(apiUrl("/api/contractor-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetContractorMasterList(zlist));
-    } catch (error) {
-      console.error("Failed to fetch records", error);
     }
   };
 

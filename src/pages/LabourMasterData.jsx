@@ -17,7 +17,7 @@ import {
   SetSelectedApplication,
 } from "../action/userSlice";
 
-export default function LabourMasterData() {
+export default function LabourMasterData({handleSyncContractor}) {
   const dispatch = useDispatch();
   const { contractorList, navBarComponent, locationCode, selectedTerminal } = useSelector(
     (state) => state.myApp,
@@ -35,6 +35,10 @@ export default function LabourMasterData() {
   const [address, setAddress] = useState("");
 
   const fileInputRef = useRef(null);
+
+      useEffect(() => {
+      handleSyncContractor();
+    }, []);
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
