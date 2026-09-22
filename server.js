@@ -636,116 +636,30 @@ app.post("/api/upload-labour-single",
   }
 );
 
-app.get("/api/labour-pass-requests", async (req, res) => {
-  const requestId = crypto.randomUUID();
-  const startedAt = new Date().toISOString();
-  let pool;
-  try {
-    const { fetchdate, location_code, contractor } = req.query;
-    pool = await new sql.ConnectionPool(sqlConfig).connect();
-    const request = pool.request();
-    const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
-    if (fetchdate) {
-      request.input("fetchdate", sql.Date, String(fetchdate));
-      whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
-    }
-    if (location_code) {
-      request.input("locationCode", sql.NVarChar, String(location_code));
-      whereClauses.push("LOCATION_CODE = @locationCode");
-    }
-    if (contractor) {
-      request.input("contractor", sql.NVarChar, String(contractor));
-      whereClauses.push("CONTRACTOR = @contractor");
-    }
-    const query = `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`;
-    const result = await request.query(query);
-    const rows = Array.isArray(result.recordset) ? result.recordset : [];
-    // console.log(`[${new Date().toISOString()}] labour-pass success requestId=${requestId} rows=${rows.length}`);
-    return res.json(rows);
-  } catch (error) {
-    const failedAt = new Date().toISOString();
-    console.error(`[${failedAt}] labour-pass failure requestId=${requestId}`, {
-      name: error.name,
-      code: error.code,
-      message: error.message,
-      number: error.number,
-      state: error.state,
-      server: sqlConfig.server,
-      database: sqlConfig.database,
-      stack: error.stack,
-    });
-    return res.status(500).json({
-      error: error.message,
-      requestId,
-      timestamp: failedAt,
-    });
-  } finally {
-    if (pool) await pool.close();
-  }
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
-    }
+app.get("/api/labour-master-data", (req, res) => {
+  (async () => {
+    try {
+        const { location_code, contractor } = req.query;
+        let whereClauses = [];
+      let query = "SELECT * FROM LabourMasterRecord";
+      if (location_code) {
+      whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
+      }
+      if (contractor) {
+      whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
+      }
+      if (whereClauses.length > 0) {
+        query += " WHERE " + whereClauses.join(" AND ");
+      }
 
-    const workbook = req.file.buffer
-      ? xlsx.read(req.file.buffer, { type: 'buffer' })
-      : xlsx.readFile(req.file.path);
-
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      return res.status(400).json({ success: false, message: "Excel file contains no sheets" });
+      await sql.connect(sqlConfig);
+      const result = await sql.query(query);
+      res.json(result.recordset);
+    } catch (error) {
+      console.error("Query error:", error);
+      res.status(500).json({ error: error.message });
     }
-
-    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-    if (!Array.isArray(sheetData) || sheetData.length === 0) {
-      return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
-    }
-
-    const pool = await sql.connect(sqlConfig);
-    let count = 0
-    let responseText =""
-    for (const row of sheetData) {
-        try{
-            const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const contractorName     = sanitizeValue(row['CONTRACTOR NAME']).toUpperCase();
-                const mailID       = sanitizeValue(row['MAIL ID']).toLowerCase();
-                const mobile         = sanitizeValue(row['MOBILE NO']);
-
-                await pool.request()
-                .input('locationCode', sql.VarChar, locationCode)
-                .input('contractorName', sql.VarChar, contractorName)
-                .input('mailID', sql.VarChar, mailID)
-                .input('mobile', sql.VarChar, mobile)
-                .query(`
-                INSERT INTO ContractorCredentials (LOCATION_CODE, CONTRACTOR_NAME, MAIL_ID, MOBILE_NO)
-                VALUES (@locationCode, @contractorName, @mailID, @mobile)
-                `)
-    }
-    catch (err) {
-    // Check if the error is specifically a unique constraint violation
-    if (err.number === 2627 || err.number === 2601) {
-        count = count + 1
-        responseText = `${err.message}`
-      console.warn(`Skipping duplicate row. Identifier already exists. Detail: ${err.message}`);
-      continue; // This skips the current bad row and moves to the next Excel row safely!
-    }
-    
-    // If it's a different error (e.g., connection drop, bad data type), you might want to throw it
-    throw err; 
-  }
-    }
-
-    await pool.close();
-
-    res.status(200).json({ 
-      success: true, 
-      message: `${count!=sheetData.length?`Successfully imported ${sheetData.length - count} records into Azure SQL!`:""}\n${count>0?`Upload failed for ${count} records due to ${responseText}`:""}`
-    });
-
-  } catch (error) {
-    console.error("Excel import failed:", error);
-    res.status(500).json({ error: error.message });
-  }
+  })();
 });
 
 app.post("/api/upload-contractor-single",
