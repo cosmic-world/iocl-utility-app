@@ -118,7 +118,7 @@ export default function LabourApprovalDashboard() {
                     navBarComponent === "labourPassDashboard" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Dashboard"));
+                  dispatch(SetSelectedApplication("Worker Entry Request"));
                   dispatch(NavBarComponent("labourPassDashboard"));
                 }}
               >
@@ -135,7 +135,7 @@ export default function LabourApprovalDashboard() {
                     navBarComponent === "labourPassApproval" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
                   dispatch(NavBarComponent("labourPassApproval"));
                 }}
               >
@@ -153,7 +153,7 @@ export default function LabourApprovalDashboard() {
                     navBarComponent === "labourPassHistory" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
                   dispatch(NavBarComponent("labourPassHistory"));
                 }}
               >
@@ -173,7 +173,7 @@ export default function LabourApprovalDashboard() {
                     navBarComponent === "contractor_masterData" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Master Data"));
+                  dispatch(SetSelectedApplication("Worker Master Data"));
                   dispatch(NavBarComponent("contractor_masterData"));
                 }}
               >
@@ -365,7 +365,7 @@ export default function LabourApprovalDashboard() {
               <tr>
                 <th style={{ width: 200 }}>DATE</th>
                 <th style={{ width: 300 }}>CONTRACTOR NAME</th>
-                <th style={{ width: 250 }}>LABOUR NAME</th>
+                <th style={{ width: 250 }}>WORKER NAME</th>
                 <th style={{ width: 200 }}>MOBILE NO</th>
                 <th style={{ width: 200 }}>AADHAAR NO</th>
                 <th>ADDRESS</th>

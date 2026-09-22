@@ -152,7 +152,7 @@ export default function MasterData() {
                     navBarComponent === "labourPassDashboard" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Dashboard"));
+                  dispatch(SetSelectedApplication("Worker Entry Request"));
                   dispatch(NavBarComponent("labourPassDashboard"));
                 }}
               >
@@ -170,7 +170,7 @@ export default function MasterData() {
                     navBarComponent === "labourPassApproval" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
                   dispatch(NavBarComponent("labourPassApproval"));
                 }}
               >
@@ -188,7 +188,7 @@ export default function MasterData() {
                     navBarComponent === "labourPassHistory" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
                   dispatch(NavBarComponent("labourPassHistory"));
                 }}
               >
@@ -208,7 +208,7 @@ export default function MasterData() {
                     navBarComponent === "contractor_masterData" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Master Data"));
+                  dispatch(SetSelectedApplication("Worker Master Data"));
                   dispatch(NavBarComponent("contractor_masterData"));
                 }}
               >

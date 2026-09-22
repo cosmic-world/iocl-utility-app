@@ -204,7 +204,7 @@ export default function contacts() {
             <CardContent className="w-100 h-100 text-center">
               <Typography className="app-name">
                 <Approval color="primary" sx={{ zoom: 3, mb: 1 }} />
-                {"Labour Entry"}
+                {"Worker Entry"}
               </Typography>
             </CardContent>
           </CardActionArea>

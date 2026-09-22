@@ -477,7 +477,7 @@ export default function tempPassDashboard() {
                     navBarComponent === "labourPassDashboard" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Dashboard"));
+                  dispatch(SetSelectedApplication("Worker Entry Request"));
                   dispatch(NavBarComponent("labourPassDashboard"));
                 }}
               >
@@ -495,7 +495,7 @@ export default function tempPassDashboard() {
                     navBarComponent === "labourPassApproval" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
                   dispatch(NavBarComponent("labourPassApproval"));
                 }}
               >
@@ -513,7 +513,7 @@ export default function tempPassDashboard() {
                     navBarComponent === "labourPassHistory" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(SetSelectedApplication("Worker Pass Approval History"));
                   dispatch(NavBarComponent("labourPassHistory"));
                 }}
               >
@@ -533,7 +533,7 @@ export default function tempPassDashboard() {
                     navBarComponent === "contractor_masterData" ? "null" : "white",
                 }}
                 onClick={() => {
-                  dispatch(SetSelectedApplication("Labour Master Data"));
+                  dispatch(SetSelectedApplication("Worker Master Data"));
                   dispatch(NavBarComponent("contractor_masterData"));
                 }}
               >
@@ -683,7 +683,7 @@ export default function tempPassDashboard() {
           </div>
 
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Labour Name</Typography>
+            <Typography>Worker Name</Typography>
             <Autocomplete
               name="labourName"
               className="w-100"
@@ -821,7 +821,7 @@ export default function tempPassDashboard() {
                   type="number"
                   placeholder={
                     labourName == ""
-                      ? "Select Labour Name First"
+                      ? "Select Worker Name First"
                       : "Select From Dropdown or Type For New..."
                   }
                   InputProps={{
@@ -894,7 +894,7 @@ export default function tempPassDashboard() {
                   {...params}
                   placeholder={
                     labourName == ""
-                      ? "Select Labour Name First"
+                      ? "Select Worker Name First"
                       : "Select From Dropdown or Type For New..."
                   }
                   InputProps={{
@@ -966,7 +966,7 @@ export default function tempPassDashboard() {
                   multiline
                   placeholder={
                     labourName == ""
-                      ? "Select Labour Name First"
+                      ? "Select Worker Name First"
                       : "Select From Dropdown or Type For New..."
                   }
                   InputProps={{
@@ -1430,7 +1430,7 @@ export default function tempPassDashboard() {
                   }
                 />
               </th>
-              <th style={{ width: 250 }}>LABOUR NAME</th>
+              <th style={{ width: 250 }}>WORKER NAME</th>
               <th style={{ width: 200 }}>MOBILE NO</th>
               <th style={{ width: 200 }}>AADHAAR NO</th>
               <th style={{ flex: 1 }}>ADDRESS</th>

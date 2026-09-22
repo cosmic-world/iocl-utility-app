@@ -550,7 +550,7 @@ app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (re
     for (const row of sheetData) {
         try{
             const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const labourName     = sanitizeValue(row['LABOUR NAME']);
+                const labourName     = sanitizeValue(row['WORKER NAME']);
                 const contractor       = sanitizeValue(row['CONTRACTOR']);
                 const mobile         = sanitizeValue(row['MOBILE NO']);
                 const aadhaar         = sanitizeValue(row['AADHAAR NO']);
@@ -1098,7 +1098,7 @@ function createLabourPermissionReport(rows) {
   showApproverPerRow
     ? doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
     : doc.fontSize(10).text(`Date/Time: ${formatReportDate(first.APPROVED_AT)}`, right - 180, 38, { width: 180, align: "right" });
-  doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF PERSONS", left, 82, { align: "center", width: pageWidth });
+  doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS", left, 82, { align: "center", width: pageWidth });
   doc.font("Helvetica").fontSize(9).text(`Dear Sir,\n\nWe request permission for entry into the IOCL Coimbatore Terminal for the following persons.`, left, 108);
 
   let y = 145;
@@ -1115,7 +1115,7 @@ function createLabourPermissionReport(rows) {
   for (let group = 0; group < groups; group += 1) {
     const x = left + group * groupWidth;
     drawReportCell(doc, "Sr. No", x, y, 38, headerHeight, { bold: true, align: "center" });
-    drawReportCell(doc, "Name of the Person / Approver", x + 38, y, groupWidth - 88, headerHeight, { bold: true, align: "center" });
+    drawReportCell(doc, "Name of the Worker", x + 38, y, groupWidth - 88, headerHeight, { bold: true, align: "center" });
     drawReportCell(doc, "Pass No.", x + groupWidth - 50, y, 50, headerHeight, { bold: true, align: "center" });
     for (let rowIndex = 0; rowIndex < 7; rowIndex += 1) {
       const row = rows[group * 7 + rowIndex];
@@ -1163,18 +1163,18 @@ function createLabourRegisterReport(rows) {
   if (fs.existsSync(logoPath)) {
     doc.image(logoPath, left, 20, { fit: [58, 42], align: "left", valign: "top" });
   }
-  doc.font("Helvetica-Bold").fontSize(14).text("REGISTER FOR DETAILS OF CONTRACTORS' LABOUR", left, 28, { align: "center", width });
+  doc.font("Helvetica-Bold").fontSize(14).text("REGISTER FOR DETAILS OF CONTRACTORS' WORKERS", left, 28, { align: "center", width });
   doc.fontSize(10).text(`Location: COIMBATORE TERMINAL`, left, 68);
 
   const columns = [
-    ["Sl. No.", 34], ["Date", 62], ["Name of Contractor", 104], ["Name of the Labour", 104], ["Labour's Aadhaar No.", 82],
-    ["Labour's Mobile No.", 72], ["Gate Pass No.", 82], 
+    ["Sl. No.", 34], ["Date", 62], ["Name of Contractor", 104], ["Name of the Worker", 104], ["Worker's Aadhaar No.", 82],
+    ["Worker's Mobile No.", 72], ["Gate Pass No.", 82], 
     // ["Father's Name", 88],
     ["Address", 125], 
     // ["ABAT", 48],
     // ["Signature of LTI / Left Thumb Impression", 95], 
-    ["In Time", 62], 
-    ["Out Time", 62],
+    ["Time In", 62], 
+    ["Time Out", 62],
     ["Name & Designation of Authorizing Official", 100],
   ];
   const totalColumnWidth = columns.reduce((sum, column) => sum + column[1], 0);
@@ -1552,7 +1552,7 @@ async function sendApprovalEmail(officerEmail, labourDetails) {
         
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="padding: 8px 0; font-weight: bold; width: 35%;">Labour Name:</td>
+            <td style="padding: 8px 0; font-weight: bold; width: 35%;">Worker Name:</td>
             <td style="padding: 8px 0;">${LABOUR_NAME}</td>
           </tr>
           <tr>
