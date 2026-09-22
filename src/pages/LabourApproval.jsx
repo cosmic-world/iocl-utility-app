@@ -177,6 +177,36 @@ export default function LabourApproval() {
               >
                 {!readOnly && (
                   <>
+                    <input
+                      type="checkbox"
+                      aria-label="Select all pending workers"
+                      checked={
+                        request.rows.some((row) => row.REQUEST_STATUS === "PENDING") &&
+                        request.rows.filter((row) => row.REQUEST_STATUS === "PENDING")
+                          .every((row) => selectedLabourIds.includes(row.ID))
+                      }
+                      ref={(element) => {
+                        if (element) {
+                          const pendingRows = request.rows.filter(
+                            (row) => row.REQUEST_STATUS === "PENDING",
+                          );
+                          element.indeterminate =
+                            selectedLabourIds.length > 0 &&
+                            selectedLabourIds.length < pendingRows.length;
+                        }
+                      }}
+                      onChange={(event) => {
+                        const pendingIds = request.rows
+                          .filter((row) => row.REQUEST_STATUS === "PENDING")
+                          .map((row) => row.ID);
+                        setSelectedLabourIds(
+                          event.target.checked ? pendingIds : [],
+                        );
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ alignSelf: "center", mr: 1 }}>
+                      Select all pending
+                    </Typography>
                     <Button
                       size="small"
                       variant="contained"

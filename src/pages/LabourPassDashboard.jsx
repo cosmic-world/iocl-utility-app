@@ -76,7 +76,7 @@ export default function LabourPassDashboard({handleSyncContractor}) {
           ),
         ),
       ]
-    : [...new Set(officerList.map((item) => item["OFFICER_NAME"]))];
+    : [...new Set(officerList.filter(item=>['ADMIN','SUPER_ADMIN'].includes(item.ROLE)).map((item) => item["OFFICER_NAME"]))];
 
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
@@ -1371,7 +1371,7 @@ export default function LabourPassDashboard({handleSyncContractor}) {
           variant="contained"
           sx={{ m: 2, mt: 4 }}
           style={{ width: 200 }}
-          disabled={submitting_1}
+          disabled={submitting_1 || selectedLabourIds.length === 0}
           onClick={submitSelectedLabours}
         >
           {submitting_1 ? "Submitting..." : "SUBMIT SELECTED"}
@@ -1399,19 +1399,43 @@ export default function LabourPassDashboard({handleSyncContractor}) {
                   size="small"
                   checked={
                     records.length > 0 &&
-                    selectedLabourIds.length === records.length
+                    records.filter(
+                      (record) =>
+                        !recordsLaborsEntry.find(
+                          (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                        )?.REQUEST_STATUS,
+                    ).length > 0 &&
+                    selectedLabourIds.length ===
+                      records.filter(
+                        (record) =>
+                          !recordsLaborsEntry.find(
+                            (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                          )?.REQUEST_STATUS,
+                      ).length
                   }
                   indeterminate={
                     selectedLabourIds.length > 0 &&
-                    selectedLabourIds.length < records.length
+                    selectedLabourIds.length <
+                      records.filter(
+                        (record) =>
+                          !recordsLaborsEntry.find(
+                            (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                          )?.REQUEST_STATUS,
+                      ).length
                   }
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const eligibleRecords = records.filter(
+                      (record) =>
+                        !recordsLaborsEntry.find(
+                          (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                        )?.REQUEST_STATUS,
+                    );
                     setSelectedLabourIds(
                       event.target.checked
-                        ? records.map((record) => record.ID)
+                        ? eligibleRecords.map((record) => record.ID)
                         : [],
-                    )
-                  }
+                    );
+                  }}
                 />
               </th>
               <th style={{ width: 250 }}>WORKER NAME</th>
