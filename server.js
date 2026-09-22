@@ -920,7 +920,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
+const labourWorkflowBaseUrl = (process.env.REACT_APP_API_URL || "http://localhost:3001").replace(/\/$/, "");
 
 async function ensureLabourWorkflowColumns(pool) {
   await pool.request().query(`
@@ -1154,7 +1154,7 @@ async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
     to: officerEmail,
     subject: `Action required: Labour pass request for ${first.CONTRACTOR || "contractor"}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Labour entry approval</h2><p>A request for <strong>${rows.length} labour${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><strong>Workers:</strong> ${rows.map((row) => row.LABOUR_NAME || row.labourName || "").join(", ")}<br><strong>Purpose:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p></div>`,  });
+    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Worker entry approval</h2><p>A request for <strong>${rows.length} worker${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>CONTRACTOR:</strong> ${first.CONTRACTOR || ""}<br><strong>WORKERS:</strong> ${rows.map((row) => row.LABOUR_NAME || row.labourName || "").join(", ")}<br><strong>PURPOSE:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p></div>`,  });
 }
 
 app.post("/api/labour-pass-requests", async (req, res) => {

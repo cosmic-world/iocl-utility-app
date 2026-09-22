@@ -163,7 +163,7 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
         : [...current, record.ID],
     );
   };
-  const [isNew, setIsNew] = useState(false);
+  
   const handleReset = () => {
     setContractor("");
     setLabourName("");
@@ -245,40 +245,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Unable to submit request.");
-      const uploadMaster = async (e) => {
-        try {
-          const payload = {
-            locationCode: String(locationCode),
-            contractor,
-            labourName,
-            mobileNo,
-            aadhaarNo,
-            address,
-          };
-          // Submit to server
-          const response = await fetch(apiUrl("/api/upload-labour-single"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
-            },
-            body: JSON.stringify(payload),
-          });
-
-          if (response.ok) {
-            alert("Record submitted successfully!");
-          } else {
-            const error = await response.text();
-            console.error("Error submitting form:", error);
-            // alert("Error submitting form: " + error);
-          }
-        } catch (error) {
-          alert("Error: " + error.message);
-        } finally {
-          setIsNew(false);
-          handleSync();
-        }
-      };
-      isNew ? uploadMaster() : null;
       fetchLabourEntryRecords();
       alert(`Request sent to ${officerName} for approval.`);
       handleReset();
@@ -570,14 +536,14 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
           className="w-75 d-flex justify-content-center align-items-center"
           style={{ borderBottom: "1px dashed black" }}
         >
-          Single Labour Pass Request
+          Single Worker Pass Request
         </Typography>
         <Typography
           variant="h7"
           className="w-75 d-flex justify-content-center align-items-center"
           style={{ borderBottom: "1px dashed black" }}
         >
-          If the Labour is new and expected to come regularly, please add in the
+          If the Worker is new and expected to come regularly, please add in the
           Contractor Master Data for ease of apply.
         </Typography>
         <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
@@ -689,25 +655,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                 newValue !== null
                   ? setLabourName(newValue.toLocaleUpperCase())
                   : setLabourName("");
-                if (reason === "input") {
-                  newValue !== null
-                    ? !labour_masterList.length > 0
-                      ? [
-                          ...new Set(
-                            labour_masterList
-                              .filter(
-                                (ele) =>
-                                  ele.LOCATION_CODE == locationCode &&
-                                  ele.CONTRACTOR == contractor,
-                              )
-                              .map((item) => item["LABOUR_NAME"]),
-                          ),
-                        ]
-                      : [].includes(newValue)
-                        ? setIsNew(true)
-                        : setIsNew(false)
-                    : setIsNew(false);
-                }
               }}
               onChange={(event, newValue) => {
                 newValue !== null ? setLabourName(newValue) : setLabourName("");
@@ -1124,7 +1071,7 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
         className="w-75 d-flex justify-content-center align-items-center mt-3"
         style={{ borderBottom: "1px dashed black" }}
       >
-        Multiple Labour Pass Request
+        Multiple Worker Pass Request
       </Typography>
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
