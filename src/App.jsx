@@ -8,7 +8,11 @@ import Header from "./pages/Header";
 import LandingPage from "./pages/landingPage";
 import { useDispatch, useSelector } from "react-redux";
 import LabourApproval from "./pages/LabourApproval";
-import { NavBarComponent, SetPermitList, SetContractorMasterList } from "./action/userSlice";
+import {
+  NavBarComponent,
+  SetPermitList,
+  SetContractorMasterList,
+} from "./action/userSlice";
 
 function formatDate(date1) {
   const date = new Date(...date1.slice(5, -1).split(","));
@@ -269,7 +273,7 @@ function App() {
     },
   });
 
-    const handleSyncContractor = async () => {
+  const handleSyncContractor = async () => {
     try {
       const response = await fetch(apiUrl("/api/contractor-master-data"));
       if (!response.ok) {
@@ -292,7 +296,11 @@ function App() {
           <Route
             path="/"
             element={
-              <LandingPage state={state} handleReadMail={handleReadMail} handleSyncContractor={handleSyncContractor} />
+              <LandingPage
+                state={state}
+                handleReadMail={handleReadMail}
+                handleSyncContractor={handleSyncContractor}
+              />
             }
           />
         </Routes>

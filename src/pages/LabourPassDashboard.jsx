@@ -24,7 +24,7 @@ import {
   SetContractorMasterList,
 } from "../action/userSlice";
 
-export default function LabourPassDashboard({handleSyncContractor}) {
+export default function LabourPassDashboard({ handleSyncContractor }) {
   const dispatch = useDispatch();
   const {
     labour_masterList,
@@ -71,12 +71,18 @@ export default function LabourPassDashboard({handleSyncContractor}) {
   const FinalOfficerList = checkIfOfficerListHasDuplicates
     ? [
         ...new Set(
-          officerList.filter(item=>['ADMIN','SUPER_ADMIN'].includes(item.ROLE)).map(
-            (item) => `${item["OFFICER_NAME"]} - ${item["MAIL_ID"]}`,
-          ),
+          officerList
+            .filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE))
+            .map((item) => `${item["OFFICER_NAME"]} - ${item["MAIL_ID"]}`),
         ),
       ]
-    : [...new Set(officerList.filter(item=>['ADMIN','SUPER_ADMIN'].includes(item.ROLE)).map((item) => item["OFFICER_NAME"]))];
+    : [
+        ...new Set(
+          officerList
+            .filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE))
+            .map((item) => item["OFFICER_NAME"]),
+        ),
+      ];
 
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
@@ -340,9 +346,15 @@ export default function LabourPassDashboard({handleSyncContractor}) {
 
   const forwardSelectedRequest = async () => {
     const selectedRequests = recordsLaborsEntry.filter(
-      (item) => selectedForwardLabourIds.includes(item.ID) && item.REQUEST_STATUS === "PENDING",
+      (item) =>
+        selectedForwardLabourIds.includes(item.ID) &&
+        item.REQUEST_STATUS === "PENDING",
     );
-    const requestTokens = [...new Set(selectedRequests.map((item) => item.REQUEST_TOKEN).filter(Boolean))];
+    const requestTokens = [
+      ...new Set(
+        selectedRequests.map((item) => item.REQUEST_TOKEN).filter(Boolean),
+      ),
+    ];
     if (!selectedRequests.length || requestTokens.length !== 1) {
       alert("Select pending request only.");
       return;
@@ -366,7 +378,8 @@ export default function LabourPassDashboard({handleSyncContractor}) {
         },
       );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Unable to forward request.");
+      if (!response.ok)
+        throw new Error(data.message || "Unable to forward request.");
       await fetchLabourEntryRecords();
       setSelectedForwardLabourIds([]);
       alert(`Request forwarded to ${data.approvingOfficer} for approval.`);
@@ -442,111 +455,111 @@ export default function LabourPassDashboard({handleSyncContractor}) {
         overflow: "auto",
       }}
     >
-            <div
-              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-              style={{
-                border: "1px solid black",
-                width: "100%",
-              }}
-            >
-              <Button
-                variant={
-                  navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassDashboard" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Entry Request"));
-                  dispatch(NavBarComponent("labourPassDashboard"));
-                }}
-              >
-                Worker Entry Request
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassApproval" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassApproval" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassApproval"));
-                }}
-              >
-                APPROVAL CENTRE
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassHistory" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassHistory" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval History"));
-                  dispatch(NavBarComponent("labourPassHistory"));
-                }}
-              >
-                APPROVAL HISTORY
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_masterData"
-                    ? "contained"
-                    : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_masterData" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Master Data"));
-                  dispatch(NavBarComponent("contractor_masterData"));
-                }}
-              >
-                Worker Master Data
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_cred" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_cred" ? "null" : "white",
-                  "&:disabled": {
-                    cursor: "not-allowed",
-                    backgroundColor: "white",
-                    pointerEvents: "all !important",
-                  },
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Contractor Master Data"));
-                  dispatch(NavBarComponent("contractor_cred"));
-                }}
-              >
-                Contractor Master Data
-              </Button>
-            </div>
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+        }}
+      >
+        <Button
+          variant={
+            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassDashboard" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Entry Request"));
+            dispatch(NavBarComponent("labourPassDashboard"));
+          }}
+        >
+          Worker Entry Request
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassApproval" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassApproval" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassApproval"));
+          }}
+        >
+          APPROVAL CENTRE
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassHistory" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassHistory" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval History"));
+            dispatch(NavBarComponent("labourPassHistory"));
+          }}
+        >
+          APPROVAL HISTORY
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_masterData"
+              ? "contained"
+              : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_masterData" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Master Data"));
+            dispatch(NavBarComponent("contractor_masterData"));
+          }}
+        >
+          Worker Master Data
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_cred" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_cred" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Contractor Master Data"));
+            dispatch(NavBarComponent("contractor_cred"));
+          }}
+        >
+          Contractor Master Data
+        </Button>
+      </div>
 
       <div
         className="d-flex flex-column justify-content-center align-items-center"
@@ -1455,12 +1468,16 @@ export default function LabourPassDashboard({handleSyncContractor}) {
               { length: records.length > 0 ? records.length : 8 },
               (_, i) => {
                 const record = records[i];
-                const requestStatus = record? recordsLaborsEntry.find(
-                              (item) => item.AADHAAR_NO === record.AADHAAR_NO,
-                            )?.REQUEST_STATUS || "" : ""
-                const labour_id = record? recordsLaborsEntry.find(
-                              (item) => item.AADHAAR_NO === record.AADHAAR_NO,
-                            )?.ID || "" : ""
+                const requestStatus = record
+                  ? recordsLaborsEntry.find(
+                      (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                    )?.REQUEST_STATUS || ""
+                  : "";
+                const labour_id = record
+                  ? recordsLaborsEntry.find(
+                      (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                    )?.ID || ""
+                  : "";
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
@@ -1469,16 +1486,24 @@ export default function LabourPassDashboard({handleSyncContractor}) {
                     <td style={{ textAlign: "center" }}>
                       {record ? (
                         <Checkbox
-                          checked={selectedLabourIds.includes(record.ID) || selectedForwardLabourIds.includes(labour_id)}
-                          onChange={() => <>
-                            {requestStatus === ""?toggleLabourSelection(record):''}
-                            {requestStatus === "PENDING"?setSelectedForwardLabourIds(prev => 
-                              selectedForwardLabourIds.includes(labour_id)
-                                ? prev.filter(id => id !== labour_id)
-                                : [...prev, labour_id]
-                              ):null}
-                            </>
+                          checked={
+                            selectedLabourIds.includes(record.ID) ||
+                            selectedForwardLabourIds.includes(labour_id)
                           }
+                          onChange={() => (
+                            <>
+                              {requestStatus === ""
+                                ? toggleLabourSelection(record)
+                                : ""}
+                              {requestStatus === "PENDING"
+                                ? setSelectedForwardLabourIds((prev) =>
+                                    selectedForwardLabourIds.includes(labour_id)
+                                      ? prev.filter((id) => id !== labour_id)
+                                      : [...prev, labour_id],
+                                  )
+                                : null}
+                            </>
+                          )}
                           disabled={requestStatus === "APPROVED"}
                         />
                       ) : (

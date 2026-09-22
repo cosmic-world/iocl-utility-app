@@ -13,15 +13,11 @@ import UndoIcon from "@mui/icons-material/Undo";
 import { useDispatch, useSelector } from "react-redux";
 import { apiUrl } from "../api";
 import Table from "react-bootstrap/Table";
-import {
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
-export default function LabourApprovalDashboard({handleSyncContractor}) {
-  const { userType, locationCode, contractorList, navBarComponent } = useSelector(
-    (state) => state.myApp,
-  );
+export default function LabourApprovalDashboard({ handleSyncContractor }) {
+  const { userType, locationCode, contractorList, navBarComponent } =
+    useSelector((state) => state.myApp);
   const dispatch = useDispatch();
   const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const $table = document.querySelector(".ttes_table_view");
@@ -36,9 +32,9 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [gatePassNo, setGatePassNo] = useState({});
-    useEffect(() => {
-      handleSyncContractor();
-    }, []);
+  useEffect(() => {
+    handleSyncContractor();
+  }, []);
   const handleSubmit = async () => {
     try {
       const params = new URLSearchParams();
@@ -48,13 +44,15 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
         "fetchdate",
         getTodayLabel().split("-").reverse().join("-"),
       );
-      const response = await fetch(apiUrl(`/api/labour-pass-requests?${params.toString()}`));
+      const response = await fetch(
+        apiUrl(`/api/labour-pass-requests?${params.toString()}`),
+      );
       if (!response.ok) {
         throw new Error("Failed to load records");
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length==0?alert("No records found"):null;
+      zlist.length == 0 ? alert("No records found") : null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.error("Failed to fetch records", error);
@@ -69,7 +67,9 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
       .replace(/\s/g, "")
       .toUpperCase();
     if (!/^[RGY]-\d+$/.test(gatePass)) {
-      alert("Gatepass no must start with 'R-', 'G-' or 'Y-' followed by a number");
+      alert(
+        "Gatepass no must start with 'R-', 'G-' or 'Y-' followed by a number",
+      );
       return;
     }
 
@@ -77,7 +77,9 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
     setApprovingId(recordId);
     try {
       const response = await fetch(
-        apiUrl(`/api/labour-pass-requests/${recordId}/${encodeURIComponent(gatePass)}`),
+        apiUrl(
+          `/api/labour-pass-requests/${recordId}/${encodeURIComponent(gatePass)}`,
+        ),
         { method: "POST" },
       );
       const data = await response.json();
@@ -92,7 +94,10 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
             : item,
         ),
       );
-      setGatePassNo((previous) => ({ ...previous, [recordId]: data.GATE_PASS_NO }));
+      setGatePassNo((previous) => ({
+        ...previous,
+        [recordId]: data.GATE_PASS_NO,
+      }));
       setEditingGatePassId(null);
     } catch (error) {
       alert(error.message);
@@ -111,112 +116,112 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
         overflow: "auto",
       }}
     >
-            <div
-              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-              style={{
-                border: "1px solid black",
-                width: "100%",
-              }}
-            >
-              <Button
-                variant={
-                  navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassDashboard" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Entry Request"));
-                  dispatch(NavBarComponent("labourPassDashboard"));
-                }}
-              >
-                Worker Entry Request
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassApproval" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassApproval" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassApproval"));
-                }}
-              >
-                APPROVAL CENTRE
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassHistory" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassHistory" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassHistory"));
-                }}
-              >
-                APPROVAL HISTORY
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_masterData"
-                    ? "contained"
-                    : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_masterData" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Master Data"));
-                  dispatch(NavBarComponent("contractor_masterData"));
-                }}
-              >
-                Worker Master Data
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_cred" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_cred" ? "null" : "white",
-                  "&:disabled": {
-                    cursor: "not-allowed",
-                    backgroundColor: "white",
-                    pointerEvents: "all !important",
-                  },
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Contractor Master Data"));
-                  dispatch(NavBarComponent("contractor_cred"));
-                }}
-              >
-                Contractor Master Data
-              </Button>
-            </div>
-      <Box sx={{ width: "100%", height: "100%"}}>
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+        }}
+      >
+        <Button
+          variant={
+            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassDashboard" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Entry Request"));
+            dispatch(NavBarComponent("labourPassDashboard"));
+          }}
+        >
+          Worker Entry Request
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassApproval" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassApproval" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassApproval"));
+          }}
+        >
+          APPROVAL CENTRE
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassHistory" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassHistory" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassHistory"));
+          }}
+        >
+          APPROVAL HISTORY
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_masterData"
+              ? "contained"
+              : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_masterData" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Master Data"));
+            dispatch(NavBarComponent("contractor_masterData"));
+          }}
+        >
+          Worker Master Data
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_cred" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_cred" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Contractor Master Data"));
+            dispatch(NavBarComponent("contractor_cred"));
+          }}
+        >
+          Contractor Master Data
+        </Button>
+      </div>
+      <Box sx={{ width: "100%", height: "100%" }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="center"
@@ -385,17 +390,22 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
                           <TextField
                             fullWidth
                             variant="outlined"
-                            value={record ? gatePassNo[id] ?? record.GATE_PASS_NO ?? "" : ""}
+                            value={
+                              record
+                                ? (gatePassNo[id] ?? record.GATE_PASS_NO ?? "")
+                                : ""
+                            }
                             disabled={
                               !record ||
                               userType === "user" ||
                               !isApproved ||
                               (hasGatePass && !isEditingGatePass)
                             }
-                            style={{ backgroundColor: "white", visibility:record?'visible':'hidden' }}
-                            placeholder={
-                              "e.g., R-1 or G-1 or Y-1"
-                            }
+                            style={{
+                              backgroundColor: "white",
+                              visibility: record ? "visible" : "hidden",
+                            }}
+                            placeholder={"e.g., R-1 or G-1 or Y-1"}
                             onChange={(e) =>
                               setGatePassNo((previous) => ({
                                 ...previous,
@@ -426,8 +436,11 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
                               },
                             }}
                           />
-                          {record && hasGatePass && isApproved && userType !== "user" && (
-                            isEditingGatePass ? (
+                          {record &&
+                            hasGatePass &&
+                            isApproved &&
+                            userType !== "user" &&
+                            (isEditingGatePass ? (
                               <UndoIcon
                                 size="small"
                                 color="error"
@@ -441,8 +454,7 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
                                   setEditingGatePassId(null);
                                 }}
                                 disabled={saveLoader}
-                              >
-                              </UndoIcon>
+                              ></UndoIcon>
                             ) : (
                               <EditIcon
                                 size="small"
@@ -456,14 +468,15 @@ export default function LabourApprovalDashboard({handleSyncContractor}) {
                                   setEditingGatePassId(id);
                                 }}
                                 disabled={saveLoader}
-                              >
-                              </EditIcon>
-                            )
-                          )}
+                              ></EditIcon>
+                            ))}
                           <Button
                             size="small"
                             variant={"contained"}
-                            style={{ width: 150, visibility:record?'visible':'hidden' }}
+                            style={{
+                              width: 150,
+                              visibility: record ? "visible" : "hidden",
+                            }}
                             color="success"
                             disabled={
                               !record ||

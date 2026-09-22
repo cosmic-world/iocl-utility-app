@@ -9,20 +9,16 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { apiUrl } from "../api";
 import Table from "react-bootstrap/Table";
-import {
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import { DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-export default function LabourApprovalHistory({handleSyncContractor}) {
-  const { userType, locationCode, contractorList, navBarComponent } = useSelector(
-    (state) => state.myApp,
-  );
+export default function LabourApprovalHistory({ handleSyncContractor }) {
+  const { userType, locationCode, contractorList, navBarComponent } =
+    useSelector((state) => state.myApp);
   const dispatch = useDispatch();
   const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const $table = document.querySelector(".ttes_table_view");
@@ -33,9 +29,9 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
   const [creation_date, setCreation_date] = useState("");
-      useEffect(() => {
-      handleSyncContractor();
-    }, []);
+  useEffect(() => {
+    handleSyncContractor();
+  }, []);
   const handleFetch = async () => {
     try {
       const params = new URLSearchParams();
@@ -52,8 +48,10 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
         throw new Error("Failed to load records");
       }
       const data = await response.json();
-      const zlist = Array.isArray(data) ? data.filter(item=>item.REQUEST_STATUS === "APPROVED") : [];
-      zlist.length==0?alert("No records found"):null; 
+      const zlist = Array.isArray(data)
+        ? data.filter((item) => item.REQUEST_STATUS === "APPROVED")
+        : [];
+      zlist.length == 0 ? alert("No records found") : null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.error("Failed to fetch records", error);
@@ -64,7 +62,9 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
 
   const handlePrintReport = async (format) => {
     if (format === "permission" && (!searchContractor || !creation_date)) {
-      alert("Select a contractor and creation date before printing the permission letter.");
+      alert(
+        "Select a contractor and creation date before printing the permission letter.",
+      );
       return;
     }
 
@@ -79,7 +79,9 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
 
     try {
       setSaveLoader(true);
-      const response = await fetch(apiUrl(`/api/labour-pass-reports?${params.toString()}`));
+      const response = await fetch(
+        apiUrl(`/api/labour-pass-reports?${params.toString()}`),
+      );
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "Unable to create report");
@@ -103,111 +105,112 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
         overflow: "auto",
       }}
     >
-            <div
-              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-              style={{
-                border: "1px solid black",
-                width: "100%",
-              }}
-            >
-              <Button
-                variant={
-                  navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassDashboard" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Entry Request"));
-                  dispatch(NavBarComponent("labourPassDashboard"));
-                }}
-              >
-                Worker Entry Request
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassApproval" ? "contained" : "outlined"}
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassApproval" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassApproval"));
-                }}
-              >
-                APPROVAL CENTRE
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassHistory" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassHistory" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassHistory"));
-                }}
-              >
-                APPROVAL HISTORY
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_masterData"
-                    ? "contained"
-                    : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_masterData" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Master Data"));
-                  dispatch(NavBarComponent("contractor_masterData"));
-                }}
-              >
-                Worker Master Data
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_cred" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_cred" ? "null" : "white",
-                  "&:disabled": {
-                    cursor: "not-allowed",
-                    backgroundColor: "white",
-                    pointerEvents: "all !important",
-                  },
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Contractor Master Data"));
-                  dispatch(NavBarComponent("contractor_cred"));
-                }}
-              >
-                Contractor Master Data
-              </Button>
-            </div>
-      <Box sx={{ width: "100%", height: "100%"}}>
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+        }}
+      >
+        <Button
+          variant={
+            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassDashboard" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Entry Request"));
+            dispatch(NavBarComponent("labourPassDashboard"));
+          }}
+        >
+          Worker Entry Request
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassApproval" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassApproval" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassApproval"));
+          }}
+        >
+          APPROVAL CENTRE
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassHistory" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassHistory" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassHistory"));
+          }}
+        >
+          APPROVAL HISTORY
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_masterData"
+              ? "contained"
+              : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_masterData" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Master Data"));
+            dispatch(NavBarComponent("contractor_masterData"));
+          }}
+        >
+          Worker Master Data
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_cred" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_cred" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Contractor Master Data"));
+            dispatch(NavBarComponent("contractor_cred"));
+          }}
+        >
+          Contractor Master Data
+        </Button>
+      </div>
+      <Box sx={{ width: "100%", height: "100%" }}>
         <div className="d-flex flex-wrap gap-2 justify-content-center align-items-center my-2">
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Autocomplete
@@ -270,46 +273,48 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
               )}
             />
           </div>
-                  <div style={{ width: "100%", maxWidth: 350 }}>
-                    <div style={{ backgroundColor: "white" }}>
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DemoItem>
-                          <DatePicker
-                            value={creation_date ? dayjs(creation_date, "DD-MM-YYYY") : null}
-                            format="DD-MM-YYYY"
-                            onChange={(newValue) => {
-                              if (newValue) {
-                                setCreation_date(newValue.format("DD-MM-YYYY"));
-                              } else {
-                                setCreation_date("");
-                              }
-                            }}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                label: "Created on",
-                                InputLabelProps: { shrink: true },
-                                sx: {
-                                  "& .MuiInputBase-input": {
-                                    fontSize: "1rem",
-                                    paddingTop: "10px !important", // Reduces extra top whitespace
-                                    paddingBottom: "10px !important", // Keeps it centered vertically
-                                    fontFamily: "Lucida Sans",
-                                    color: "black",
-                                  },
-                                  "& input::placeholder": {
-                                    fontFamily: "Lucida Sans",
-                                    fontSize: "0.8rem", // Optional: adjust placeholder size
-                                    fontStyle: "italic", // Optional: make placeholder italicized
-                                  },
-                                },
-                              },
-                            }}
-                          />
-                        </DemoItem>
-                      </LocalizationProvider>
-                    </div>
-                  </div>
+          <div style={{ width: "100%", maxWidth: 350 }}>
+            <div style={{ backgroundColor: "white" }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DemoItem>
+                  <DatePicker
+                    value={
+                      creation_date ? dayjs(creation_date, "DD-MM-YYYY") : null
+                    }
+                    format="DD-MM-YYYY"
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setCreation_date(newValue.format("DD-MM-YYYY"));
+                      } else {
+                        setCreation_date("");
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        label: "Created on",
+                        InputLabelProps: { shrink: true },
+                        sx: {
+                          "& .MuiInputBase-input": {
+                            fontSize: "1rem",
+                            paddingTop: "10px !important", // Reduces extra top whitespace
+                            paddingBottom: "10px !important", // Keeps it centered vertically
+                            fontFamily: "Lucida Sans",
+                            color: "black",
+                          },
+                          "& input::placeholder": {
+                            fontFamily: "Lucida Sans",
+                            fontSize: "0.8rem", // Optional: adjust placeholder size
+                            fontStyle: "italic", // Optional: make placeholder italicized
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </DemoItem>
+              </LocalizationProvider>
+            </div>
+          </div>
           <Button
             variant="outlined"
             onClick={handleFetch}
@@ -386,7 +391,13 @@ export default function LabourApprovalHistory({handleSyncContractor}) {
                   return (
                     <tr key={i}>
                       <td style={{ textAlign: "center" }}>
-                        {record ? record["CREATED_AT"].slice(0, 10).split("-").reverse().join("-") : ""}
+                        {record
+                          ? record["CREATED_AT"]
+                              .slice(0, 10)
+                              .split("-")
+                              .reverse()
+                              .join("-")
+                          : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["CONTRACTOR"] : ""}

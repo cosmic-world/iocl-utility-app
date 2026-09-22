@@ -11,9 +11,7 @@ import {
   Box,
 } from "@mui/material";
 import { Download, Delete, SwapHoriz } from "@mui/icons-material";
-import {
-  SetOfficerMasterList,
-} from "../action/userSlice";
+import { SetOfficerMasterList } from "../action/userSlice";
 
 export default function MasterData() {
   const dispatch = useDispatch();

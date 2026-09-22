@@ -17,11 +17,10 @@ import {
   SetSelectedApplication,
 } from "../action/userSlice";
 
-export default function LabourMasterData({handleSyncContractor}) {
+export default function LabourMasterData({ handleSyncContractor }) {
   const dispatch = useDispatch();
-  const { contractorList, navBarComponent, locationCode, selectedTerminal } = useSelector(
-    (state) => state.myApp,
-  );
+  const { contractorList, navBarComponent, locationCode, selectedTerminal } =
+    useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,9 +35,9 @@ export default function LabourMasterData({handleSyncContractor}) {
 
   const fileInputRef = useRef(null);
 
-      useEffect(() => {
-      handleSyncContractor();
-    }, []);
+  useEffect(() => {
+    handleSyncContractor();
+  }, []);
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
@@ -162,111 +161,111 @@ export default function LabourMasterData({handleSyncContractor}) {
         overflowX: "auto",
       }}
     >
-            <div
-              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-              style={{
-                border: "1px solid black",
-                width: "100%",
-              }}
-            >
-              <Button
-                variant={
-                  navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassDashboard" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Entry Request"));
-                  dispatch(NavBarComponent("labourPassDashboard"));
-                }}
-              >
-                Worker Entry Request
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassApproval" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassApproval" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassApproval"));
-                }}
-              >
-                APPROVAL CENTRE
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "labourPassHistory" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "labourPassHistory" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-                  dispatch(NavBarComponent("labourPassHistory"));
-                }}
-              >
-                APPROVAL HISTORY
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_masterData"
-                    ? "contained"
-                    : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_masterData" ? "null" : "white",
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Worker Master Data"));
-                  dispatch(NavBarComponent("contractor_masterData"));
-                }}
-              >
-                Worker Master Data
-              </Button>
-              <Button
-                variant={
-                  navBarComponent === "contractor_cred" ? "contained" : "outlined"
-                }
-                color="warning"
-                sx={{
-                  my: 1,
-                  mx: 5,
-                  backgroundColor:
-                    navBarComponent === "contractor_cred" ? "null" : "white",
-                  "&:disabled": {
-                    cursor: "not-allowed",
-                    backgroundColor: "white",
-                    pointerEvents: "all !important",
-                  },
-                }}
-                onClick={() => {
-                  dispatch(SetSelectedApplication("Contractor Master Data"));
-                  dispatch(NavBarComponent("contractor_cred"));
-                }}
-              >
-                Contractor Master Data
-              </Button>
-            </div>
+      <div
+        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+        style={{
+          border: "1px solid black",
+          width: "100%",
+        }}
+      >
+        <Button
+          variant={
+            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassDashboard" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Entry Request"));
+            dispatch(NavBarComponent("labourPassDashboard"));
+          }}
+        >
+          Worker Entry Request
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassApproval" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassApproval" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassApproval"));
+          }}
+        >
+          APPROVAL CENTRE
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "labourPassHistory" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "labourPassHistory" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+            dispatch(NavBarComponent("labourPassHistory"));
+          }}
+        >
+          APPROVAL HISTORY
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_masterData"
+              ? "contained"
+              : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_masterData" ? "null" : "white",
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Worker Master Data"));
+            dispatch(NavBarComponent("contractor_masterData"));
+          }}
+        >
+          Worker Master Data
+        </Button>
+        <Button
+          variant={
+            navBarComponent === "contractor_cred" ? "contained" : "outlined"
+          }
+          color="warning"
+          sx={{
+            my: 1,
+            mx: 5,
+            backgroundColor:
+              navBarComponent === "contractor_cred" ? "null" : "white",
+            "&:disabled": {
+              cursor: "not-allowed",
+              backgroundColor: "white",
+              pointerEvents: "all !important",
+            },
+          }}
+          onClick={() => {
+            dispatch(SetSelectedApplication("Contractor Master Data"));
+            dispatch(NavBarComponent("contractor_cred"));
+          }}
+        >
+          Contractor Master Data
+        </Button>
+      </div>
 
       {saveLoader ? (
         <CircularProgress
@@ -366,65 +365,63 @@ export default function LabourMasterData({handleSyncContractor}) {
 
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Typography>Contractor Name</Typography>
-                      <Autocomplete
-                        name="Search Contractor"
-                        className="w-100"
-                        value={contractor !== "" ? contractor : null}
-                        onChange={(event, newValue) => {
-                          newValue !== null
-                            ? setContractor(newValue)
-                            : setContractor("");
-                        }}
-                        selectOnFocus
-                        clearOnBlur
-                        handleHomeEndKeys
-                        freeSolo
-                        options={
-                          contractorList.length > 0
-                            ? [
-                                ...new Set(
-                                  contractorList
-                                    .filter((ele) => ele.LOCATION_CODE == locationCode)
-                                    .map((item) => item["CONTRACTOR_NAME"]),
-                                ),
-                              ]
-                            : []
-                        }
-                        sx={{
-                          // 1. Increase font size of the placeholder/input text
-                          "& .MuiInputBase-input": {
-                            fontSize: "1rem",
-                          },
-                          "& .MuiOutlinedInput-root": {
-                            paddingTop: "2px !important", // Reducer top whitespace
-                            paddingBottom: "2px !important", // Keeps it centered vertically
-                          },
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            placeholder={"Select Contractor from Dropdown"}
-                            InputLabelProps={{
-                              ...params.InputLabelProps,
-                              shrink: true,
-                            }}
-                            InputProps={{
-                              ...params.InputProps,
-                              style: {
-                                fontFamily: "Lucida Sans",
-                                backgroundColor: "white",
-                              },
-                              sx: {
-                                "& input::placeholder": {
-                                  fontFamily: "Lucida Sans",
-                                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                                  fontStyle: "italic", // Optional: make placeholder italicized
-                                },
-                              },
-                            }}
-                          />
-                        )}
-                      />
+            <Autocomplete
+              name="Search Contractor"
+              className="w-100"
+              value={contractor !== "" ? contractor : null}
+              onChange={(event, newValue) => {
+                newValue !== null ? setContractor(newValue) : setContractor("");
+              }}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              freeSolo
+              options={
+                contractorList.length > 0
+                  ? [
+                      ...new Set(
+                        contractorList
+                          .filter((ele) => ele.LOCATION_CODE == locationCode)
+                          .map((item) => item["CONTRACTOR_NAME"]),
+                      ),
+                    ]
+                  : []
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={"Select Contractor from Dropdown"}
+                  InputLabelProps={{
+                    ...params.InputLabelProps,
+                    shrink: true,
+                  }}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
           </div>
 
           <div style={{ width: "100%", maxWidth: 350 }}>

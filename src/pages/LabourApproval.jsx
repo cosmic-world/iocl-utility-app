@@ -181,8 +181,11 @@ export default function LabourApproval() {
                       type="checkbox"
                       aria-label="Select all pending workers"
                       checked={
-                        request.rows.some((row) => row.REQUEST_STATUS === "PENDING") &&
-                        request.rows.filter((row) => row.REQUEST_STATUS === "PENDING")
+                        request.rows.some(
+                          (row) => row.REQUEST_STATUS === "PENDING",
+                        ) &&
+                        request.rows
+                          .filter((row) => row.REQUEST_STATUS === "PENDING")
                           .every((row) => selectedLabourIds.includes(row.ID))
                       }
                       ref={(element) => {
@@ -204,7 +207,10 @@ export default function LabourApproval() {
                         );
                       }}
                     />
-                    <Typography variant="body2" sx={{ alignSelf: "center", mr: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ alignSelf: "center", mr: 1 }}
+                    >
                       Select all pending
                     </Typography>
                     <Button

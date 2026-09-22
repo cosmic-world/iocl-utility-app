@@ -1082,6 +1082,11 @@ function createLabourPermissionReport(rows) {
     y + 32,
   );
   !showApproverPerRow ? doc.font("Helvetica").fontSize(8).text(formatReportDate(first.APPROVED_AT), left, y + 45) : null;
+  doc.font("Helvetica-Bold").fontSize(9).text(
+    `Approved by: `,
+    right-100,
+    y + 32,
+  );
   return new Promise((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.end();

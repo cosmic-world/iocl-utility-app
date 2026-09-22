@@ -8,7 +8,7 @@ import {
   Password,
   LocationOn,
   Approval,
-  LocalShipping
+  LocalShipping,
 } from "@mui/icons-material";
 import { Typography, CardActionArea, Box, Badge } from "@mui/material";
 import {

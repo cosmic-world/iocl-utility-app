@@ -1513,8 +1513,7 @@ export default function tempPassDashboard() {
           <tbody>
             {Array.from(
               {
-                length:
-                  filteredRecords.length > 0 ? filteredRecords.length : 5,
+                length: filteredRecords.length > 0 ? filteredRecords.length : 5,
               },
               (_, i) => {
                 const record = filteredRecords[i];
