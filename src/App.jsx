@@ -8,10 +8,7 @@ import Header from "./pages/Header";
 import LandingPage from "./pages/landingPage";
 import { useDispatch, useSelector } from "react-redux";
 import LabourApproval from "./pages/LabourApproval";
-import {
-  NavBarComponent,
-  SetPermitList,
-} from "./action/userSlice";
+import { NavBarComponent, SetPermitList } from "./action/userSlice";
 
 function formatDate(date1) {
   const date = new Date(...date1.slice(5, -1).split(","));
@@ -26,8 +23,9 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList } =
-    useSelector((state) => state.myApp);
+  const { navBarComponent, selectedTerminal, PermitList } = useSelector(
+    (state) => state.myApp,
+  );
   const permitListRef = useRef(PermitList);
 
   useEffect(() => {

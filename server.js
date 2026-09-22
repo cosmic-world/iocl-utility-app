@@ -10,6 +10,7 @@ const sql = require("mssql");
 // const cron = require('node-cron');
 const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
+const PDFDocument = require('pdfkit');
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -641,18 +642,18 @@ app.get("/api/labour-master-data", (req, res) => {
         const { location_code, contractor } = req.query;
         let whereClauses = [];
       let query = "SELECT * FROM LabourMasterRecord";
-
-      if (contractor) {
-      whereClauses.push(`contractor = '${contractor.replace(/'/g, "''")}'`)
+      if (location_code) {
+      whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
       }
-
-          if (whereClauses.length > 0) {
+      if (contractor) {
+      whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
+      }
+      if (whereClauses.length > 0) {
         query += " WHERE " + whereClauses.join(" AND ");
       }
 
       await sql.connect(sqlConfig);
       const result = await sql.query(query);
-      await sql.close();
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -770,7 +771,6 @@ app.get("/api/contractor-master-data", (req, res) => {
     try {
       await sql.connect(sqlConfig);
       const result = await sql.query("SELECT * FROM ContractorCredentials");
-      await sql.close();
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -903,7 +903,6 @@ app.get("/api/officer-master-data", (req, res) => {
     try {
       await sql.connect(sqlConfig);
       const result = await sql.query("SELECT * FROM OfficerCredentials");
-      await sql.close();
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -1049,6 +1048,164 @@ function createLabourApprovalPdf(rows, token) {
   return Buffer.from(pdf, "utf8");
 }
 
+function formatReportDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value)
+    : date.toLocaleString("en-GB", { hour12: false });
+}
+
+function drawReportCell(doc, text, x, y, width, height, options = {}) {
+  const padding = options.padding ?? 4;
+  doc.rect(x, y, width, height).stroke();
+  doc.font(options.bold ? "Helvetica-Bold" : "Helvetica")
+    .fontSize(options.fontSize ?? 8)
+    .text(String(text ?? ""), x + padding, y + padding, {
+      width: width - padding * 2,
+      height: height - padding * 2,
+      align: options.align || "left",
+      valign: "center",
+      ellipsis: true,
+    });
+}
+
+function createLabourPermissionReport(rows) {
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 28 });
+  const buffers = [];
+  doc.on("data", (chunk) => buffers.push(chunk));
+  const first = rows[0] || {};
+  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const left = doc.page.margins.left;
+  const right = left + pageWidth;
+
+  const logoPath = path.join(__dirname, "public", "iocl.png");
+
+    const approvers = [
+    ...new Set(
+      rows
+        .map((row) => row.APPROVED_BY)
+        .filter(Boolean),
+    ),
+  ];
+  const showApproverPerRow = approvers.length > 1;
+
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, left, 28, { fit: [78, 58], align: "left", valign: "top" });
+  }
+  doc.font("Helvetica-Bold").fontSize(13).text("INDIAN OIL CORPORATION LIMITED", left, 30, { align: "center", width: pageWidth });
+  doc.fontSize(11).text("COIMBATORE TERMINAL", left, 47, { align: "center", width: pageWidth });
+  showApproverPerRow
+    ? doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
+    : doc.fontSize(10).text(`Date/Time: ${formatReportDate(first.APPROVED_AT)}`, right - 180, 38, { width: 180, align: "right" });
+  doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF PERSONS", left, 82, { align: "center", width: pageWidth });
+  doc.font("Helvetica").fontSize(9).text(`Dear Sir,\n\nWe request permission for entry into the IOCL Coimbatore Terminal for the following persons.`, left, 108);
+
+  let y = 145;
+  drawReportCell(doc, `Name of the Work / Work's Description: ${first.PURPOSE || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
+  y += 26;
+  drawReportCell(doc, `Contractor: ${first.CONTRACTOR || ""}    Address: ${first.ADDRESS || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
+  y += 26;
+
+  const groups = 3;
+  const groupWidth = pageWidth / groups;
+  const rowHeight = 30;
+  const headerHeight = 22;
+
+  for (let group = 0; group < groups; group += 1) {
+    const x = left + group * groupWidth;
+    drawReportCell(doc, "Sr. No", x, y, 38, headerHeight, { bold: true, align: "center" });
+    drawReportCell(doc, "Name of the Person / Approver", x + 38, y, groupWidth - 88, headerHeight, { bold: true, align: "center" });
+    drawReportCell(doc, "Pass No.", x + groupWidth - 50, y, 50, headerHeight, { bold: true, align: "center" });
+    for (let rowIndex = 0; rowIndex < 7; rowIndex += 1) {
+      const row = rows[group * 7 + rowIndex];
+      const rowY = y + headerHeight + rowIndex * rowHeight;
+      drawReportCell(doc, row ? rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { align: "center" });
+      const approverName = row?.APPROVER_NAME || row?.APPROVED_BY || "";
+      drawReportCell(
+        doc,
+        row
+          ? showApproverPerRow
+            ? `${row.LABOUR_NAME || ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
+            : row.LABOUR_NAME || ""
+          : "",
+        x + 38,
+        rowY,
+        groupWidth - 88,
+        rowHeight,
+        { fontSize: 6, padding: 3 },
+      );
+      drawReportCell(doc, row?.GATE_PASS_NO || "", x + groupWidth - 50, rowY, 50, rowHeight, { align: "center" });
+    }
+  }
+
+  y += headerHeight + rowHeight * 7 + 20;
+  doc.font("Helvetica").fontSize(8).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
+  doc.font("Helvetica-Bold").fontSize(9).text(
+    `Authorized by: ${approvers.length === 1 ? approvers[0] : "Approved by the authorized officers shown above"}`,
+    left,
+    y + 32,
+  );
+  !showApproverPerRow ? doc.font("Helvetica").fontSize(8).text(formatReportDate(first.APPROVED_AT), left, y + 45) : null;
+  return new Promise((resolve) => {
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.end();
+  });
+}
+
+function createLabourRegisterReport(rows) {
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 24 });
+  const buffers = [];
+  doc.on("data", (chunk) => buffers.push(chunk));
+  const left = doc.page.margins.left;
+  const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const logoPath = path.join(__dirname, "public", "iocl.png");
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, left, 20, { fit: [58, 42], align: "left", valign: "top" });
+  }
+  doc.font("Helvetica-Bold").fontSize(14).text("REGISTER FOR DETAILS OF CONTRACTORS' LABOUR", left, 28, { align: "center", width });
+  doc.fontSize(10).text(`Location: COIMBATORE TERMINAL`, left, 68);
+
+  const columns = [
+    ["Sl. No.", 34], ["Date", 62], ["Name of Contractor", 104], ["Name of the Labour", 104], ["Labour's Aadhaar No.", 82],
+    ["Labour's Mobile No.", 72], ["Gate Pass No.", 82], 
+    // ["Father's Name", 88],
+    ["Address", 125], 
+    // ["ABAT", 48],
+    // ["Signature of LTI / Left Thumb Impression", 95], 
+    ["In Time", 62], 
+    ["Out Time", 62],
+    ["Name & Designation of Authorizing Official", 100],
+  ];
+  const totalColumnWidth = columns.reduce((sum, column) => sum + column[1], 0);
+  const scale = width / totalColumnWidth;
+  let y = 88;
+  const headerHeight = 38;
+  let x = left;
+  columns.forEach(([label, columnWidth]) => {
+    const scaledWidth = columnWidth * scale;
+    drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 6, align: "center" });
+    x += scaledWidth;
+  });
+  const rowHeight = 25;
+  rows.forEach((row, index) => {
+    x = left;
+    const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", row.APPROVING_OFFICER,];
+    columns.forEach(([, columnWidth], columnIndex) => {
+      const scaledWidth = columnWidth * scale;
+      drawReportCell(doc, values[columnIndex], x, y + headerHeight + index * rowHeight, scaledWidth, rowHeight, {
+        fontSize: 7,
+        align: columnIndex === 5 ? "left" : "center",
+      });
+      x += scaledWidth;
+    });
+  });
+  return new Promise((resolve) => {
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.end();
+  });
+}
+
 async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
   const applicationLink = `${labourWorkflowBaseUrl}/approve-labour/${requestToken}`;
   const first = rows[0] || {};
@@ -1056,8 +1213,7 @@ async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
     to: officerEmail,
     subject: `Action required: Labour pass request for ${first.CONTRACTOR || "contractor"}`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Labour entry approval</h2><p>A request for <strong>${rows.length} labour${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><strong>Purpose:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p><p style="font-size:12px;color:#64748b">Request reference: ${requestToken.slice(0, 12).toUpperCase()}</p></div>`,
-  });
+    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Labour entry approval</h2><p>A request for <strong>${rows.length} labour${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><strong>Workers:</strong> ${rows.map((row) => row.LABOUR_NAME || row.labourName || "").join(", ")}<br><strong>Purpose:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p></div>`,  });
 }
 
 app.post("/api/labour-pass-requests", async (req, res) => {
@@ -1097,8 +1253,6 @@ app.post("/api/labour-pass-requests", async (req, res) => {
   } catch (error) {
     console.error("Labour pass request failed:", error);
     return res.status(500).json({ success: false, message: error.message });
-  } finally {
-    if (pool) await pool.close();
   }
 });
 
@@ -1115,56 +1269,126 @@ app.get("/api/labour-pass-requests/:token", async (req, res) => {
   }
 });
 
-app.get("/api/labour-pass-requests", async (req, res) => {
+app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
   try {
-    await sql.connect(getSqlConfig());
-      const { fetchdate } = req.query;
-      let whereClauses = [];
-      let result = await sql.query(`
-      SELECT REQUEST_TOKEN, CONTRACTOR, APPROVING_OFFICER, PURPOSE, TIME_IN,
-        REQUEST_STATUS, CREATED_AT, APPROVED_AT, LABOUR_NAME
-      FROM dbo.LabourEntryRecord
-      ORDER BY CREATED_AT DESC
-    `)
-      whereClauses.push('REQUEST_TOKEN IS NOT NULL')
-      if (fetchdate) {
-      whereClauses.push(`request_from >= '${fetchdate.replace(/'/g, "''")}'`)
-      }
-    result += " WHERE " + whereClauses.join(" AND ");
-    const requests = new Map();
-    result.recordset.forEach((row) => {
-      const current = requests.get(row.REQUEST_TOKEN) || {
-        REQUEST_TOKEN: row.REQUEST_TOKEN,
-        CONTRACTOR: row.CONTRACTOR,
-        APPROVING_OFFICER: row.APPROVING_OFFICER,
-        PURPOSE: row.PURPOSE,
-        TIME_IN: row.TIME_IN,
-        CREATED_AT: row.CREATED_AT,
-        LABOUR_COUNT: 0,
-        statuses: [],
-      };
-      current.LABOUR_COUNT += 1;
-      current.statuses.push(row.REQUEST_STATUS);
-      requests.set(row.REQUEST_TOKEN, current);
-    });
-    return res.json([...requests.values()].map((request) => ({
-      ...request,
-      REQUEST_STATUS: request.statuses.every((status) => status === "APPROVED")
-        ? "APPROVED"
-        : request.statuses.every((status) => status === "REJECTED")
-          ? "REJECTED"
-          : request.statuses.some((status) => status !== "PENDING")
-            ? "PARTIALLY DECIDED"
-            : "PENDING",
-    })));
+    const approvingOfficer = String(req.body?.approvingOfficer || "").trim();
+    const mailID = String(req.body?.mailID || "").trim().toLowerCase();
+    if (!approvingOfficer || !mailID) {
+      return res.status(400).json({ message: "The next approving officer and email are required." });
+    }
+
+    const pool = await sql.connect(getSqlConfig());
+    await ensureLabourWorkflowColumns(pool);
+    const request = pool.request();
+    request.input("token", sql.NVarChar, req.params.token);
+    const result = await request.query(
+      "SELECT * FROM dbo.LabourEntryRecord WHERE REQUEST_TOKEN = @token ORDER BY ID",
+    );
+    if (!result.recordset.length) {
+      return res.status(404).json({ message: "Approval request was not found." });
+    }
+    if (result.recordset.some((row) => row.REQUEST_STATUS !== "PENDING")) {
+      return res.status(409).json({ message: "Only pending labour requests can be forwarded." });
+    }
+
+    const update = pool.request();
+    update.input("token", sql.NVarChar, req.params.token);
+    update.input("approvingOfficer", sql.NVarChar, approvingOfficer);
+    await update.query(
+      "UPDATE dbo.LabourEntryRecord SET APPROVING_OFFICER = @approvingOfficer WHERE REQUEST_TOKEN = @token AND REQUEST_STATUS = 'PENDING'",
+    );
+    await sendLabourWorkflowEmail(mailID, req.params.token, result.recordset);
+    return res.json({ success: true, approvingOfficer });
   } catch (error) {
+    console.error("Labour request forwarding error:", error);
     return res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/api/labour-pass-requests", async (req, res) => {
+  let pool;
+  try {
+    const { fetchdate, location_code, contractor } = req.query;
+    pool = await sql.connect(sqlConfig);
+    await ensureLabourWorkflowColumns(pool);
+
+    const request = pool.request();
+    const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
+    if (fetchdate) {
+      request.input("fetchdate", sql.Date, String(fetchdate));
+      whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
+    }
+    if (location_code) {
+      request.input("locationCode", sql.NVarChar, String(location_code));
+      whereClauses.push("LOCATION_CODE = @locationCode");
+    }
+    if (contractor) {
+      request.input("contractor", sql.NVarChar, String(contractor));
+      whereClauses.push("CONTRACTOR = @contractor");
+    }
+    const result = await request.query(
+      `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
+    );
+    return res.json(result.recordset);
+  } catch (error) {
+    console.error("Labour request query failed:", error);
+    return res.status(500).json({ message: error.message });
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.get("/api/labour-pass-reports", async (req, res) => {
+  try {
+    const { fetchdate, location_code, contractor, format } = req.query;
+    if (!["permission", "register"].includes(format)) {
+      return res.status(400).json({ error: "A valid report format is required." });
+    }
+    if (format === "permission" && (!fetchdate || !contractor)) {
+      return res.status(400).json({
+        error: "Contractor and creation date are required for the permission letter.",
+      });
+    }
+
+    const pool = await sql.connect(sqlConfig);
+    await ensureLabourWorkflowColumns(pool);
+    const request = pool.request();
+    const conditions = ["REQUEST_TOKEN IS NOT NULL", "REQUEST_STATUS = 'APPROVED'"];
+    if (fetchdate) {
+      request.input("fetchdate", sql.NVarChar, String(fetchdate));
+      conditions.push("CAST(CREATED_AT AS DATE) = CONVERT(date, @fetchdate, 23)");
+    }
+    if (location_code) {
+      request.input("locationCode", sql.NVarChar, String(location_code));
+      conditions.push("LOCATION_CODE = @locationCode");
+    }
+    if (contractor) {
+      request.input("contractor", sql.NVarChar, String(contractor));
+      conditions.push("CONTRACTOR = @contractor");
+    }
+    const result = await request.query(`SELECT *, COALESCE(NULLIF(LTRIM(RTRIM(APPROVED_BY)), ''), APPROVING_OFFICER) AS APPROVER_NAME FROM dbo.LabourEntryRecord WHERE ${conditions.join(" AND ")} ORDER BY CREATED_AT, ID`);
+    const rows = result.recordset;
+    if (!rows.length) {
+      await sql.close();
+      return res.status(404).json({ error: "No approved labour records found for the selected filters." });
+    }
+    const pdf = format === "permission"
+      ? await createLabourPermissionReport(rows)
+      : await createLabourRegisterReport(rows);
+    await sql.close();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="labour-${format}-report.pdf"`);
+    return res.send(pdf);
+  } catch (error) {
+    console.error("Labour report error:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
 
 app.post("/api/labour-pass-requests/:token/labours/:labourId/decision", async (req, res) => {
   try {
-    await sql.connect(getSqlConfig());
+    const pool = await sql.connect(getSqlConfig());
+    await ensureLabourWorkflowColumns(pool);
     const labourId = Number(req.params.labourId);
     const decision = String(req.body?.decision || "").toUpperCase();
     if (!Number.isInteger(labourId) || !["APPROVE", "REJECT"].includes(decision)) {
@@ -1207,7 +1431,8 @@ app.post("/api/labour-pass-requests/:token/labours/:labourId/decision", async (r
 
 app.post("/api/labour-pass-requests/:token/decision", async (req, res) => {
   try {
-    await sql.connect(getSqlConfig());
+    const pool = await sql.connect(getSqlConfig());
+    await ensureLabourWorkflowColumns(pool);
     const labourIds = Array.isArray(req.body?.labourIds)
       ? req.body.labourIds.map(Number).filter((id) => Number.isInteger(id))
       : [];
@@ -1252,6 +1477,45 @@ app.post("/api/labour-pass-requests/:token/decision", async (req, res) => {
   }
 });
 
+app.post("/api/labour-pass-requests/:id/:gatepass", async (req, res) => {
+  try {
+    const recordId = Number(req.params.id);
+    const gatepass = String(req.params.gatepass || "").trim().toUpperCase();
+    if (!Number.isInteger(recordId) || recordId <= 0) {
+      return res.status(400).json({ error: "Invalid record id." });
+    }
+    if (!/^[RGY]-\d+$/.test(gatepass)) {
+      return res.status(400).json({ error: "Gate pass must be R-, G- or Y- followed by a number." });
+    }
+    await sql.connect(sqlConfig);
+    const existingRequest = new sql.Request();
+    existingRequest.input("id", sql.Int, recordId);
+    const existingResult = await existingRequest.query(
+      "SELECT REQUEST_STATUS FROM dbo.LabourEntryRecord WHERE ID = @id",
+    );
+    if (!existingResult.recordset.length) {
+      return res.status(404).json({ error: "Labour pass request was not found." });
+    }
+    if (existingResult.recordset[0].REQUEST_STATUS !== "APPROVED") {
+      return res.status(409).json({ error: "Gate pass can only be assigned to an approved request." });
+    }
+    const updateRequest = new sql.Request();
+    updateRequest.input("id", sql.Int, recordId);
+    updateRequest.input("gatepassno", sql.NVarChar(sql.MAX), gatepass);
+    const updateResult = await updateRequest.query(
+      "UPDATE dbo.LabourEntryRecord SET GATE_PASS_NO = @gatepassno WHERE id = @id"
+    );
+    if (!updateResult.rowsAffected[0]) {
+      return res.status(404).json({ error: "Labour pass request was not found." });
+    }
+    await sql.close();
+    return res.status(200).json({ success: true, GATE_PASS_NO: gatepass });
+  } catch (error) {
+    console.error("Gate Pass update error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 /**
  * Sends an approval notification email to the approving officer
  * @param {string} officerEmail - The email address of the approving officer
@@ -1273,8 +1537,6 @@ async function sendApprovalEmail(officerEmail, labourDetails) {
   // Change this to your actual frontend application URL
 //   const applicationLink = `https://your-app-domain.com/approve-pass/${requestId}`;
     const applicationLink = `http://192.168.1.39:3001`;
-  console.log('labourDetails',labourDetails);
-  
   // 2. Define the email template using HTML
   const mailOptions = {
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',

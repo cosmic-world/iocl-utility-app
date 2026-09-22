@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Autocomplete,
   Typography,
-  ButtonGroup,
   Checkbox,
 } from "@mui/material";
 import { DemoItem } from "@mui/x-date-pickers/internals/demo";
@@ -17,47 +16,29 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-
-import {
-  Visibility,
-  Download,
-  UploadFile,
-  History,
-  PhotoCamera,
-} from "@mui/icons-material";
 import {
   SetLabourMasterList,
   SetOfficerMasterList,
   NavBarComponent,
   SetSelectedApplication,
+  SetContractorMasterList,
 } from "../action/userSlice";
-import CameraModal from "./CameraModal";
-import Dropdown from "react-bootstrap/Dropdown";
-import DropdownButton from "react-bootstrap/DropdownButton";
-
-function normalizeLabourNames(labourData) {
-  // Check if it's an array (multiple names)
-  if (Array.isArray(labourData)) {
-    return labourData
-      .map((name, index) => `${index + 1}: '${name}'`)
-      .join(", ");
-  }
-
-  // If it's a single string (or fallback), return as-is
-  return labourData;
-}
 
 export default function tempPassDashboard() {
   const dispatch = useDispatch();
-  const { labour_masterList, officerList, navBarComponent, userType } =
-    useSelector((state) => state.myApp);
-
+  const {
+    labour_masterList,
+    officerList,
+    navBarComponent,
+    userType,
+    contractorList,
+    locationCode,
+    selectedTerminal,
+  } = useSelector((state) => state.myApp);
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);
-  const [startIndex, setstartIndex] = useState(0);
-
+  const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const [saveLoader, setSaveLoader] = useState(false);
-
-  const [locationCode, setLocationCode] = useState("");
   const [contractor, setContractor] = useState("");
   const [labourName, setLabourName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
@@ -65,27 +46,22 @@ export default function tempPassDashboard() {
   const [address, setAddress] = useState("");
   const [approvingOfficer, setApprovingOfficer] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [gatePassNo, setGatePassNo] = useState("");
   const [timeIn, setTimeIn] = useState("");
-  const [passType, setPassType] = useState("");
-
-  const [searchLocationCode, setSearchLocationCode] = useState("");
   const [searchContractor, setSearchContractor] = useState("");
   const [approvingOfficer_1, setApprovingOfficer_1] = useState("");
   const [multiPurpose, setMultiPurpose] = useState("");
   const [multiTimeIn, setMultiTimeIn] = useState("");
   const [selectedLabourIds, setSelectedLabourIds] = useState([]);
-
-  const [syncing, setSyncing] = useState(false);
+  const [selectedForwardLabourIds, setSelectedForwardLabourIds] = useState([]);
   const [seaching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitting_1, setSubmitting_1] = useState(false);
-  const [approvingId, setApprovingId] = useState(null);
-  const [documents, setDocuments] = useState(Array(3).fill(null));
 
   useEffect(() => {
     handleSync();
+    handleSyncContractor();
     handleSyncOfficerList();
+    fetchLabourEntryRecords();
   }, []);
 
   const checkIfOfficerListHasDuplicates =
@@ -107,7 +83,6 @@ export default function tempPassDashboard() {
 
   const handleSyncOfficerList = async () => {
     setSaveLoader(true);
-    setSyncing(true);
     try {
       const response = await fetch(apiUrl("/api/officer-master-data"));
       if (!response.ok) {
@@ -125,13 +100,11 @@ export default function tempPassDashboard() {
       console.error("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
-      setSyncing(false);
     }
   };
 
   const handleSync = async () => {
     setSaveLoader(true);
-    setSyncing(true);
     try {
       const response = await fetch(apiUrl("/api/labour-master-data"));
       if (!response.ok) {
@@ -142,16 +115,29 @@ export default function tempPassDashboard() {
 
       setSaveLoader(false);
       dispatch(SetLabourMasterList(zlist));
-      // zlist.length > 0
-      //   ? alert("Syncing completed successfully.")
-      //   : alert("No records found in the database.");
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
-      setSyncing(false);
     }
   };
+
+  const handleSyncContractor = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/contractor-master-data"));
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+
+      setSaveLoader(false);
+      dispatch(SetContractorMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
   const officerName =
     approvingOfficer !== ""
       ? checkIfOfficerListHasDuplicates
@@ -187,18 +173,147 @@ export default function tempPassDashboard() {
         : [...current, record.ID],
     );
   };
+  const [isNew, setIsNew] = useState(false);
+  const handleReset = () => {
+    setContractor("");
+    setLabourName("");
+    setMobileNo("");
+    setAadhaarNo("");
+    setAddress("");
+    setPurpose("");
+    setTimeIn("");
+    setApprovingOfficer("");
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!contractor) {
+      alert("Please select contractor.");
+      return;
+    }
+    if (!labourName) {
+      alert("Please select/enter labour name.");
+      return;
+    }
+    const labourAlreadyRequestedToday = recordsLaborsEntry.filter(
+      (val) => val["AADHAAR_NO"] == aadhaarNo,
+    );
+    if (labourAlreadyRequestedToday.length > 0) {
+      alert("This labour name has already been requested today.");
+      return;
+    }
+    if (!mobileNo) {
+      alert("Please select/enter mobile no.");
+      return;
+    }
+    if (!/^[0-9]{10}$/.test(mobileNo)) {
+      alert("Mobile No should be exactly 10 digits.");
+      return;
+    }
+    if (!aadhaarNo) {
+      alert("Please select/enter aadhaar no.");
+      return;
+    }
+    if (!address) {
+      alert("Please select/enter address.");
+      return;
+    }
+    if (!purpose) {
+      alert("Please enter purpose.");
+      return;
+    }
+    if (!timeIn) {
+      alert("Please enter timeIn.");
+      return;
+    }
+    if (!officerName) {
+      alert("Please select approving officer.");
+      return;
+    }
+    setSubmitting(true);
+    setSaveLoader(true);
+    try {
+      const response = await fetch(apiUrl("/api/labour-pass-requests"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locationCode: String(locationCode),
+          contractor,
+          purpose,
+          timeIn,
+          approvingOfficer: officerName,
+          mailID,
+          labours: [
+            {
+              labourName,
+              mobileNo,
+              aadhaarNo,
+              address,
+            },
+          ],
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Unable to submit request.");
+      const uploadMaster = async (e) => {
+        try {
+          const payload = {
+            locationCode: String(locationCode),
+            contractor,
+            labourName,
+            mobileNo,
+            aadhaarNo,
+            address,
+          };
+          // Submit to server
+          const response = await fetch(apiUrl("/api/upload-labour-single"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            alert("Record submitted successfully!");
+          } else {
+            const error = await response.text();
+            console.error("Error submitting form:", error);
+            // alert("Error submitting form: " + error);
+          }
+        } catch (error) {
+          alert("Error: " + error.message);
+        } finally {
+          setIsNew(false);
+          handleSync();
+        }
+      };
+      isNew ? uploadMaster() : null;
+      fetchLabourEntryRecords();
+      alert(`Request sent to ${officerName} for approval.`);
+      handleReset();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
+      setSubmitting(false);
+    }
+  };
 
   const submitSelectedLabours = async () => {
     const selectedLabours = records.filter((record) =>
       selectedLabourIds.includes(record.ID),
     );
     if (!selectedLabours.length) return alert("Select at least one labour.");
-    const requestOfficerName = selectedOfficerName || officerName;
-    const requestOfficerMail = selectedOfficerMail || mailID;
-    const requestLocationCode = searchLocationCode || locationCode;
-    const requestContractor = searchContractor || contractor;
-    if (!multiPurpose || !multiTimeIn || !requestOfficerName || !requestOfficerMail) {
-      return alert("Enter purpose, time in and select an approving officer first.");
+    if (
+      !multiPurpose ||
+      !multiTimeIn ||
+      !selectedOfficerName ||
+      !selectedOfficerMail
+    ) {
+      return alert(
+        "Enter purpose, time in and select an approving officer first.",
+      );
     }
 
     setSubmitting_1(true);
@@ -208,12 +323,12 @@ export default function tempPassDashboard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          locationCode: requestLocationCode,
-          contractor: requestContractor,
+          locationCode: String(locationCode),
+          contractor: searchContractor,
           purpose: multiPurpose,
           timeIn: multiTimeIn,
-          approvingOfficer: requestOfficerName,
-          mailID: requestOfficerMail,
+          approvingOfficer: selectedOfficerName,
+          mailID: selectedOfficerMail,
           labours: selectedLabours.map((record) => ({
             labourName: record.LABOUR_NAME,
             mobileNo: record.MOBILE_NO,
@@ -223,11 +338,14 @@ export default function tempPassDashboard() {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Unable to submit request.");
-      alert(`Request sent to ${requestOfficerName} for approval.`);
+      if (!response.ok)
+        throw new Error(data.message || "Unable to submit request.");
+      fetchLabourEntryRecords();
+      alert(`Request sent to ${selectedOfficerName} for approval.`);
       setSelectedLabourIds([]);
       setMultiPurpose("");
       setMultiTimeIn("");
+      setApprovingOfficer_1("");
     } catch (error) {
       alert(error.message);
     } finally {
@@ -236,12 +354,51 @@ export default function tempPassDashboard() {
     }
   };
 
+  const forwardSelectedRequest = async () => {
+    const selectedRequests = recordsLaborsEntry.filter(
+      (item) => selectedForwardLabourIds.includes(item.ID) && item.REQUEST_STATUS === "PENDING",
+    );
+    const requestTokens = [...new Set(selectedRequests.map((item) => item.REQUEST_TOKEN).filter(Boolean))];
+    if (!selectedRequests.length || requestTokens.length !== 1) {
+      alert("Select pending request only.");
+      return;
+    }
+    if (!selectedOfficerName || !selectedOfficerMail) {
+      alert("Select the next approving officer first.");
+      return;
+    }
+
+    try {
+      setSaveLoader(true);
+      const response = await fetch(
+        apiUrl(`/api/labour-pass-requests/${requestTokens[0]}/forward`),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvingOfficer: selectedOfficerName,
+            mailID: selectedOfficerMail,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Unable to forward request.");
+      await fetchLabourEntryRecords();
+      setSelectedForwardLabourIds([]);
+      alert(`Request forwarded to ${data.approvingOfficer} for approval.`);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
   const fetchRecords = async () => {
     setSaveLoader(true);
     setSearching(true);
     try {
       const params = new URLSearchParams();
-
+      params.append("location_code", String(locationCode));
       if (searchContractor) params.append("contractor", searchContractor);
 
       const url = apiUrl(`/api/labour-master-data?${params.toString()}`);
@@ -252,9 +409,9 @@ export default function tempPassDashboard() {
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
       setRecords(zlist);
-      zlist.length == 0
-        ? alert("No records found matching the search criteria.")
-        : null;
+      // zlist.length == 0
+      //   ? alert("No records found matching the search criteria.")
+      //   : null;
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -263,187 +420,33 @@ export default function tempPassDashboard() {
     }
   };
 
-  const handleFileChange = (index, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = [
-      "application/pdf",
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "image/webp",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only PDF and image files (PNG, JPEG, JPG, WEBP) are allowed");
-      return;
-    }
-
-    // Validate file size (max 30MB)
-    if (file.size > 30 * 1024 * 1024) {
-      alert("File size must be less than 30MB");
-      return;
-    }
-
-    // Update documents array
-    const newDocuments = [...documents];
-    newDocuments[index] = file;
-    setDocuments(newDocuments);
-  };
-
-  const handlePostData = async (e, officerName, type) => {
-    e.preventDefault();
-    if (!locationCode) {
-      alert("Please select a Location Code.");
-      return;
-    }
-
-    if (!contractor) {
-      alert("Please enter/select Contractor.");
-      return;
-    }
-
-    if (!labourName) {
-      alert("Please enter/select Labour Name.");
-      return;
-    }
-
-    if (!mobileNo) {
-      alert("Please enter/select Mobile No.");
-      return;
-    }
-
-    if (!/^[0-9]{10}$/.test(mobileNo)) {
-      alert("Mobile No should be exactly 10 digits.");
-      return;
-    }
-
-    if (!aadhaarNo) {
-      alert("Please enter/select Aadhaar No or ID Proof No.");
-      return;
-    }
-
-    if (!address) {
-      alert("Please enter/select Address");
-      return;
-    }
-
-    if (!purpose) {
-      alert("Please enter Purpose of request");
-      return;
-    }
-
-    if (!timeIn) {
-      alert("Please enter Time In");
-      return;
-    }
-
-    setSaveLoader(true);
-    type == "single" ? setSubmitting(true) : setSubmitting_1(true);
-
+  const fetchLabourEntryRecords = async () => {
     try {
-      const formData = new FormData();
-      // Add form fields
-      formData.append("location_code", locationCode);
-      formData.append("contractor", contractor);
-      formData.append("labourName", normalizeLabourNames(labourName));
-      formData.append("mobile_no", mobileNo);
-      formData.append("aadhaarNo", aadhaarNo);
-      formData.append("address", address);
-      formData.append("gatePassNo", gatePassNo);
-      formData.append("purpose", purpose);
-      formData.append("timeIn", timeIn);
-      formData.append("approvingOfficer", officerName);
-      formData.append("mailID", mailID); // Add mailID to the form data
-
-      // Add files (only if they exist)
-      if (documents[0]) formData.append("document1", documents[0]);
-      if (documents[1]) formData.append("document2", documents[1]);
-      if (documents[2]) formData.append("document3", documents[2]);
-
-      // Submit to server
-      const response = await fetch(apiUrl("/api/upload-labour-pass"), {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("Record submitted successfully!");
-        // Reset form
-        // setLocationCode("");
-        // setApprovingOfficer("");
-        // setContractor("");
-        // setLabourName("");
-        // setMobileNo("");
-        // setAadhaarNo("");
-        // setAddress("");
-        // setGatePassNo("");
-        // setPurpose("");
-        // setTimeIn("");
-        // setApprovingOfficer("");
-        // setDocuments(Array(4).fill(null));
-      } else {
-        const data = await response.json();
-        alert("connection error: " + data.error);
-      }
-    } catch (error) {
-      alert("Error: " + error.message);
-    } finally {
-      setSaveLoader(false);
-      setSubmitting(false);
-      setSubmitting_1(false);
-    }
-  };
-
-  const parseApprovalHistory = (value) => {
-    if (!value) return [];
-    const trimmed = String(value).trim();
-    if (!trimmed) return [];
-    return trimmed
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  };
-
-  const fileInputRefs = useRef([]);
-  const cameraInputRefs = useRef([]);
-  const [activeCamIndex, setActiveCamIndex] = useState(null); // Tracks which row is actively using the camera
-
-  const handleCameraClick = async (index) => {
-    try {
-      // Check if mediaDevices API is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        alert("Your browser does not support camera features.");
-        return;
-      }
-
-      // List all media devices
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const hasVideoDevice = devices.some(
-        (device) => device.kind === "videoinput",
+      const params = new URLSearchParams();
+      params.append("location_code", String(locationCode));
+      if (searchContractor) params.append("contractor", searchContractor);
+      params.append(
+        "fetchdate",
+        getTodayLabel().split("-").reverse().join("-"),
       );
 
-      if (!hasVideoDevice) {
-        alert("No camera is available to open on this device.");
-      } else {
-        // Camera exists! Open the modal for this specific document index
-        setActiveCamIndex(index);
+      const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to load records");
       }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      setRecordsLaborsEntry(zlist);
+      // zlist.length == 0
+      //   ? alert("No records found matching the search criteria.")
+      //   : null;
     } catch (error) {
-      alert("Error checking for camera availability.");
-      console.error(error);
+      console.error("Failed to fetch records", error);
+    } finally {
+      setSaveLoader(false);
+      setSearching(false);
     }
-  };
-
-  const handleCameraCapture = (index, file) => {
-    // Mock event object to seamlessly feed your existing handleFileChange function
-    const mockEvent = {
-      target: {
-        files: [file],
-      },
-    };
-    handleFileChange(index, mockEvent);
   };
 
   return (
@@ -455,77 +458,111 @@ export default function tempPassDashboard() {
         overflow: "auto",
       }}
     >
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          border: "1px solid black",
-          width: "100%",
-          borderBottom: "none",
-        }}
-      >
-        <Button
-          variant={
-            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "labourPassDashboard" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Labour Pass Dashboard"));
-            dispatch(NavBarComponent("labourPassDashboard"));
-          }}
-        >
-          Labour Pass Dashboard
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_masterData"
-              ? "contained"
-              : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_masterData" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Labour Master Data"));
-            dispatch(NavBarComponent("contractor_masterData"));
-          }}
-        >
-          Labour Master Data
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_cred" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_cred" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          disabled={userType == "user"}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Contractor Master Data"));
-            dispatch(NavBarComponent("contractor_cred"));
-          }}
-        >
-          Contractor Master Data (Admin Only)
-        </Button>
-      </div>
+            <div
+              className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
+              style={{
+                border: "1px solid black",
+                width: "100%",
+              }}
+            >
+              <Button
+                variant={
+                  navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
+                }
+                color="warning"
+                sx={{
+                  my: 1,
+                  mx: 5,
+                  backgroundColor:
+                    navBarComponent === "labourPassDashboard" ? "null" : "white",
+                }}
+                onClick={() => {
+                  dispatch(SetSelectedApplication("Labour Pass Dashboard"));
+                  dispatch(NavBarComponent("labourPassDashboard"));
+                }}
+              >
+                Worker Entry Request
+              </Button>
+              <Button
+                variant={
+                  navBarComponent === "labourPassApproval" ? "contained" : "outlined"
+                }
+                color="warning"
+                sx={{
+                  my: 1,
+                  mx: 5,
+                  backgroundColor:
+                    navBarComponent === "labourPassApproval" ? "null" : "white",
+                }}
+                onClick={() => {
+                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(NavBarComponent("labourPassApproval"));
+                }}
+              >
+                APPROVAL CENTRE
+              </Button>
+              <Button
+                variant={
+                  navBarComponent === "labourPassHistory" ? "contained" : "outlined"
+                }
+                color="warning"
+                sx={{
+                  my: 1,
+                  mx: 5,
+                  backgroundColor:
+                    navBarComponent === "labourPassHistory" ? "null" : "white",
+                }}
+                onClick={() => {
+                  dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
+                  dispatch(NavBarComponent("labourPassHistory"));
+                }}
+              >
+                APPROVAL HISTORY
+              </Button>
+              <Button
+                variant={
+                  navBarComponent === "contractor_masterData"
+                    ? "contained"
+                    : "outlined"
+                }
+                color="warning"
+                sx={{
+                  my: 1,
+                  mx: 5,
+                  backgroundColor:
+                    navBarComponent === "contractor_masterData" ? "null" : "white",
+                }}
+                onClick={() => {
+                  dispatch(SetSelectedApplication("Labour Master Data"));
+                  dispatch(NavBarComponent("contractor_masterData"));
+                }}
+              >
+                Worker Master Data
+              </Button>
+              <Button
+                variant={
+                  navBarComponent === "contractor_cred" ? "contained" : "outlined"
+                }
+                color="warning"
+                sx={{
+                  my: 1,
+                  mx: 5,
+                  backgroundColor:
+                    navBarComponent === "contractor_cred" ? "null" : "white",
+                  "&:disabled": {
+                    cursor: "not-allowed",
+                    backgroundColor: "white",
+                    pointerEvents: "all !important",
+                  },
+                }}
+                onClick={() => {
+                  dispatch(SetSelectedApplication("Contractor Master Data"));
+                  dispatch(NavBarComponent("contractor_cred"));
+                }}
+              >
+                Contractor Master Data
+              </Button>
+            </div>
 
       <div
         className="d-flex flex-column justify-content-center align-items-center"
@@ -561,87 +598,56 @@ export default function tempPassDashboard() {
             />
           ) : null}
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Code</Typography>
-            <Autocomplete
-              className="w-100"
-              options={
-                labour_masterList.length > 0
-                  ? [
-                      ...new Set(
-                        labour_masterList.map((item) => item["LOCATION_CODE"]),
-                      ),
-                    ]
-                  : []
-              }
-              name="Location Code"
-              value={locationCode !== "" ? locationCode : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onChange={(e, newValue) =>
-                newValue !== null
-                  ? setLocationCode(newValue)
-                  : setLocationCode("")
-              }
+            <Typography>Location Name</Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              value={locationName}
+              style={{ backgroundColor: "white" }}
+              size="small"
+              disabled
               sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "1px !important", // Reducer top whitespace
+                  paddingBottom: "1px !important", // Keeps it centered vertically
+                },
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
                   fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  backgroundColor: "white",
+                  textTransform: "uppercase",
                 },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
                 },
               }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Select Location Code"
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
             />
           </div>
 
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
             <Typography>Contractor Name</Typography>
             <Autocomplete
-              name="contractor"
               className="w-100"
-              value={contractor !== "" ? contractor : null}
-              onInputChange={(event, newValue) => {
-                newValue !== null
-                  ? setContractor(newValue.toLocaleUpperCase())
-                  : setContractor("");
-              }}
-              onChange={(event, newValue) => {
-                newValue !== null ? setContractor(newValue) : setContractor("");
-              }}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
               options={
-                labour_masterList.length > 0
+                contractorList.length > 0
                   ? [
                       ...new Set(
-                        labour_masterList
+                        contractorList
                           .filter((ele) => ele.LOCATION_CODE == locationCode)
-                          .map((item) => item["CONTRACTOR"]),
+                          .map((item) => item["CONTRACTOR_NAME"]),
                       ),
                     ]
                   : []
+              }
+              name="contractor"
+              value={contractor !== "" ? contractor : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onChange={(e, newValue) =>
+                newValue !== null ? setContractor(newValue) : setContractor("")
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text
@@ -656,17 +662,12 @@ export default function tempPassDashboard() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={
-                    locationCode == ""
-                      ? "Select Location Code First or Type For New..."
-                      : "Select From Dropdown or Type For New..."
-                  }
+                  placeholder={"Select Contractor from Dropdown"}
                   InputProps={{
                     ...params.InputProps,
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -687,10 +688,29 @@ export default function tempPassDashboard() {
               name="labourName"
               className="w-100"
               value={labourName !== "" ? labourName : null}
-              onInputChange={(event, newValue) => {
+              onInputChange={(event, newValue, reason) => {
                 newValue !== null
                   ? setLabourName(newValue.toLocaleUpperCase())
                   : setLabourName("");
+                if (reason === "input") {
+                  newValue !== null
+                    ? !labour_masterList.length > 0
+                      ? [
+                          ...new Set(
+                            labour_masterList
+                              .filter(
+                                (ele) =>
+                                  ele.LOCATION_CODE == locationCode &&
+                                  ele.CONTRACTOR == contractor,
+                              )
+                              .map((item) => item["LABOUR_NAME"]),
+                          ),
+                        ]
+                      : [].includes(newValue)
+                        ? setIsNew(true)
+                        : setIsNew(false)
+                    : setIsNew(false);
+                }
               }}
               onChange={(event, newValue) => {
                 newValue !== null ? setLabourName(newValue) : setLabourName("");
@@ -904,9 +924,7 @@ export default function tempPassDashboard() {
               className="w-100"
               value={address !== "" ? address : null}
               onInputChange={(event, newValue) => {
-                newValue !== null
-                  ? setAddress(newValue.toLocaleUpperCase())
-                  : setAddress("");
+                newValue !== null ? setAddress(newValue) : setAddress("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null ? setAddress(newValue) : setAddress("");
@@ -956,7 +974,6 @@ export default function tempPassDashboard() {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& .MuiInputBase-input::placeholder": {
@@ -980,7 +997,7 @@ export default function tempPassDashboard() {
               value={purpose}
               style={{ backgroundColor: "white" }}
               placeholder={"Type Purpose..."}
-              onChange={(e) => setPurpose(e.target.value?.toUpperCase() || "")}
+              onChange={(e) => setPurpose(e.target.value ? e.target.value : "")}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   paddingTop: "10px !important", // Reducer top whitespace
@@ -991,37 +1008,6 @@ export default function tempPassDashboard() {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
                   backgroundColor: "white",
-                  textTransform: "uppercase",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Gate Pass No</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={gatePassNo}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setGatePassNo(e.target.value?.toUpperCase() || "")
-              }
-              placeholder={"Type Gate Pass No..."}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
                 "& .MuiInputBase-input::placeholder": {
                   fontFamily: "Lucida Sans",
@@ -1119,72 +1105,6 @@ export default function tempPassDashboard() {
             />
           </div>
         </div>
-
-        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          {["Document-1", "Document-2", "Document-3"].map((field, index) => (
-            <div
-              key={index}
-              style={{ width: "300px" }}
-              className="d-flex flex-column align-items-center align-items-sm-start"
-            >
-              <Typography>{`${field} (Optional)`}</Typography>
-
-              <ButtonGroup variant="contained">
-                <Button
-                  startIcon={<UploadFile />}
-                  style={{
-                    fontFamily: "Lucida Sans",
-                    textTransform: "none",
-                    width: "200px",
-                  }}
-                  onClick={() => fileInputRefs.current[index]?.click()}
-                >
-                  Choose File
-                </Button>
-                <Button
-                  // color="secondary"
-                  variant="outlined"
-                  style={{ backgroundColor: "white" }}
-                  onClick={() => handleCameraClick(index)}
-                  // onClick={() => cameraInputRefs.current[index]?.click()}
-                >
-                  <PhotoCamera />
-                </Button>
-              </ButtonGroup>
-
-              <Typography
-                variant="body2"
-                style={{ fontFamily: "Lucida Sans", color: "#555" }}
-              >
-                {documents[index]
-                  ? `Selected: ${documents[index].name.slice(0, 20)}`
-                  : "No file chosen"}
-              </Typography>
-
-              <input
-                type="file"
-                ref={(el) => (fileInputRefs.current[index] = el)}
-                accept=".pdf,image/*"
-                onChange={(e) => handleFileChange(index, e)}
-                style={{ display: "none" }}
-              />
-
-              <input
-                type="file"
-                ref={(el) => (cameraInputRefs.current[index] = el)}
-                accept="image/*"
-                capture="environment" // Focuses on the rear camera (use "user" for front/selfie camera)
-                onChange={(e) => handleFileChange(index, e)}
-                style={{ display: "none" }}
-              />
-            </div>
-          ))}
-          <CameraModal
-            open={activeCamIndex !== null}
-            onClose={() => setActiveCamIndex(null)}
-            onCapture={(file) => handleCameraCapture(activeCamIndex, file)}
-          />
-        </div>
         <div
           className="d-flex flex-sm-row justify-content-center align-items-center position-relative pt-0"
           style={{ borderTop: "1px dashed", width: "90%" }}
@@ -1192,24 +1112,12 @@ export default function tempPassDashboard() {
           <Button
             color="primary"
             variant="contained"
-            sx={{ m: 2 }}
+            sx={{ m: 1 }}
             style={{ width: 200 }}
-            disabled={submitting_1}
-            onClick={submitSelectedLabours}
+            disabled={submitting}
+            onClick={handleSubmit}
           >
-            {submitting_1 ? "Submitting..." : "SUBMIT SELECTED"}
-          </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            sx={{ m: 2 }}
-            style={{ width: 200, backgroundColor: "white" }}
-            disabled={syncing}
-            onClick={(e) => {
-              handleSync(e);
-            }}
-          >
-            {syncing ? "Syncing Master..." : "SYNC MASTER"}
+            {submitting ? "Submitting..." : "SUBMIT"}
           </Button>
         </div>
       </div>
@@ -1224,96 +1132,42 @@ export default function tempPassDashboard() {
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-          <Typography>Purpose of Request</Typography>
+          <Typography>Location Name</Typography>
           <TextField
             fullWidth
-            multiline
-            minRows={2}
-            value={multiPurpose}
-            placeholder="Type purpose of multi-labour request..."
-            onChange={(event) => setMultiPurpose(event.target.value.toUpperCase())}
-            sx={{ backgroundColor: "white" }}
-          />
-        </div>
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-          <Typography>Time In</Typography>
-          <TextField
-            fullWidth
-            type="time"
-            value={multiTimeIn}
-            onChange={(event) => setMultiTimeIn(event.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ backgroundColor: "white" }}
-          />
-        </div>
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-          <Autocomplete
-            className="w-100"
-            options={
-              labour_masterList.length > 0
-                ? [
-                    ...new Set(
-                      labour_masterList.map((item) => item["LOCATION_CODE"]),
-                    ),
-                  ]
-                : []
-            }
-            name="Search Location Code"
-            value={searchLocationCode !== "" ? searchLocationCode : null}
-            isOptionEqualToValue={(option, value) => option === value}
-            onChange={(e, newValue) =>
-              newValue !== null
-                ? setSearchLocationCode(newValue)
-                : setSearchLocationCode("")
-            }
+            variant="outlined"
+            value={locationName}
+            style={{ backgroundColor: "white" }}
+            size="small"
+            disabled
             sx={{
+              "& .MuiOutlinedInput-root": {
+                paddingTop: "1px !important", // Reducer top whitespace
+                paddingBottom: "1px !important", // Keeps it centered vertically
+              },
               // 1. Increase font size of the placeholder/input text
               "& .MuiInputBase-input": {
                 fontSize: "1rem",
+                fontFamily: "Lucida Sans",
+                backgroundColor: "white",
+                textTransform: "uppercase",
               },
-              "& .MuiOutlinedInput-root": {
-                paddingTop: "2px !important", // Reducer top whitespace
-                paddingBottom: "2px !important", // Keeps it centered vertically
+              "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
               },
             }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Location Code"
-                placeholder="Select Location Code or Type For New..."
-                InputLabelProps={{
-                  ...params.InputLabelProps,
-                  shrink: true,
-                }}
-                InputProps={{
-                  ...params.InputProps,
-                  style: {
-                    fontFamily: "Lucida Sans",
-                    backgroundColor: "white",
-                  },
-                  sx: {
-                    "& input::placeholder": {
-                      fontFamily: "Lucida Sans",
-                      fontSize: "0.8rem", // Optional: adjust placeholder size
-                      fontStyle: "italic", // Optional: make placeholder italicized
-                    },
-                  },
-                }}
-              />
-            )}
           />
         </div>
 
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Contractor</Typography>
           <Autocomplete
             name="Search Contractor"
             className="w-100"
             value={searchContractor !== "" ? searchContractor : null}
-            onInputChange={(event, newValue) => {
-              newValue !== null
-                ? setSearchContractor(newValue)
-                : setSearchContractor("");
-            }}
             onChange={(event, newValue) => {
               newValue !== null
                 ? setSearchContractor(newValue)
@@ -1323,16 +1177,13 @@ export default function tempPassDashboard() {
             clearOnBlur
             handleHomeEndKeys
             freeSolo
-            disabled={searchLocationCode === ""}
             options={
-              labour_masterList.length > 0
+              contractorList.length > 0
                 ? [
                     ...new Set(
-                      labour_masterList
-                        .filter(
-                          (ele) => ele.LOCATION_CODE == searchLocationCode,
-                        )
-                        .map((item) => item["CONTRACTOR"]),
+                      contractorList
+                        .filter((ele) => ele.LOCATION_CODE == locationCode)
+                        .map((item) => item["CONTRACTOR_NAME"]),
                     ),
                   ]
                 : []
@@ -1350,12 +1201,7 @@ export default function tempPassDashboard() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Contractor"
-                placeholder={
-                  searchLocationCode == ""
-                    ? "Select Location Code First or Type For New..."
-                    : "Select From CONTRACTOR Dropdown or Type For New..."
-                }
+                placeholder={"Select Contractor from Dropdown"}
                 InputLabelProps={{
                   ...params.InputLabelProps,
                   shrink: true,
@@ -1382,13 +1228,18 @@ export default function tempPassDashboard() {
         <Button
           color="primary"
           variant="contained"
-          sx={{ m: 2 }}
+          sx={{ m: 2, mt: 4 }}
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            searchContractor != ""
-              ? fetchRecords(e)
-              : alert("No contractor is selected!");
+            searchContractor != "" ? (
+              <>
+                {fetchRecords(e)}
+                {fetchLabourEntryRecords()}
+              </>
+            ) : (
+              alert("No contractor is selected!")
+            );
           }}
         >
           {seaching ? "Searching..." : "SEARCH RECORDS"}
@@ -1397,11 +1248,10 @@ export default function tempPassDashboard() {
         <Button
           color="primary"
           variant="outlined"
-          sx={{ m: 2 }}
+          sx={{ m: 2, mt: 4 }}
           style={{ width: 200, backgroundColor: "white" }}
           onClick={(e) => {
             setRecords([]);
-            setSearchLocationCode("");
             setSearchContractor("");
             setSelectedLabourIds([]);
           }}
@@ -1412,6 +1262,78 @@ export default function tempPassDashboard() {
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
         <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Purpose of Request</Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            multiline
+            value={multiPurpose}
+            style={{ backgroundColor: "white" }}
+            placeholder={"Type Purpose..."}
+            onChange={(e) =>
+              setMultiPurpose(e.target.value ? e.target.value : "")
+            }
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                paddingTop: "10px !important", // Reducer top whitespace
+                paddingBottom: "10px !important", // Keeps it centered vertically
+              },
+              // 1. Increase font size of the placeholder/input text
+              "& .MuiInputBase-input": {
+                fontSize: "1rem",
+                fontFamily: "Lucida Sans",
+                backgroundColor: "white",
+              },
+              "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
+              },
+            }}
+          />
+        </div>
+        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Time In</Typography>
+          <div style={{ backgroundColor: "white" }}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoItem>
+                <TimePicker
+                  value={multiTimeIn ? dayjs(multiTimeIn, "HH:mm:ss") : null}
+                  format="HH:mm:ss"
+                  onChange={(newValue) => {
+                    if (newValue) {
+                      setMultiTimeIn(newValue.format("HH:mm:ss"));
+                    } else {
+                      setMultiTimeIn("");
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      sx: {
+                        "& .MuiInputBase-input": {
+                          fontSize: "1rem",
+                          paddingTop: "10px !important", // Reduces extra top whitespace
+                          paddingBottom: "10px !important", // Keeps it centered vertically
+                          fontFamily: "Lucida Sans",
+                          color: "black",
+                        },
+                        "& input::placeholder": {
+                          fontFamily: "Lucida Sans",
+                          fontSize: "0.8rem", // Optional: adjust placeholder size
+                          fontStyle: "italic", // Optional: make placeholder italicized
+                        },
+                      },
+                    },
+                  }}
+                />
+              </DemoItem>
+            </LocalizationProvider>
+          </div>
+        </div>
+        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <Typography>Approving Officer</Typography>
           <Autocomplete
             className="w-100"
             options={FinalOfficerList}
@@ -1436,7 +1358,6 @@ export default function tempPassDashboard() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Approving Officer"
                 placeholder="Select Location Code"
                 InputLabelProps={{
                   ...params.InputLabelProps,
@@ -1464,7 +1385,7 @@ export default function tempPassDashboard() {
         <Button
           color="success"
           variant="contained"
-          sx={{ m: 2 }}
+          sx={{ m: 2, mt: 4 }}
           style={{ width: 200 }}
           disabled={submitting_1}
           onClick={submitSelectedLabours}
@@ -1472,16 +1393,14 @@ export default function tempPassDashboard() {
           {submitting_1 ? "Submitting..." : "SUBMIT SELECTED"}
         </Button>
         <Button
-          color="secondary"
+          color="warning"
           variant="outlined"
-          sx={{ m: 2 }}
+          sx={{ m: 2, mt: 4 }}
           style={{ width: 220, backgroundColor: "white" }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Labour Pass Approval Centre"));
-            dispatch(NavBarComponent("labourPassApproval"));
-          }}
+          disabled={saveLoader || !selectedForwardLabourIds.length}
+          onClick={forwardSelectedRequest}
         >
-          APPROVAL CENTRE
+          FORWARD REQUEST
         </Button>
       </div>
 
@@ -1489,20 +1408,34 @@ export default function tempPassDashboard() {
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>
-              <th style={{ width: 80 }}>
+              <th style={{ width: 250 }}>CONTRACTOR</th>
+              <th style={{ width: 120 }}>
                 SELECT
                 <Checkbox
                   size="small"
-                  checked={records.length > 0 && selectedLabourIds.length === records.length}
-                  indeterminate={selectedLabourIds.length > 0 && selectedLabourIds.length < records.length}
-                  onChange={(event) => setSelectedLabourIds(event.target.checked ? records.map((record) => record.ID) : [])}
+                  checked={
+                    records.length > 0 &&
+                    selectedLabourIds.length === records.length
+                  }
+                  indeterminate={
+                    selectedLabourIds.length > 0 &&
+                    selectedLabourIds.length < records.length
+                  }
+                  onChange={(event) =>
+                    setSelectedLabourIds(
+                      event.target.checked
+                        ? records.map((record) => record.ID)
+                        : [],
+                    )
+                  }
                 />
               </th>
-              <th>LABOUR NAME</th>
-              <th>MOBILE NO</th>
-              <th>AADHAAR NO</th>
+              <th style={{ width: 250 }}>LABOUR NAME</th>
+              <th style={{ width: 200 }}>MOBILE NO</th>
+              <th style={{ width: 200 }}>AADHAAR NO</th>
               <th style={{ flex: 1 }}>ADDRESS</th>
-              {/* <th style={{ width: 300}}>GATE PASS NO</th> */}
+              <th style={{ width: 250 }}>APPROVING OFFICER</th>
+              <th style={{ width: 200 }}>APPROVAL STATUS</th>
             </tr>
           </thead>
           <tbody
@@ -1511,18 +1444,38 @@ export default function tempPassDashboard() {
             }}
           >
             {Array.from(
-              { length: records.length > 0 ? records.length : 100 },
+              { length: records.length > 0 ? records.length : 8 },
               (_, i) => {
                 const record = records[i];
+                const requestStatus = record? recordsLaborsEntry.find(
+                              (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                            )?.REQUEST_STATUS || "" : ""
+                const labour_id = record? recordsLaborsEntry.find(
+                              (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                            )?.ID || "" : ""
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
+                      {record ? record["CONTRACTOR"] : ""}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
                       {record ? (
                         <Checkbox
-                          checked={selectedLabourIds.includes(record.ID)}
-                          onChange={() => toggleLabourSelection(record)}
+                          checked={selectedLabourIds.includes(record.ID) || selectedForwardLabourIds.includes(labour_id)}
+                          onChange={() => <>
+                            {requestStatus === ""?toggleLabourSelection(record):''}
+                            {requestStatus === "PENDING"?setSelectedForwardLabourIds(prev => 
+                              selectedForwardLabourIds.includes(labour_id)
+                                ? prev.filter(id => id !== labour_id)
+                                : [...prev, labour_id]
+                              ):null}
+                            </>
+                          }
+                          disabled={requestStatus === "APPROVED"}
                         />
-                      ) : ""}
+                      ) : (
+                        ""
+                      )}
                       {record ? i + 1 : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
@@ -1536,6 +1489,37 @@ export default function tempPassDashboard() {
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record ? record["ADDRESS"] : ""}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      {record
+                        ? recordsLaborsEntry.find(
+                            (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                          )?.APPROVING_OFFICER || ""
+                        : ""}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        color: record
+                          ? recordsLaborsEntry.find(
+                              (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                            )?.REQUEST_STATUS === "PENDING"
+                            ? "blue"
+                            : recordsLaborsEntry.find(
+                                  (item) =>
+                                    item.AADHAAR_NO === record.AADHAAR_NO,
+                                )?.REQUEST_STATUS === "APPROVED"
+                              ? "green"
+                              : "black"
+                          : "black",
+                      }}
+                    >
+                      {record
+                        ? recordsLaborsEntry.find(
+                            (item) => item.AADHAAR_NO === record.AADHAAR_NO,
+                          )?.REQUEST_STATUS || ""
+                        : ""}
                     </td>
                   </tr>
                 );
