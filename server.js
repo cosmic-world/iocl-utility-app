@@ -636,33 +636,60 @@ app.post("/api/upload-labour-single",
   }
 );
 
-app.get("/api/labour-master-data", (req, res) => {
-  (async () => {
-    try {
-        const { location_code, contractor } = req.query;
-        let whereClauses = [];
-      let query = "SELECT * FROM LabourMasterRecord";
-      if (location_code) {
-      whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
-      }
-      if (contractor) {
-      whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
-      }
-      if (whereClauses.length > 0) {
-        query += " WHERE " + whereClauses.join(" AND ");
-      }
+app.get("/api/labour-pass-requests", async (req, res) => {
+  const requestId = crypto.randomUUID();
+  const startedAt = new Date().toISOString();
+  let pool;
+  try {
+    const { fetchdate, location_code, contractor } = req.query;
+    console.log(`[${startedAt}] labour-pass start requestId=${requestId}`, {
+      fetchdate,
+      location_code,
+      contractor,
+      dbServer: sqlConfig.server,
+      dbName: sqlConfig.database,
+    });
 
-      await sql.connect(sqlConfig);
-      const result = await sql.query(query);
-      res.json(result.recordset);
-    } catch (error) {
-      console.error("Query error:", error);
-      res.status(500).json({ error: error.message });
+    pool = await new sql.ConnectionPool(sqlConfig).connect();
+    const request = pool.request();
+    const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
+    if (fetchdate) {
+      request.input("fetchdate", sql.Date, String(fetchdate));
+      whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
     }
-  })();
-});
-
-app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async (req, res) => {
+    if (location_code) {
+      request.input("locationCode", sql.NVarChar, String(location_code));
+      whereClauses.push("LOCATION_CODE = @locationCode");
+    }
+    if (contractor) {
+      request.input("contractor", sql.NVarChar, String(contractor));
+      whereClauses.push("CONTRACTOR = @contractor");
+    }
+    const query = `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`;
+    const result = await request.query(query);
+    const rows = Array.isArray(result.recordset) ? result.recordset : [];
+    console.log(`[${new Date().toISOString()}] labour-pass success requestId=${requestId} rows=${rows.length}`);
+    return res.json(rows);
+  } catch (error) {
+    const failedAt = new Date().toISOString();
+    console.error(`[${failedAt}] labour-pass failure requestId=${requestId}`, {
+      name: error.name,
+      code: error.code,
+      message: error.message,
+      number: error.number,
+      state: error.state,
+      server: sqlConfig.server,
+      database: sqlConfig.database,
+      stack: error.stack,
+    });
+    return res.status(500).json({
+      error: error.message,
+      requestId,
+      timestamp: failedAt,
+    });
+  } finally {
+    if (pool) await pool.close();
+  }
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -1309,33 +1336,43 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
   }
 });
 
-app.get("/api/labour-pass-requests", (req, res) => {
-  (async () => {
-    try {
-        // const { location_code, contractor } = req.query;
-        // let whereClauses = [];
-      let query = "SELECT * FROM LabourEntryRecord";
-      // if (fetchdate) {
-      // whereClauses.push(`CAST(CREATED_AT AS DATE) = CONVERT(date, '${fetchdate.replace(/'/g, "''")}', 23)`)
-      // }
-      // if (location_code) {
-      // whereClauses.push(`LOCATION_CODE = '${location_code.replace(/'/g, "''")}'`)
-      // }
-      // if (contractor) {
-      // whereClauses.push(`CONTRACTOR = '${contractor.replace(/'/g, "''")}'`)
-      // }
-      // if (whereClauses.length > 0) {
-      //   query += " WHERE " + whereClauses.join(" AND ");
-      // }
+app.get("/api/labour-pass-requests", async (req, res) => {
+  let pool;
+  try {
+    const { fetchdate, location_code, contractor } = req.query;
+    pool = await new sql.ConnectionPool(sqlConfig).connect();
+    const request = pool.request();
+    const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
 
-      await sql.connect(sqlConfig);
-      const result = await sql.query(query);
-      res.json(result.recordset);
-    } catch (error) {
-      console.error("Query error:", error);
-      res.status(500).json({ error: error.message });
+    if (fetchdate) {
+      request.input("fetchdate", sql.Date, String(fetchdate));
+      whereClauses.push("CAST(CREATED_AT AS DATE) = @fetchdate");
     }
-  })();
+    if (location_code) {
+      request.input("locationCode", sql.NVarChar, String(location_code));
+      whereClauses.push("LOCATION_CODE = @locationCode");
+    }
+    if (contractor) {
+      request.input("contractor", sql.NVarChar, String(contractor));
+      whereClauses.push("CONTRACTOR = @contractor");
+    }
+
+    const result = await request.query(
+      `SELECT * FROM dbo.LabourEntryRecord WHERE ${whereClauses.join(" AND ")} ORDER BY CREATED_AT DESC`,
+    );
+    return res.json(Array.isArray(result.recordset) ? result.recordset : []);
+  } catch (error) {
+    console.error("Labour request query failed:", {
+      message: error.message,
+      code: error.code,
+      fetchdate: req.query.fetchdate,
+      location_code: req.query.location_code,
+      contractor: req.query.contractor,
+    });
+    return res.status(500).json({ error: error.message });
+  } finally {
+    if (pool) await pool.close();
+  }
 });
 
 app.get("/api/labour-pass-reports", async (req, res) => {
