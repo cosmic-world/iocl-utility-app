@@ -1310,9 +1310,10 @@ app.post("/api/labour-pass-requests/:token/forward", async (req, res) => {
 });
 
 app.get("/api/labour-pass-requests", async (req, res) => {
+  let pool;
   try {
     const { fetchdate, location_code, contractor } = req.query;
-    const pool = await sql.connect(sqlConfig);
+    pool = await new sql.ConnectionPool(sqlConfig).connect();
 
     const request = pool.request();
     const whereClauses = ["REQUEST_TOKEN IS NOT NULL"];
@@ -1333,8 +1334,16 @@ app.get("/api/labour-pass-requests", async (req, res) => {
     );
     return res.json(Array.isArray(result.recordset) ? result.recordset : []);
   } catch (error) {
-    console.error("Labour request query failed:", error);
+    console.error("Labour request query failed:", {
+      message: error.message,
+      code: error.code,
+      fetchdate: req.query.fetchdate,
+      location_code: req.query.location_code,
+      contractor: req.query.contractor,
+    });
     return res.status(500).json({ message: error.message });
+  } finally {
+    if (pool) await pool.close();
   }
 });
 
