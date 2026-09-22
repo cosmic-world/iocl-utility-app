@@ -286,13 +286,12 @@ function App() {
       console.error("Failed to fetch records", error);
     }
   };
-const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
       <Header />
       <BrowserRouter>
         <Routes>
-          <Route path={`${labourWorkflowBaseUrl}/approve-labour/:token`} element={<LabourApproval />} />
+          <Route path="/approve-labour/:token" element={<LabourApproval />} />
           <Route
             path="/"
             element={
