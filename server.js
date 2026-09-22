@@ -1144,10 +1144,9 @@ function createLabourRegisterReport(rows) {
     doc.end();
   });
 }
-
-apiUrl("/api/officer-master-data")
-
-const labourWorkflowBaseUrl = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
+// APP_BASE_URL must be set in the environment where server.js itself runs (not the Amplify frontend build config),
+// since REACT_APP_ prefixed vars are only injected into the React bundle at build time and are never visible here.
+const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
 
 async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
   const applicationLink = `${labourWorkflowBaseUrl}/approve-labour/${requestToken}`;
