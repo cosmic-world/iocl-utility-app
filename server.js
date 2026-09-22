@@ -1,5 +1,4 @@
 require("dotenv").config();
-console.log("DEBUG APP_BASE_URL =", JSON.stringify(process.env.APP_BASE_URL));
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -178,7 +177,9 @@ app.post("/api/upload-temp-pass",
   upload.fields([
     { name: "request_letter", maxCount: 1 },
     { name: "id_proof", maxCount: 1 },
-    { name: "driving_licence", maxCount: 1 },
+    { name: "driving_licence_front", maxCount: 1 },
+    { name: "driving_licence_back", maxCount: 1 },
+    { name: "additional_doc", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
@@ -193,7 +194,9 @@ app.post("/api/upload-temp-pass",
       const filePaths = {
         request_letter: getFileUrl("request_letter"),
         id_proof: getFileUrl("id_proof"),
-        driving_licence: getFileUrl("driving_licence"),
+        driving_licence_front: getFileUrl("driving_licence_front"),
+        driving_licence_back: getFileUrl("driving_licence_back"),
+        additional_doc: getFileUrl("additional_doc"),
       };
 
       if (useAzureStorage) {
@@ -204,7 +207,13 @@ app.post("/api/upload-temp-pass",
         const containerClient = blobServiceClient.getContainerClient(containerName);
         await containerClient.createIfNotExists({ access: 'container' });
 
-        for (const field of ["request_letter", "id_proof", "driving_licence"]) {
+        for (const field of [
+          "request_letter",
+          "id_proof",
+          "driving_licence_front",
+          "driving_licence_back",
+          "additional_doc",
+        ]) {
           const file = files[field]?.[0];
           if (!file) continue;
           const safeName = file.originalname.replace(/[^a-zA-Z0-9.-_]/g, "_");
@@ -242,16 +251,21 @@ app.post("/api/upload-temp-pass",
       request.input('request_to', sql.Date, new Date(bodyData['request_to']) || null);
       request.input('request_letter_path', sql.NVarChar, filePaths.request_letter || null);
       request.input('id_proof_path', sql.NVarChar, filePaths.id_proof || null);
-      request.input('driving_licence_path', sql.NVarChar, filePaths.driving_licence || null);
+      request.input('driving_licence_front_path', sql.NVarChar, filePaths.driving_licence_front || null);
+      request.input('driving_licence_back_path', sql.NVarChar, filePaths.driving_licence_back || null);
+      request.input('additional_doc_path', sql.NVarChar, filePaths.additional_doc || null);
       request.input('approval_history', sql.NVarChar(sql.MAX), bodyData['approval_history'] || null);
       
       const insertSql = `INSERT INTO dbo.temp_pass_records (
         location_code, vendor, crew_type, crew_name, tt_no,
         mobile_no, govt_id, driving_licence_no, request_from, request_to,
-        request_letter_path, id_proof_path, driving_licence_path, approval_history, created_at
+        request_letter_path, id_proof_path, driving_licence_front_path,
+        driving_licence_back_path, additional_doc_path, approval_history, created_at
       ) VALUES (@location_code, @vendor, @crew_type, @crew_name, @tt_no,
         @mobile_no, @govt_id, @driving_licence_no, @request_from, @request_to,
-        @request_letter_path, @id_proof_path, @driving_licence_path, @approval_history, SYSUTCDATETIME());`;
+        @request_letter_path, @id_proof_path, @driving_licence_front_path,
+        @driving_licence_back_path, @additional_doc_path, @approval_history,
+        SYSUTCDATETIME());`;
       await request.query(insertSql)
       
       await sql.close();

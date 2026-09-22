@@ -177,3 +177,26 @@ WHERE i.object_id = OBJECT_ID('dbo.OfficerCredentials')
 ORDER BY ObjectType, ObjectName;
 
 SELECT * FROM [dbo].[LabourEntryRecord] WHERE CAST(CREATED_AT AS DATE) = '2026-09-22'
+
+-- Rename existing licence document column
+IF COL_LENGTH('dbo.temp_pass_records', 'driving_licence_path') IS NOT NULL
+   AND COL_LENGTH('dbo.temp_pass_records', 'driving_licence_front_path') IS NULL
+BEGIN
+    EXEC sp_rename
+        'dbo.temp_pass_records.driving_licence_path',
+        'driving_licence_front_path',
+        'COLUMN';
+END;
+
+-- Add new document columns
+IF COL_LENGTH('dbo.temp_pass_records', 'driving_licence_back_path') IS NULL
+BEGIN
+    ALTER TABLE dbo.temp_pass_records
+    ADD driving_licence_back_path NVARCHAR(MAX) NULL;
+END;
+
+IF COL_LENGTH('dbo.temp_pass_records', 'additional_doc_path') IS NULL
+BEGIN
+    ALTER TABLE dbo.temp_pass_records
+    ADD additional_doc_path NVARCHAR(MAX) NULL;
+END;

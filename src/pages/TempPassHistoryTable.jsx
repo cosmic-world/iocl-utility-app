@@ -301,6 +301,7 @@ export default function ExportCustomToolbar({}) {
           typeof rawValue === "object" && rawValue?.props?.href
             ? rawValue.props.href
             : rawValue;
+        if (!params.row.request_letter_path) return [];
         return [
           <GridActionsCellItem
             icon={<Visibility />}
@@ -327,6 +328,7 @@ export default function ExportCustomToolbar({}) {
           typeof rawValue === "object" && rawValue?.props?.href
             ? rawValue.props.href
             : rawValue;
+        if (!params.row.Id_proof_path) return [];
         return [
           <GridActionsCellItem
             icon={<Visibility />}
@@ -338,8 +340,8 @@ export default function ExportCustomToolbar({}) {
       },
     },
     {
-      field: "driving_licence_path",
-      headerName: "DRIVING LICENCE",
+      field: "driving_licence_front_path",
+      headerName: "DRIVING LICENCE FRONT",
       type: "actions",
       minWidth: 100,
       flex: 1,
@@ -348,15 +350,70 @@ export default function ExportCustomToolbar({}) {
       headerClassName: "id-column",
       cellClassName: "id-column",
       getActions: (params) => {
-        const rawValue = params.row.driving_licence_path;
+        const rawValue = params.row.driving_licence_front_path;
         const fileUrl =
           typeof rawValue === "object" && rawValue?.props?.href
             ? rawValue.props.href
             : rawValue;
+        if (!params.row.driving_licence_front_path) return [];
         return [
           <GridActionsCellItem
             icon={<Visibility />}
-            label="id_proof"
+            label="driving_licence_front"
+            onClick={() => handleOpenDoc(fileUrl)}
+            style={{ color: "#9c27b0" }}
+          />,
+        ];
+      },
+    },
+    {
+      field: "driving_licence_back_path",
+      headerName: "DRIVING LICENCE BACK",
+      type: "actions",
+      minWidth: 100,
+      flex: 1,
+      headerAlign: "center",
+      align: "center",
+      headerClassName: "id-column",
+      cellClassName: "id-column",
+      getActions: (params) => {
+        const rawValue = params.row.driving_licence_back_path;
+        const fileUrl =
+          typeof rawValue === "object" && rawValue?.props?.href
+            ? rawValue.props.href
+            : rawValue;
+        if (!params.row.driving_licence_back_path) return [];
+        return [
+          <GridActionsCellItem
+            icon={<Visibility />}
+            label="driving_licence_back"
+            onClick={() => handleOpenDoc(fileUrl)}
+            style={{ color: "#9c27b0" }}
+          />,
+        ];
+      },
+    },
+    {
+      field: "additional_doc_path",
+      headerName: "ADDITIONAL DOC",
+      type: "actions",
+      minWidth: 100,
+      flex: 1,
+      headerAlign: "center",
+      align: "center",
+      headerClassName: "id-column",
+      cellClassName: "id-column",
+      getActions: (params) => {
+        const rawValue = params.row.additional_doc_path;
+        const fileUrl =
+          typeof rawValue === "object" && rawValue?.props?.href
+            ? rawValue.props.href
+            : rawValue;
+        if (!params.row.additional_doc_path) return [];
+        return [
+          <GridActionsCellItem
+            icon={<Visibility />}
+            label="additional_doc"
             onClick={() => handleOpenDoc(fileUrl)}
             style={{ color: "#9c27b0" }}
           />,
@@ -395,7 +452,9 @@ export default function ExportCustomToolbar({}) {
     approval_history: `${parseApprovalHistory(record.approval_history).length}-Days`,
     request_letter_path: record.request_letter_path,
     Id_proof_path: record.id_proof_path,
-    driving_licence_path: record.driving_licence_path,
+    driving_licence_front_path: record.driving_licence_front_path,
+    driving_licence_back_path: record.driving_licence_back_path,
+    additional_doc_path: record.additional_doc_path,
   }));
 
   const [filterModel, setFilterModel] = useState({ items: [] });

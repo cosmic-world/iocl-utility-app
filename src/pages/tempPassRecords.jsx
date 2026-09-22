@@ -266,7 +266,11 @@ export default function tempPassDashboard() {
       // Add files (only if they exist)
       if (documents[0]) formData.append("request_letter", documents[0]);
       if (documents[1]) formData.append("id_proof", documents[1]);
-      if (documents[2]) formData.append("driving_licence", documents[2]);
+      if (documents[2])
+        formData.append("driving_licence_front", documents[2]);
+      if (documents[3])
+        formData.append("driving_licence_back", documents[3]);
+      if (documents[4]) formData.append("additional_doc", documents[4]);
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-temp-pass"), {
         method: "POST",
@@ -312,7 +316,7 @@ export default function tempPassDashboard() {
         setDrivingLicence("");
         setRequestStart("");
         setRequestEnd("");
-        setDocuments(Array(4).fill(null));
+        setDocuments(Array(5).fill(null));
       } else {
         const data = await response.json();
         alert("connection error: " + data.error);
@@ -447,6 +451,8 @@ export default function tempPassDashboard() {
       record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
   );
   const [isNew, setIsNew] = useState(false);
+  console.log('filteredRecords',filteredRecords);
+  
   return (
     <div
       className={
@@ -1223,7 +1229,13 @@ export default function tempPassDashboard() {
         </div>
 
         <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          {["Request Letter", "ID Proof", "Driving Licence"].map(
+          {[
+            "Request Letter",
+            "ID Proof",
+            "Driving Licence Front",
+            "Driving Licence Back",
+            "Additional Doc",
+          ].map(
             (field, index) => (
               <div
                 key={index}
@@ -1492,28 +1504,29 @@ export default function tempPassDashboard() {
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>
-              <th>DATE</th>
-              <th>LOCATION CODE</th>
-              <th>CREW TYPE</th>
-              <th>CREW NAME</th>
-              <th>VENDOR</th>
-              <th>TT NO</th>
-              <th>MOBILE NO</th>
-              <th>GOVT ID</th>
-              <th>DRIVING LICENSE NO</th>
+              <th style={{ width: 100 }}>DATE</th>
+              <th style={{ width: 100 }}>CREW TYPE</th>
+              <th style={{ width: 150 }}>CREW NAME</th>
+              <th >VENDOR</th>
+              <th style={{ width: 100 }}>TT NO</th>
+              <th style={{ width: 100 }}>MOBILE NO</th>
+              <th style={{ width: 150 }}>GOVT ID</th>
+              <th style={{ width: 150 }}>DRIVING LICENSE NO</th>
               <th>REQUEST FROM</th>
               <th>REQUEST TO</th>
               <th>PASS REQUESTED (DAYS)</th>
               <th>APPROVAL HISTORY</th>
               <th style={{ width: 100 }}>REQUEST LETTER</th>
               <th style={{ width: 100 }}>ID PROOF</th>
-              <th style={{ width: 100 }}>DRIVING LICENCE DOC</th>
+              <th style={{ width: 100 }}>DRIVING LICENCE FRONT</th>
+              <th style={{ width: 100 }}>DRIVING LICENCE BACK</th>
+              <th style={{ width: 100 }}>ADDITIONAL DOC</th>
             </tr>
           </thead>
           <tbody>
             {Array.from(
               {
-                length: filteredRecords.length > 0 ? filteredRecords.length : 5,
+                length: filteredRecords.length > 0 && showRecords? filteredRecords.length : 7,
               },
               (_, i) => {
                 const record = filteredRecords[i];
@@ -1553,9 +1566,6 @@ export default function tempPassDashboard() {
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["location_code"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record && showRecords ? record["crew_type"] : ""}
@@ -1670,7 +1680,17 @@ export default function tempPassDashboard() {
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record && showRecords
-                        ? getLink(record.driving_licence_path)
+                        ? getLink(record.driving_licence_front_path)
+                        : ""}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      {record && showRecords
+                        ? getLink(record.driving_licence_back_path)
+                        : ""}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      {record && showRecords
+                        ? getLink(record.additional_doc_path)
                         : ""}
                     </td>
                   </tr>
