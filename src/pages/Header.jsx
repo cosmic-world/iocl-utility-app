@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Typewriter from "typewriter-effect";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Menu, MenuItem, Divider } from "@mui/material";

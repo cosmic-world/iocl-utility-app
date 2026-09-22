@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
-import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
 import {
   Button,
@@ -11,14 +10,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { DemoItem } from "@mui/x-date-pickers/internals/demo";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import dayjs from "dayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Visibility, Download } from "@mui/icons-material";
+import { Download } from "@mui/icons-material";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 export default function MasterData() {

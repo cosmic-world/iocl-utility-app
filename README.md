@@ -175,3 +175,5 @@ WHERE i.object_id = OBJECT_ID('dbo.OfficerCredentials')
   AND i.type > 0
 
 ORDER BY ObjectType, ObjectName;
+
+SELECT * FROM [dbo].[LabourEntryRecord] WHERE CAST(CREATED_AT AS DATE) = '2026-09-22'

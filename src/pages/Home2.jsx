@@ -7,6 +7,8 @@ import {
   Dashboard,
   Password,
   LocationOn,
+  Approval,
+  LocalShipping
 } from "@mui/icons-material";
 import { Typography, CardActionArea, Box, Badge } from "@mui/material";
 import {
@@ -182,7 +184,6 @@ export default function contacts() {
           style={{ width: 250, height: 200, cursor: "not-allowed", margin: 10 }}
         >
           <CardActionArea
-            // disabled
             onMouseDown={() => setSelectedCard("Labour Entry")}
             onClick={() => {
               authorized ? handleSubmit() : setModalShow(true);
@@ -202,18 +203,8 @@ export default function contacts() {
           >
             <CardContent className="w-100 h-100 text-center">
               <Typography className="app-name">
-                <GridView color="primary" sx={{ zoom: 3, mb: 1 }} />
-                <span style={{ opacity: 0.7 }}>Labour Entry</span>
-                <span
-                  style={{
-                    display: "block",
-                    fontSize: "0.8rem",
-                    color: "gray",
-                    opacity: 0.7,
-                  }}
-                >
-                  Under Development
-                </span>
+                <Approval color="primary" sx={{ zoom: 3, mb: 1 }} />
+                {"Labour Entry"}
               </Typography>
             </CardContent>
           </CardActionArea>
@@ -284,7 +275,7 @@ export default function contacts() {
           >
             <CardContent className="w-100 h-100 text-center">
               <Typography className="app-name">
-                <GridView color="primary" sx={{ zoom: 3, mb: 1 }} />
+                <LocalShipping color="primary" sx={{ zoom: 3, mb: 1 }} />
                 <span style={{ opacity: 0.7 }}>TT IN-OUT</span>
                 <span
                   style={{

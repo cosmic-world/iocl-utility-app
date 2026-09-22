@@ -51,7 +51,6 @@ export default function PermitDisplay({ state, handleReadMail }) {
 
   useEffect(() => {
     setInterval(() => {
-      console.log("clock", clock, new Date().toLocaleTimeString());
       if (clock > 5000) {
         setClock(0);
       } else {
@@ -61,8 +60,6 @@ export default function PermitDisplay({ state, handleReadMail }) {
   }, []);
 
   useEffect(() => {
-    console.log("here", startIndex, step, new Date().toLocaleTimeString());
-
     setstartIndex((prevState) =>
       prevState + step < uniquePermitList.length ? prevState + step : 0,
     );
@@ -523,8 +520,6 @@ export default function PermitDisplay({ state, handleReadMail }) {
                     }}
                   />
                   {uniquePermitList.map((val, index) => {
-                    console.log("uniquePermitList", uniquePermitList);
-
                     return (
                       <Tooltip
                         key={index}

@@ -6,15 +6,8 @@ import {
   GridActionsCellItem,
   GridToolbarContainer,
   GridToolbarExport,
-  GridFooterContainer,
 } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
-import {
-  KeyboardArrowRight,
-  KeyboardDoubleArrowRight,
-  KeyboardArrowLeft,
-  KeyboardDoubleArrowLeft,
-} from "@mui/icons-material";
 import {
   Button,
   TextField,
@@ -26,10 +19,6 @@ import {
 } from "@mui/material";
 import {
   Visibility,
-  Download,
-  UploadFile,
-  History,
-  PhotoCamera,
 } from "@mui/icons-material";
 import { DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";

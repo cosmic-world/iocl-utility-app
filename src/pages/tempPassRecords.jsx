@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Autocomplete,
   Typography,
-  Box,
   IconButton,
   ButtonGroup,
 } from "@mui/material";
@@ -20,7 +19,6 @@ import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import {
   Visibility,
-  Download,
   UploadFile,
   History,
   PhotoCamera,
@@ -1516,7 +1514,7 @@ export default function tempPassDashboard() {
             {Array.from(
               {
                 length:
-                  filteredRecords.length > 0 ? filteredRecords.length : 100,
+                  filteredRecords.length > 0 ? filteredRecords.length : 5,
               },
               (_, i) => {
                 const record = filteredRecords[i];

@@ -7,22 +7,12 @@ import {
   Button,
   TextField,
   CircularProgress,
-  Autocomplete,
   Typography,
   Box,
 } from "@mui/material";
-import { DemoItem } from "@mui/x-date-pickers/internals/demo";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import dayjs from "dayjs";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Visibility, Download, Delete, SwapHoriz } from "@mui/icons-material";
+import { Download, Delete, SwapHoriz } from "@mui/icons-material";
 import {
   SetOfficerMasterList,
-  NavBarComponent,
-  SetSelectedApplication,
 } from "../action/userSlice";
 
 export default function MasterData() {
