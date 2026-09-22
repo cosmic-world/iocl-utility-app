@@ -451,8 +451,7 @@ export default function tempPassDashboard() {
       record["tt_no"].toLowerCase().includes(searchTT.toLowerCase()),
   );
   const [isNew, setIsNew] = useState(false);
-  console.log('filteredRecords',filteredRecords);
-  
+
   return (
     <div
       className={
