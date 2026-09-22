@@ -163,7 +163,7 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
         : [...current, record.ID],
     );
   };
-  
+
   const handleReset = () => {
     setContractor("");
     setLabourName("");

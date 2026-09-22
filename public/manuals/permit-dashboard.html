@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Permit Dashboard - User Manual</title>
+  <style>
+    body{font-family:Arial,sans-serif;line-height:1.55;color:#172033;max-width:900px;margin:0 auto;padding:32px;background:#f5f7fb}
+    main{background:#fff;padding:32px 40px;border:1px solid #d9e1ee;border-radius:8px} h1{color:#0d6efd;margin-top:0}
+    h2{border-bottom:1px solid #d9e1ee;padding-bottom:6px;margin-top:28px} li{margin:7px 0}
+    .note{background:#eef5ff;border-left:4px solid #0d6efd;padding:12px 16px}
+    @media print{body{background:#fff;padding:0}main{border:0;padding:0}}
+  </style>
+</head>
+<body><main>
+  <h1>Permit Dashboard</h1>
+  <p><strong>User Manual</strong></p>
+  <p>This application displays permit and clearance information received from the configured permit mailbox and provides tools for submitting and maintaining permit records.</p>
+  <h2>1. Before you begin</h2>
+  <ul><li>Select the correct terminal and confirm its name in the header.</li><li>Make sure the application can reach the configured permit mailbox and data service.</li><li>Users can view and refresh permit data. Authorized administrators can modify records and maintain configuration-dependent data.</li></ul>
+  <h2>2. View permit data</h2>
+  <ol><li>Open <strong>Permit Dashboard</strong> from Application Selection.</li><li>Select <strong>Permit Table View</strong> to see active permit records for the selected terminal.</li><li>Review the permit number, permit type, contractor, work description, location, officer, and clearance times.</li><li>Use <strong>Extract Data from Mail</strong> when you need to refresh permit information immediately. The application also refreshes data automatically.</li><li>Use <strong>Permit Layout View</strong> on a desktop screen for the visual display layout. The layout automatically cycles through the available records.</li></ol>
+  <h2>3. Submit a permit request</h2>
+  <ol><li>Select <strong>Permit Request Form</strong>.</li><li>Enter the location and contractor details exactly as used in the permit request.</li><li>Enter the work description and work location clearly enough for the reviewing officer to identify the job.</li><li>Select the permit type and enter the receiver/requestor name.</li><li>Enter valid Clearance From and Clearance Till times. Check that the clearance period covers the intended work.</li><li>Review all details carefully, then submit the form.</li><li>Return to <strong>Permit Table View</strong> and refresh the mailbox data to confirm the record.</li></ol>
+  <h2>4. Modify records</h2>
+  <p>Authorized administrators can open <strong>Modify Permit Records</strong> to edit or manage permit data. Regular users should contact an administrator when a correction is needed.</p>
+  <h2>5. Understanding the table</h2>
+  <ul><li><strong>Permit Type:</strong> category of work such as hot, cold, electrical, or height work.</li><li><strong>Permit No:</strong> unique reference number from the permit request. Use it when discussing a record with the control room or administrator.</li><li><strong>Work Description / Location:</strong> the approved activity and place of work.</li><li><strong>Clearance From / Till:</strong> active clearance time window. A permit outside this window may no longer be active.</li><li><strong>Officer Name:</strong> officer associated with the permit record.</li></ul>
+  <h2>6. Common issues</h2>
+  <div class="note"><ul><li>Confirm the correct terminal was selected before reviewing data.</li><li>Use Extract Data from Mail if a newly received permit is not visible, then allow the table to refresh.</li><li>Check the permit number and clearance times against the source mailbox message.</li><li>Permit Layout View is intended for desktop screens.</li><li>Contact an administrator if the mailbox data, permit details, or officer mapping is incorrect.</li></ul></div>
+</main></body></html>

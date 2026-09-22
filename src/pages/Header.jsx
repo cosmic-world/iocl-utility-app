@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Menu, MenuItem, Divider } from "@mui/material";
+import Download from "@mui/icons-material/Download";
+import { Button, Menu, MenuItem, Divider, Tooltip } from "@mui/material";
 
 export default function Header({}) {
   const dispatch = useDispatch();
@@ -11,6 +12,28 @@ export default function Header({}) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
+  const manual = String(selectedApplication || "").includes("TT Crew")
+    ? {
+        href: "/manuals/tt-crew-temporary-pass.html",
+        filename: "TT-Crew-Temporary-Pass-User-Manual.html",
+      }
+    : String(selectedApplication || "").includes("Permit")
+      ? {
+          href: "/manuals/permit-dashboard.html",
+          filename: "Permit-Dashboard-User-Manual.html",
+        }
+      : [
+            "Labour Entry",
+            "Worker Entry",
+            "Worker Pass",
+            "Worker Master",
+            "Contractor Master",
+          ].some((label) => String(selectedApplication || "").includes(label))
+        ? {
+            href: "/manuals/worker-entry.html",
+            filename: "Worker-Entry-User-Manual.html",
+          }
+        : null;
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -101,6 +124,33 @@ export default function Header({}) {
             >
               Contacts
             </MenuItem>
+            <Divider className="bg-dark" />
+            <Tooltip
+              title={
+                manual
+                  ? "Download user manual"
+                  : "Manual unavailable for this view"
+              }
+            >
+              <MenuItem className="d-flex justify-content-center">
+                <Button
+                  component={manual ? "a" : "button"}
+                  href={manual?.href}
+                  download={manual?.filename}
+                  disabled={!manual}
+                  size="small"
+                  startIcon={<Download />}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    whiteSpace: "nowrap",
+                    fontFamily: "Lucida Sans",
+                  }}
+                >
+                  Help Manual
+                </Button>
+              </MenuItem>
+            </Tooltip>
           </Menu>
         </>
       ) : null}

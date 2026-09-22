@@ -266,10 +266,8 @@ export default function tempPassDashboard() {
       // Add files (only if they exist)
       if (documents[0]) formData.append("request_letter", documents[0]);
       if (documents[1]) formData.append("id_proof", documents[1]);
-      if (documents[2])
-        formData.append("driving_licence_front", documents[2]);
-      if (documents[3])
-        formData.append("driving_licence_back", documents[3]);
+      if (documents[2]) formData.append("driving_licence_front", documents[2]);
+      if (documents[3]) formData.append("driving_licence_back", documents[3]);
       if (documents[4]) formData.append("additional_doc", documents[4]);
       // Submit to server
       const response = await fetch(apiUrl("/api/upload-temp-pass"), {
@@ -1234,66 +1232,64 @@ export default function tempPassDashboard() {
             "Driving Licence Front",
             "Driving Licence Back",
             "Additional Doc",
-          ].map(
-            (field, index) => (
-              <div
-                key={index}
-                style={{ width: "300px" }}
-                className="d-flex flex-column align-items-center align-items-sm-start"
-              >
-                <Typography>{field}</Typography>
+          ].map((field, index) => (
+            <div
+              key={index}
+              style={{ width: "300px" }}
+              className="d-flex flex-column align-items-center align-items-sm-start"
+            >
+              <Typography>{field}</Typography>
 
-                <ButtonGroup variant="contained">
-                  <Button
-                    startIcon={<UploadFile />}
-                    style={{
-                      fontFamily: "Lucida Sans",
-                      textTransform: "none",
-                      width: "200px",
-                    }}
-                    onClick={() => fileInputRefs.current[index]?.click()}
-                  >
-                    Choose File
-                  </Button>
-                  <Button
-                    // color="secondary"
-                    variant="outlined"
-                    style={{ backgroundColor: "white" }}
-                    onClick={() => handleCameraClick(index)}
-                    // onClick={() => cameraInputRefs.current[index]?.click()}
-                  >
-                    <PhotoCamera />
-                  </Button>
-                </ButtonGroup>
-
-                <Typography
-                  variant="body2"
-                  style={{ fontFamily: "Lucida Sans", color: "#555" }}
+              <ButtonGroup variant="contained">
+                <Button
+                  startIcon={<UploadFile />}
+                  style={{
+                    fontFamily: "Lucida Sans",
+                    textTransform: "none",
+                    width: "200px",
+                  }}
+                  onClick={() => fileInputRefs.current[index]?.click()}
                 >
-                  {documents[index]
-                    ? `Selected: ${documents[index].name.slice(0, 20)}`
-                    : "No file chosen"}
-                </Typography>
+                  Choose File
+                </Button>
+                <Button
+                  // color="secondary"
+                  variant="outlined"
+                  style={{ backgroundColor: "white" }}
+                  onClick={() => handleCameraClick(index)}
+                  // onClick={() => cameraInputRefs.current[index]?.click()}
+                >
+                  <PhotoCamera />
+                </Button>
+              </ButtonGroup>
 
-                <input
-                  type="file"
-                  ref={(el) => (fileInputRefs.current[index] = el)}
-                  accept=".pdf,image/*"
-                  onChange={(e) => handleFileChange(index, e)}
-                  style={{ display: "none" }}
-                />
+              <Typography
+                variant="body2"
+                style={{ fontFamily: "Lucida Sans", color: "#555" }}
+              >
+                {documents[index]
+                  ? `Selected: ${documents[index].name.slice(0, 20)}`
+                  : "No file chosen"}
+              </Typography>
 
-                <input
-                  type="file"
-                  ref={(el) => (cameraInputRefs.current[index] = el)}
-                  accept="image/*"
-                  capture="environment" // Focuses on the rear camera (use "user" for front/selfie camera)
-                  onChange={(e) => handleFileChange(index, e)}
-                  style={{ display: "none" }}
-                />
-              </div>
-            ),
-          )}
+              <input
+                type="file"
+                ref={(el) => (fileInputRefs.current[index] = el)}
+                accept=".pdf,image/*"
+                onChange={(e) => handleFileChange(index, e)}
+                style={{ display: "none" }}
+              />
+
+              <input
+                type="file"
+                ref={(el) => (cameraInputRefs.current[index] = el)}
+                accept="image/*"
+                capture="environment" // Focuses on the rear camera (use "user" for front/selfie camera)
+                onChange={(e) => handleFileChange(index, e)}
+                style={{ display: "none" }}
+              />
+            </div>
+          ))}
           <CameraModal
             open={activeCamIndex !== null}
             onClose={() => setActiveCamIndex(null)}
@@ -1506,7 +1502,7 @@ export default function tempPassDashboard() {
               <th style={{ width: 100 }}>DATE</th>
               <th style={{ width: 100 }}>CREW TYPE</th>
               <th style={{ width: 150 }}>CREW NAME</th>
-              <th >VENDOR</th>
+              <th>VENDOR</th>
               <th style={{ width: 100 }}>TT NO</th>
               <th style={{ width: 100 }}>MOBILE NO</th>
               <th style={{ width: 150 }}>GOVT ID</th>
@@ -1525,7 +1521,10 @@ export default function tempPassDashboard() {
           <tbody>
             {Array.from(
               {
-                length: filteredRecords.length > 0 && showRecords? filteredRecords.length : 7,
+                length:
+                  filteredRecords.length > 0 && showRecords
+                    ? filteredRecords.length
+                    : 7,
               },
               (_, i) => {
                 const record = filteredRecords[i];
