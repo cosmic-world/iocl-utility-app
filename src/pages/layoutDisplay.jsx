@@ -554,18 +554,23 @@ export default function PermitDisplay({ state, handleReadMail }) {
                                 "Receiver Name",
                                 "Clearance From",
                                 "Clearance Till",
-                              ].map(
-                                (key) =>
-                                  `${key} : ${
-                                    key === "Receiver Name"
-                                      ? findOfficerName(val[key])
-                                      : key === "Work Description"
-                                        ? (
-                                            val[key]?.split("/")[1] || val[key]
-                                          )?.slice(0, 100)
-                                        : val[key] || ""
-                                  }`,
-                              )}
+                              ].map((key) => {
+                                const value =
+                                  key === "Receiver Name"
+                                    ? findOfficerName(val[key])
+                                    : key === "Work Description"
+                                      ? (
+                                          val[key]?.split("/")[1] || val[key]
+                                        )?.slice(0, 100)
+                                      : val[key] || "";
+
+                                return (
+                                  <tr key={key}>
+                                    <td>{key}</td>
+                                    <td>{value}</td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </Table>
                         }
@@ -592,7 +597,7 @@ export default function PermitDisplay({ state, handleReadMail }) {
                             borderRadius: "50%",
                             textAlign: "center",
                             fontWeight: "bold",
-                            paddingTop: 2,
+                            paddingTop: 0.5,
                             background:
                               val["Permit Type"] == "Hot Work"
                                 ? "#e7028c"
