@@ -35,17 +35,17 @@ export default function Header({}) {
   const manuals = [
     {
       label: "TT Crew Temporary Pass Manual",
-      href: `${process.env.PUBLIC_URL}/asset/TT-Crew-Temporary-Pass-User_Manual.pdf`,
+      href: `${process.env.PUBLIC_URL}/manuals/TT-Crew-Temporary-Pass-User_Manual.pdf`,
       filename: "TT-Crew-Temporary-Pass-User_Manual.pdf",
     },
     {
       label: "Permit Dashboard Manual",
-      href: `${process.env.PUBLIC_URL}/asset/Permit-Dashboard-User_Manual.pdf`,
+      href: `${process.env.PUBLIC_URL}/manuals/Permit-Dashboard-User_Manual.pdf`,
       filename: "Permit-Dashboard-User_Manual.pdf",
     },
     {
       label: "Worker Entry Manual",
-      href: `${process.env.PUBLIC_URL}/asset/Worker-Entry-User_Manual.pdf`,
+      href: `${process.env.PUBLIC_URL}/manuals/Worker-Entry-User_Manual.pdf`,
       filename: "Worker-Entry-User_Manual.pdf",
     },
   ];
