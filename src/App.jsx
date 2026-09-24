@@ -103,7 +103,7 @@ function App() {
   useEffect(() => {
     let intervalId;
     if (selectedTerminal !== "") {
-      // handleReadMail();
+      handleReadMail();
       intervalId = setInterval(handleReadMail, 10000);
     }
     return () => {
