@@ -7,7 +7,16 @@ import {
 } from "../action/userSlice";
 import MenuIcon from "@mui/icons-material/Menu";
 import Download from "@mui/icons-material/Download";
-import { Button, Menu, MenuItem, Divider, Tooltip } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Menu,
+  MenuItem,
+  Divider,
+  Button,
+} from "@mui/material";
 import persistSessionStorage from "redux-persist/lib/storage/session";
 
 export default function Header({}) {
@@ -23,28 +32,23 @@ export default function Header({}) {
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
 
-  const manual = String(selectedApplication || "").includes("TT Crew")
-    ? {
-        href: `${process.env.PUBLIC_URL}/manuals/tt-crew-temporary-pass.html`,
-        filename: "TT-Crew-Temporary-Pass-User-Manual.html",
-      }
-    : String(selectedApplication || "").includes("Permit")
-      ? {
-          href: `${process.env.PUBLIC_URL}/manuals/permit-dashboard.html`,
-          filename: "Permit-Dashboard-User-Manual.html",
-        }
-      : [
-            "Labour Entry",
-            "Worker Entry",
-            "Worker Pass",
-            "Worker Master",
-            "Contractor Master",
-          ].some((label) => String(selectedApplication || "").includes(label))
-        ? {
-            href: `${process.env.PUBLIC_URL}/manuals/worker-entry.html`,
-            filename: "Worker-Entry-User-Manual.html",
-          }
-        : null;
+  const manuals = [
+    {
+      label: "TT Crew Temporary Pass Manual",
+      href: `${process.env.PUBLIC_URL}/manuals/TT-Crew-Temporary-Pass-User_Manual.pdf`,
+      filename: "TT-Crew-Temporary-Pass-User_Manual.pdf",
+    },
+    {
+      label: "Permit Dashboard Manual",
+      href: `${process.env.PUBLIC_URL}/manuals/Permit-Dashboard-User_Manual.pdf`,
+      filename: "Permit-Dashboard-User_Manual.pdf",
+    },
+    {
+      label: "Worker Entry Manual",
+      href: `${process.env.PUBLIC_URL}/manuals/Worker-Entry-User_Manual.pdf`,
+      filename: "Worker-Entry-User_Manual.pdf",
+    },
+  ];
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -72,6 +76,7 @@ export default function Header({}) {
             open={open}
             aria-hidden={false}
             onClose={() => setAnchorE1(null)}
+            MenuListProps={{ sx: { paddingTop: 0, paddingBottom: 0 } }}
             slotProps={{
               paper: {
                 sx: {
@@ -94,14 +99,14 @@ export default function Header({}) {
                 setAnchorE1(null);
               }}
               disabled={userType == "" ? true : false}
-              className="d-flex justify-content-center"
+              className="d-flex justify-content-center p-3"
             >
               Application Dashboard
             </MenuItem>
-            <Divider className="bg-dark" />
+            <Divider className="bg-dark m-0" />
             <MenuItem
               selected={navBarComponent == "officer_cred"}
-              className="d-flex justify-content-center"
+              className="d-flex justify-content-center p-3"
               disabled={userType == "user"}
               onClick={() => {
                 dispatch(NavBarComponent("officer_cred"));
@@ -111,10 +116,10 @@ export default function Header({}) {
             >
               Admin Control
             </MenuItem>
-            <Divider className="bg-dark" />
+            <Divider className="bg-dark m-0" />
             <MenuItem
               selected={navBarComponent == "contacts"}
-              className="d-flex justify-content-center"
+              className="d-flex justify-content-center p-3"
               onClick={() => {
                 dispatch(NavBarComponent("contacts"));
                 dispatch(SetSelectedApplication("Contacts"));
@@ -123,38 +128,59 @@ export default function Header({}) {
             >
               Contacts
             </MenuItem>
-            {/* <Divider className="bg-dark" /> */}
-            {/* <Tooltip
-              title={
-                manual
-                  ? "Download user manual"
-                  : "Manual unavailable for this view"
-              }
+            <Divider className="bg-dark m-0" />
+            <MenuItem className="p-0">
+            <Accordion
+              disableGutters
+              elevation={0}
+              sx={{
+                width: "100%",
+                "&:before": { display: "none" },
+              }}
             >
-              <MenuItem className="d-flex justify-content-center">
-                <Button
-                  component={manual ? "a" : "button"}
-                  href={manual?.href}
-                  download={manual?.filename}
-                  disabled={!manual}
-                  size="small"
-                  startIcon={<Download />}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    whiteSpace: "nowrap",
-                    fontFamily: "Lucida Sans",
-                  }}
-                >
-                  Help Manual
-                </Button>
-              </MenuItem>
-            </Tooltip> */}
-            <Divider className="bg-dark" />
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  justifyContent: "center",
+                  position: "relative",
+                  "& .MuiAccordionSummary-content": {
+                    flexGrow: 0,
+                    margin: 1.5,
+                  },
+                  "& .MuiAccordionSummary-expandIconWrapper": {
+                    position: "absolute",
+                    right: 8,
+                  },
+                }}
+              >
+                <Button size="small"
+                sx={{ minWidth: 0, fontSize: "1.08rem", textTransform: "none", fontFamily: "Lucida Sans", fontWeight: "normal" }}>
+                  Help Manuals</Button>
+              </AccordionSummary>
+              <AccordionDetails sx={{ padding: 0 }}>
+                {manuals.map((manual, index) => (
+                  <React.Fragment key={manual.href}>
+                    {<Divider variant="middle" component="li" className="my-0" />}
+                    <MenuItem
+                      component="a"
+                      href={manual.href}
+                      download={manual.filename}
+                      onClick={() => setAnchorE1(null)}
+                      className="d-flex justify-content-center p-3"
+                    >
+                      <Download sx={{ mr: 1 }} />
+                      {manual.label}
+                    </MenuItem>
+                  </React.Fragment>
+                ))}
+              </AccordionDetails>
+            </Accordion>
+            </MenuItem>
+            <Divider className="bg-dark m-0" />
             {authorized ? (
               <MenuItem
                 selected={navBarComponent == "sign-out"}
-                className="d-flex justify-content-center"
+                className="d-flex justify-content-center p-3"
                 onClick={() => {
                   dispatch(ResetAppState());
                   dispatch(NavBarComponent("sign-in"));
@@ -185,10 +211,11 @@ export default function Header({}) {
       />
       {/* current date-time stamp display */}
       <div
-        className="d-none d-xxl-flex justify-content-center align-items-center h-100 w-25"
+        className="d-none d-xxl-flex justify-content-center align-items-center h-100"
         style={{
           color: "#1976d2",
           fontWeight: "bold",
+          width: "350px",
         }}
       >
         <label>
@@ -221,7 +248,7 @@ export default function Header({}) {
           style={{
             color: "#1976d2",
             fontWeight: "bold",
-            width: 300,
+            width: 250,
           }}
         >
           <label>{`Role:`}&nbsp;</label>

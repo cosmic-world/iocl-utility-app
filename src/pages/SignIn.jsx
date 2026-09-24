@@ -345,7 +345,7 @@ function SignIn() {
                   onChange={(event) =>
                     setRegistration((current) => ({
                       ...current,
-                      locationName: event.target.value.toUpperCase(),
+                      locationName: event.target.value.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
                     }))
                   }
                 />

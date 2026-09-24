@@ -634,7 +634,7 @@ export default function ExportCustomToolbar({}) {
         </Button>
       </div>
 
-      {saveLoader ? (
+      {saveLoader && showRecords ? (
         <CircularProgress
           color="success"
           sx={{
@@ -894,14 +894,13 @@ export default function ExportCustomToolbar({}) {
           color="primary"
           variant="contained"
           style={{ width: 200 }}
-          disabled={seaching}
+          disabled={seaching && showRecords}
           onClick={(e) => {
             fetchRecords(e, "search");
           }}
         >
-          {seaching ? "Fetching..." : "FETCH RECORDS"}
+          {seaching && showRecords ? "Fetching..." : "FETCH RECORDS"}
         </Button>
-
         <Button
           color="primary"
           variant="outlined"
