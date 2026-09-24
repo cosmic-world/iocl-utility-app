@@ -27,10 +27,9 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList, userType } = useSelector(
-    (state) => state.myApp,
-  );
-  
+  const { navBarComponent, selectedTerminal, PermitList, userType } =
+    useSelector((state) => state.myApp);
+
   const permitListRef = useRef(PermitList);
 
   useEffect(() => {

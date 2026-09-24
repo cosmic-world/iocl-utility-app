@@ -12,8 +12,13 @@ import persistSessionStorage from "redux-persist/lib/storage/session";
 
 export default function Header({}) {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedApplication, userType, selectedTerminal, authorized } =
-    useSelector((state) => state.myApp);
+  const {
+    navBarComponent,
+    selectedApplication,
+    userType,
+    selectedTerminal,
+    authorized,
+  } = useSelector((state) => state.myApp);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
@@ -146,22 +151,22 @@ export default function Header({}) {
               </MenuItem>
             </Tooltip> */}
             <Divider className="bg-dark" />
-            {authorized?
-            <MenuItem
-              selected={navBarComponent == "sign-out"}
-              className="d-flex justify-content-center"
-              onClick={() => {
-                dispatch(ResetAppState());
-                dispatch(NavBarComponent("sign-in"));
-                dispatch(SetSelectedApplication("Sign In"));
-                window.sessionStorage.clear();
-                persistSessionStorage.removeItem("persist:root");
-                setAnchorE1(null);
-              }}
-            >
-              Sign Out
-            </MenuItem>
-            :null}
+            {authorized ? (
+              <MenuItem
+                selected={navBarComponent == "sign-out"}
+                className="d-flex justify-content-center"
+                onClick={() => {
+                  dispatch(ResetAppState());
+                  dispatch(NavBarComponent("sign-in"));
+                  dispatch(SetSelectedApplication("Sign In"));
+                  window.sessionStorage.clear();
+                  persistSessionStorage.removeItem("persist:root");
+                  setAnchorE1(null);
+                }}
+              >
+                Sign Out
+              </MenuItem>
+            ) : null}
           </Menu>
         </>
       ) : null}

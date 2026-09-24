@@ -40,7 +40,7 @@ export default function contacts() {
     }
   };
 
-    useEffect(() => {
+  useEffect(() => {
     const loadOfficerList = async () => {
       if (officerList && officerList.length > 0) return;
 
@@ -60,7 +60,7 @@ export default function contacts() {
 
     loadOfficerList();
   }, [dispatch, officerList, locationCode]);
-  
+
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">
       <Box className="d-flex flex-wrap w-100 mt-2 pb-2 justify-content-evenly align-items-center">
@@ -70,7 +70,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("TT Crew Temporary Pass")}
             onClick={() => {
-              handleSubmit()
+              handleSubmit();
             }}
             data-active={selectedApplication === "TT Crew Temporary Pass"}
             sx={{
@@ -100,7 +100,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("Permit Dashboard")}
             onClick={() => {
-              handleSubmit()
+              handleSubmit();
             }}
             data-active={selectedApplication === "Permit Dashboard"}
             sx={{
@@ -130,7 +130,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("Labour Entry")}
             onClick={() => {
-              handleSubmit()
+              handleSubmit();
             }}
             data-active={selectedApplication === "Labour Entry"}
             sx={{
@@ -161,7 +161,7 @@ export default function contacts() {
             disabled
             onMouseDown={() => setSelectedCard("Material Mangement")}
             onClick={() => {
-              handleSubmit()
+              handleSubmit();
             }}
             data-active={selectedApplication === "Material Mangement"}
             sx={{
@@ -202,7 +202,7 @@ export default function contacts() {
             disabled
             onClick={() => {
               setSelectedCard("TT IN-OUT");
-              handleSubmit()
+              handleSubmit();
             }}
             data-active={selectedApplication === "TT IN-OUT"}
             sx={{
@@ -235,7 +235,6 @@ export default function contacts() {
             </CardContent>
           </CardActionArea>
         </Card>
-
       </Box>
     </Box>
   );
