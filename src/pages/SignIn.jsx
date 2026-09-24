@@ -510,7 +510,7 @@ function SignIn() {
             fullWidth
             required
             type="password"
-            label="Location passcode"
+            placeholder="Enter location passcode"
             value={passcode}
             onChange={(event) => setPasscode(event.target.value)}
             sx={{ mb: 2 }}

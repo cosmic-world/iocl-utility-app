@@ -164,11 +164,13 @@ export default function Header({}) {
                     <MenuItem
                       component="a"
                       href={manual.href}
-                      download={manual.filename}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={() => setAnchorE1(null)}
                       className="d-flex justify-content-center p-3"
+                      style={{ fontSize: '17px' }}
                     >
-                      <Download sx={{ mr: 1 }} />
+                      <Download sx={{ mr: 1, color: '#1976d2' }} />
                       {manual.label}
                     </MenuItem>
                   </React.Fragment>
