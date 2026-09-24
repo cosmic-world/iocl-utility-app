@@ -27,9 +27,10 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList } = useSelector(
+  const { navBarComponent, selectedTerminal, PermitList, userType } = useSelector(
     (state) => state.myApp,
   );
+  
   const permitListRef = useRef(PermitList);
 
   useEffect(() => {
@@ -103,7 +104,7 @@ function App() {
   useEffect(() => {
     let intervalId;
     if (selectedTerminal !== "") {
-      handleReadMail();
+      // handleReadMail();
       intervalId = setInterval(handleReadMail, 10000);
     }
     return () => {

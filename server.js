@@ -77,6 +77,8 @@ app.use("/uploads", express.static(UPLOAD_DIR));
 app.post("/api/admin/request-otp", async (req, res) => {
   try {
     const email = String(req.body.email || "").trim().toLowerCase();
+    const role = String(req.body.role || "").trim().toUpperCase();
+    const locationCode = String(req.body.locationCode || "").trim();
     if (!email) {
       return res.status(400).json({ success: false, message: "Email address is required." });
     }
@@ -92,16 +94,19 @@ app.post("/api/admin/request-otp", async (req, res) => {
     await sql.connect(config);
     const request = new sql.Request();
     request.input("email", sql.NVarChar, email);
+    request.input("role", sql.NVarChar, role);
+    request.input("locationCode", sql.NVarChar, locationCode);
     const result = await request.query(`
       SELECT [ROLE]
       FROM OfficerCredentials
       WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+        AND (LOCATION_CODE = @locationCode)
     `);
 
     if (!result.recordset || result.recordset.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Email address is not found in the registered officer list.",
+        message: "The Email Address is not associated with an authorized Admin or Security user for the location selected.",
       });
     }
     const otp = generateOtp();
@@ -727,6 +732,234 @@ app.get("/api/contractor-master-data", (req, res) => {
   })();
 });
 
+app.get("/api/utility-locations", (req, res) => {
+  (async () => {
+    try {
+      await sql.connect(sqlConfig);
+      const result = await sql.query("SELECT ID, STATE_OFFICE, LOCATION_NAME, LOCATION_CODE, ADMIN_MAIL_ID FROM IOCLUtilityCredentials Where ACTIVE='Y'");
+      res.json(result.recordset);
+    } catch (error) {
+      console.error("Query error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  })();
+});
+
+app.post("/api/utility-locations/register", async (req, res) => {
+  try {
+    const stateOffice = String(req.body.stateOffice || "").trim();
+    const locationName = String(req.body.locationName || "").trim();
+    const locationCode = String(req.body.locationCode || "").trim();
+    const passcode = String(req.body.passcode || "").trim();
+    const adminMailId = String(req.body.adminMailId || "").trim().toLowerCase();
+
+    if (!stateOffice || !locationName || !locationCode || !passcode || !adminMailId) {
+      return res.status(400).json({ success: false, message: "All location registration fields are required." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("stateOffice", sql.NVarChar, stateOffice);
+    request.input("locationName", sql.NVarChar, locationName);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    request.input("passcode", sql.NVarChar, passcode);
+    request.input("adminMailId", sql.NVarChar, adminMailId);
+    const existing = await request.query(`
+      SELECT TOP 1 ID
+      FROM IOCLUtilityCredentials
+      WHERE LOCATION_CODE = @locationCode OR LOCATION_NAME = @locationName
+    `);
+
+    if (existing.recordset?.length) {
+      return res.status(409).json({ success: false, message: "A location with this name or code already exists." });
+    }
+
+    await request.query(`
+      INSERT INTO IOCLUtilityCredentials
+        (STATE_OFFICE, LOCATION_NAME, PASSCODE, LOCATION_CODE, ADMIN_MAIL_ID, ACTIVE)
+      VALUES (@stateOffice, @locationName, @passcode, @locationCode, @adminMailId, 'Y')
+    `);
+    return res.status(201).json({ success: true, message: "Location registered successfully." });
+  } catch (error) {
+    console.error("Location registration error:", error);
+    return res.status(500).json({ success: false, message: "Unable to register the location." });
+  }
+});
+
+app.post("/api/utility-locations/change/request-otp", async (req, res) => {
+  try {
+    const locationName = String(req.body.locationName || "").trim();
+    const currentEmail = String(req.body.currentEmail || "").trim().toLowerCase();
+    if (!locationName || !currentEmail) {
+      return res.status(400).json({ success: false, message: "Location and current admin email are required." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("locationName", sql.NVarChar, locationName);
+    request.input("currentEmail", sql.NVarChar, currentEmail);
+    const result = await request.query(`
+      SELECT TOP 1 LOCATION_CODE
+      FROM IOCLUtilityCredentials
+      WHERE LOCATION_NAME = @locationName
+        AND LOWER(LTRIM(RTRIM(ADMIN_MAIL_ID))) = @currentEmail
+        AND ACTIVE = 'Y'
+    `);
+    if (!result.recordset?.length) {
+      return res.status(404).json({ success: false, message: "Current admin email does not match this location." });
+    }
+
+    const otp = generateOtp();
+    const locationCode = result.recordset[0].LOCATION_CODE;
+    otpStore[`location:${currentEmail}:${locationCode}`] = {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+    await transporter.sendMail({
+      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      to: currentEmail,
+      subject: "Location credential change verification",
+      text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
+    });
+    return res.json({ success: true, message: "OTP sent to the current admin email." });
+  } catch (error) {
+    console.error("Location change OTP error:", error);
+    return res.status(500).json({ success: false, message: "Unable to send verification OTP." });
+  }
+});
+
+app.patch("/api/utility-locations/change", async (req, res) => {
+  try {
+    const locationName = String(req.body.locationName || "").trim();
+    const currentEmail = String(req.body.currentEmail || "").trim().toLowerCase();
+    const otp = String(req.body.otp || "").trim();
+    const newPasscode = String(req.body.newPasscode || "").trim();
+    const newAdminMailId = String(req.body.newAdminMailId || "").trim().toLowerCase();
+
+    if (!locationName || !currentEmail || !otp || (!newPasscode && !newAdminMailId)) {
+      return res.status(400).json({ success: false, message: "OTP and at least one new value are required." });
+    }
+
+    await sql.connect(sqlConfig);
+    const locationRequest = new sql.Request();
+    locationRequest.input("locationName", sql.NVarChar, locationName);
+    const locationResult = await locationRequest.query(`
+      SELECT TOP 1 LOCATION_CODE
+      FROM IOCLUtilityCredentials
+      WHERE LOCATION_NAME = @locationName
+        AND ACTIVE = 'Y'
+    `);
+    const locationCode = locationResult.recordset?.[0]?.LOCATION_CODE;
+    if (!locationCode) {
+      return res.status(404).json({ success: false, message: "Selected location was not found." });
+    }
+
+    const stored = otpStore[`location:${currentEmail}:${locationCode}`];
+    if (!stored || Date.now() > stored.expiresAt || stored.otp !== otp) {
+      return res.status(401).json({ success: false, message: "Invalid or expired OTP." });
+    }
+
+    const request = new sql.Request();
+    request.input("locationCode", sql.NVarChar, locationCode);
+    request.input("currentEmail", sql.NVarChar, currentEmail);
+    request.input("newPasscode", sql.NVarChar, newPasscode || null);
+    request.input("newAdminMailId", sql.NVarChar, newAdminMailId || null);
+    const result = await request.query(`
+      UPDATE IOCLUtilityCredentials
+      SET PASSCODE = COALESCE(@newPasscode, PASSCODE),
+          ADMIN_MAIL_ID = COALESCE(@newAdminMailId, ADMIN_MAIL_ID)
+      WHERE LOCATION_CODE = @locationCode
+        AND LOWER(LTRIM(RTRIM(ADMIN_MAIL_ID))) = @currentEmail
+        AND ACTIVE = 'Y'
+    `);
+    if (!result.rowsAffected?.[0]) {
+      return res.status(404).json({ success: false, message: "Location or current admin email was not found." });
+    }
+    delete otpStore[`location:${currentEmail}:${locationCode}`];
+    return res.json({ success: true, message: "Location credentials updated successfully." });
+  } catch (error) {
+    console.error("Location credential update error:", error);
+    return res.status(500).json({ success: false, message: "Unable to update location credentials." });
+  }
+});
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const locationName = String(req.body.locationName || "").trim();
+      const passcode = String(req.body.passcode || "").trim();
+      const role = String(req.body.role || "User").trim();
+      const email = String(req.body.email || "").trim().toLowerCase();
+      const acceptedRoles = role === "Admin" ? ["ADMIN", "SUPER_ADMIN"] : [role.toUpperCase()];
+
+      if (!locationName || !passcode || !["User", "Admin", "Security"].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: "Location, passcode, and a valid role are required.",
+        });
+      }
+
+      await sql.connect(sqlConfig);
+      const request = new sql.Request();
+      request.input("locationName", sql.NVarChar, locationName);
+      request.input("passcode", sql.NVarChar, passcode);
+
+      const result = await request.query(`
+        SELECT TOP 1 LOCATION_CODE
+        FROM IOCLUtilityCredentials
+        WHERE LOCATION_NAME = @locationName
+          AND PASSCODE = @passcode
+      `);
+
+      if (!result.recordset?.length) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid passcode for the selected location.",
+        });
+      }
+
+      let authenticatedRole = "user";
+      if (role !== "User") {
+        if (!email) {
+          return res.status(400).json({
+            success: false,
+            message: "Officer email is required.",
+          });
+        }
+
+        const officerRequest = new sql.Request();
+        officerRequest.input("email", sql.NVarChar, email);
+        officerRequest.input("locationCode", sql.NVarChar, result.recordset[0].LOCATION_CODE);
+        const officerResult = await officerRequest.query(`
+          SELECT TOP 1 [ROLE]
+          FROM OfficerCredentials
+          WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+            AND LOCATION_CODE = @locationCode
+            AND UPPER(LTRIM(RTRIM([ROLE]))) IN ('${acceptedRoles.join("','")}')
+        `);
+
+        if (!officerResult.recordset?.length) {
+          return res.status(403).json({
+            success: false,
+            message: "You are not authorized for this role and location.",
+          });
+        }
+        authenticatedRole = String(officerResult.recordset[0].ROLE).trim().toUpperCase();
+      }
+
+      return res.json({
+        success: true,
+        role: authenticatedRole,
+        locationCode: result.recordset[0].LOCATION_CODE,
+      });
+    } catch (error) {
+      console.error("Login query error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Unable to verify access right now.",
+      });
+    }
+  });
+
 app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -850,7 +1083,21 @@ app.get("/api/officer-master-data", (req, res) => {
   (async () => {
     try {
       await sql.connect(sqlConfig);
-      const result = await sql.query("SELECT * FROM OfficerCredentials");
+      const locationCode = String(req.query.locationCode || "").trim();
+      const requestedRoles = String(req.query.roles || "")
+        .split(",")
+        .map((role) => role.trim().toUpperCase())
+        .filter((role) => ["ADMIN", "SUPER_ADMIN", "SECURITY", "USER"].includes(role));
+      const request = new sql.Request();
+      request.input("locationCode", sql.NVarChar, locationCode);
+      request.input("role1", sql.NVarChar, requestedRoles[0] || "");
+      request.input("role2", sql.NVarChar, requestedRoles[1] || "");
+      const result = await request.query(`
+        SELECT *
+        FROM OfficerCredentials
+        WHERE (@locationCode = '' OR LOCATION_CODE = @locationCode)
+          AND (@role1 = '' OR UPPER(LTRIM(RTRIM([ROLE]))) IN (@role1, @role2))
+      `);
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -1383,6 +1630,25 @@ app.post("/api/labour-pass-requests/:token/labours/:labourId/decision", async (r
           ? "PARTIALLY DECIDED"
           : "PENDING";
     const approvedRows = rows.filter((row) => row.REQUEST_STATUS === "APPROVED");
+    if (role !== "User") {
+      if (!email) {
+        return res.status(400).json({ success: false, message: "Officer email is required." });
+      }
+      const officerRequest = new sql.Request();
+      officerRequest.input("email", sql.NVarChar, email);
+      officerRequest.input("locationCode", sql.NVarChar, result.recordset[0].LOCATION_CODE);
+      const officerResult = await officerRequest.query(`
+        SELECT TOP 1 [ROLE]
+        FROM OfficerCredentials
+        WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+          AND LOCATION_CODE = @locationCode
+          AND UPPER(LTRIM(RTRIM([ROLE]))) IN ('${acceptedRoles.join("','")}')
+      `);
+      if (!officerResult.recordset?.length) {
+        return res.status(403).json({ success: false, message: "You are not authorized for this role and location." });
+      }
+    }
+
     return res.json({
       success: true,
       status,

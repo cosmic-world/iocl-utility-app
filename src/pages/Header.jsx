@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import {
+  NavBarComponent,
+  ResetAppState,
+  SetSelectedApplication,
+} from "../action/userSlice";
 import MenuIcon from "@mui/icons-material/Menu";
 import Download from "@mui/icons-material/Download";
 import { Button, Menu, MenuItem, Divider, Tooltip } from "@mui/material";
+import persistSessionStorage from "redux-persist/lib/storage/session";
 
 export default function Header({}) {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedApplication, userType, selectedTerminal } =
+  const { navBarComponent, selectedApplication, userType, selectedTerminal, authorized } =
     useSelector((state) => state.myApp);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
   const open = Boolean(anchorE1);
-  
+
   const manual = String(selectedApplication || "").includes("TT Crew")
     ? {
         href: `${process.env.PUBLIC_URL}/manuals/tt-crew-temporary-pass.html`,
@@ -49,7 +54,7 @@ export default function Header({}) {
         fontSize: "1.4rem",
         height: 50,
         backgroundColor: "white",
-        border: "1px solid #0d6efd",
+        border: "1px solid #1976d2",
         borderLeft: "none",
         borderRight: "none",
       }}
@@ -77,28 +82,16 @@ export default function Header({}) {
             }}
           >
             <MenuItem
-              selected={navBarComponent == "home"}
-              onClick={() => {
-                dispatch(NavBarComponent("home"));
-                dispatch(SetSelectedApplication("Role Selection"));
-                setAnchorE1(null);
-              }}
-              className="d-flex justify-content-center"
-            >
-              User Role Selection
-            </MenuItem>
-            <Divider className="bg-dark" />
-            <MenuItem
               selected={navBarComponent == "home2"}
               onClick={() => {
                 dispatch(NavBarComponent("home2"));
-                dispatch(SetSelectedApplication("Application Selection"));
+                dispatch(SetSelectedApplication("Application Dashboard"));
                 setAnchorE1(null);
               }}
               disabled={userType == "" ? true : false}
               className="d-flex justify-content-center"
             >
-              Application Selection
+              Application Dashboard
             </MenuItem>
             <Divider className="bg-dark" />
             <MenuItem
@@ -152,6 +145,23 @@ export default function Header({}) {
                 </Button>
               </MenuItem>
             </Tooltip> */}
+            <Divider className="bg-dark" />
+            {authorized?
+            <MenuItem
+              selected={navBarComponent == "sign-out"}
+              className="d-flex justify-content-center"
+              onClick={() => {
+                dispatch(ResetAppState());
+                dispatch(NavBarComponent("sign-in"));
+                dispatch(SetSelectedApplication("Sign In"));
+                window.sessionStorage.clear();
+                persistSessionStorage.removeItem("persist:root");
+                setAnchorE1(null);
+              }}
+            >
+              Sign Out
+            </MenuItem>
+            :null}
           </Menu>
         </>
       ) : null}
@@ -162,7 +172,7 @@ export default function Header({}) {
           zoom: 1.5,
           color: "white",
           height: "100%",
-          backgroundColor: "#0d6efd",
+          backgroundColor: "#1976d2",
         }}
         onClick={(event) =>
           userType != "" ? setAnchorE1(event.currentTarget) : null
@@ -172,7 +182,7 @@ export default function Header({}) {
       <div
         className="d-none d-xxl-flex justify-content-center align-items-center h-100 w-25"
         style={{
-          color: "#0d6efd",
+          color: "#1976d2",
           fontWeight: "bold",
         }}
       >
@@ -192,9 +202,9 @@ export default function Header({}) {
       <div
         className="d-none d-xxl-flex justify-content-center align-items-center h-100"
         style={{
-          color: "#0d6efd",
+          color: "#1976d2",
           fontWeight: "bold",
-          borderRight: userType != "" ? "1px solid #0d6efd" : null,
+          borderRight: userType != "" ? "1px solid #1976d2" : null,
           width: 400,
         }}
       >
@@ -204,7 +214,7 @@ export default function Header({}) {
         <div
           className="d-none d-xxl-flex justify-content-center align-items-center h-100"
           style={{
-            color: "#0d6efd",
+            color: "#1976d2",
             fontWeight: "bold",
             width: 300,
           }}

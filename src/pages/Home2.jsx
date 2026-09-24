@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import {
   DisplaySettings,
   GridView,
   Dashboard,
-  Password,
-  LocationOn,
   Approval,
   LocalShipping,
 } from "@mui/icons-material";
@@ -14,92 +12,18 @@ import { Typography, CardActionArea, Box, Badge } from "@mui/material";
 import {
   SetSelectedApplication,
   NavBarComponent,
-  SelectedTerminal,
-  SetLocationCode,
-  SetAuthorized,
+  SetOfficerMasterList,
 } from "../action/userSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { Cascader } from "antd";
-import { Button, TextField, InputAdornment } from "@mui/material";
-import { Modal } from "react-bootstrap";
+import { apiUrl } from "../api";
 
 export default function contacts() {
   const dispatch = useDispatch();
-  const { selectedApplication, selectedTerminal, locationList, authorized } =
-    useSelector((state) => state.myApp);
-  const [pass, SetPass] = useState("");
-  const [passcode, setPasscode] = useState("");
-  const locationName = selectedTerminal[selectedTerminal.length - 1];
-  const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
-  const [modalShow, setModalShow] = useState(false);
+  const { selectedApplication, officerList, locationCode } = useSelector(
+    (state) => state.myApp,
+  );
   const [selectedCard, setSelectedCard] = useState("");
 
-  useEffect(() => {
-    const fetchSheetData = async () => {
-      try {
-        const response = await fetch(
-          `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=credentials`,
-        );
-        const text = await response.text();
-        // Remove unwanted characters from response
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.map((row) => row.c.map((ele) => ele.v));
-        const cols = json.table.cols.map((col) => col.label);
-
-        // Convert rows into simple array
-        const formattedData = rows.map((row) => {
-          const obj = {};
-          row.forEach((cell, index) => {
-            obj[cols[index]] = cell;
-          });
-          return obj;
-        });
-        const filteredData = formattedData.filter(
-          (ele) =>
-            ele["Location Name"].toLowerCase() ===
-            ((locationName !== "") & (locationName != undefined)
-              ? locationName.toLowerCase()
-              : "test"),
-        );
-        setPasscode(filteredData.length > 0 ? filteredData[0]["Passcode"] : "");
-        dispatch(
-          SetLocationCode(
-            filteredData.length > 0 ? filteredData[0]["Location Code"] : "",
-          ),
-        );
-      } catch (error) {
-        console.error("Error fetching sheet data:", error);
-      }
-    };
-    if (selectedTerminal != "") {
-      fetchSheetData();
-    }
-  }, [locationName]);
-  const zlist = [];
-
-  locationList.forEach((obj) => {
-    const existing = zlist.find((item) => item.value === obj["State Office"]);
-
-    if (existing) {
-      existing.children.push({
-        label: obj["Location Name"],
-        value: obj["Location Name"],
-      });
-    } else {
-      zlist.push({
-        label: obj["State Office"],
-        value: obj["State Office"],
-        children: [
-          {
-            label: obj["Location Name"],
-            value: obj["Location Name"],
-          },
-        ],
-      });
-    }
-  });
-
-  const stateOfficeList = zlist;
   const handleSubmit = (e) => {
     if (selectedCard === "TT Crew Temporary Pass") {
       dispatch(SetSelectedApplication("TT Crew Temporary Pass"));
@@ -114,9 +38,29 @@ export default function contacts() {
       dispatch(SetSelectedApplication("TT In-Out"));
       dispatch(NavBarComponent("ttInOutDashboard"));
     }
-    setModalShow(false);
-    dispatch(SetAuthorized(true));
   };
+
+    useEffect(() => {
+    const loadOfficerList = async () => {
+      if (officerList && officerList.length > 0) return;
+
+      try {
+        if (!locationCode) return;
+        const response = await fetch(
+          apiUrl(
+            `/api/officer-master-data?locationCode=${encodeURIComponent(locationCode)}&roles=ADMIN,SUPER_ADMIN`,
+          ),
+        );
+        const data = await response.json();
+        dispatch(SetOfficerMasterList(data || []));
+      } catch (error) {
+        console.error("Failed to load officer list:", error);
+      }
+    };
+
+    loadOfficerList();
+  }, [dispatch, officerList, locationCode]);
+  
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">
       <Box className="d-flex flex-wrap w-100 mt-2 pb-2 justify-content-evenly align-items-center">
@@ -126,7 +70,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("TT Crew Temporary Pass")}
             onClick={() => {
-              authorized ? handleSubmit() : setModalShow(true);
+              handleSubmit()
             }}
             data-active={selectedApplication === "TT Crew Temporary Pass"}
             sx={{
@@ -156,7 +100,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("Permit Dashboard")}
             onClick={() => {
-              authorized ? handleSubmit() : setModalShow(true);
+              handleSubmit()
             }}
             data-active={selectedApplication === "Permit Dashboard"}
             sx={{
@@ -186,7 +130,7 @@ export default function contacts() {
           <CardActionArea
             onMouseDown={() => setSelectedCard("Labour Entry")}
             onClick={() => {
-              authorized ? handleSubmit() : setModalShow(true);
+              handleSubmit()
             }}
             data-active={selectedApplication === "Labour Entry"}
             sx={{
@@ -217,7 +161,7 @@ export default function contacts() {
             disabled
             onMouseDown={() => setSelectedCard("Material Mangement")}
             onClick={() => {
-              authorized ? handleSubmit() : setModalShow(true);
+              handleSubmit()
             }}
             data-active={selectedApplication === "Material Mangement"}
             sx={{
@@ -258,7 +202,7 @@ export default function contacts() {
             disabled
             onClick={() => {
               setSelectedCard("TT IN-OUT");
-              authorized ? handleSubmit() : setModalShow(true);
+              handleSubmit()
             }}
             data-active={selectedApplication === "TT IN-OUT"}
             sx={{
@@ -292,93 +236,6 @@ export default function contacts() {
           </CardActionArea>
         </Card>
 
-        <Modal
-          show={modalShow}
-          onHide={() => setModalShow(false)}
-          size="md"
-          centered
-          backdrop="static"
-        >
-          <Modal.Header closeButton>
-            <Modal.Title
-              id="contained-modal-title-vcenter"
-              className="text-center w-100"
-            >
-              Verify Location Access
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Card variant="outlined" style={{ width: "100%" }}>
-              <CardContent className="d-flex flex-column align-items-center justify-content-center">
-                <Cascader
-                  className="custom-cascader"
-                  popupClassName="custom-cascader-dropdown"
-                  options={stateOfficeList}
-                  expandTrigger="hover"
-                  getPopupContainer={(triggerNode) =>
-                    triggerNode.closest(".modal") || document.body
-                  }
-                  placeholder={
-                    selectedTerminal === "" || selectedTerminal === undefined
-                      ? "Select Terminal..."
-                      : `${selectedTerminal[0]} / ${selectedTerminal[selectedTerminal.length - 1]}`
-                  }
-                  style={{
-                    width: "100%",
-                    height: "60px",
-                    marginBottom: "20px",
-                  }}
-                  prefix={<LocationOn style={{ color: "#0046bb" }} />}
-                  onChange={(newValue) => {
-                    newValue
-                      ? dispatch(SelectedTerminal(newValue))
-                      : dispatch(SelectedTerminal(""));
-                  }}
-                />
-                <TextField
-                  id="passcode"
-                  placeholder="Enter Passcode For This Location"
-                  size="large"
-                  value={pass}
-                  error={pass != "" && pass != passcode}
-                  style={{
-                    marginBottom: 20,
-                    width: "100%",
-                    backgroundColor: "white",
-                  }}
-                  type={"password"}
-                  required
-                  onChange={(e) => SetPass(e.target.value.trim())}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Password style={{ color: "#0046bb" }} />
-                      </InputAdornment>
-                    ),
-                    inputProps: {
-                      autoComplete: "off",
-                    },
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={(e) => {
-                    handleSubmit(e);
-                  }}
-                  disabled={pass === "" || pass != passcode}
-                >
-                  {"Submit"}
-                </Button>
-              </CardContent>
-            </Card>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="contained" onClick={() => setModalShow(false)}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
       </Box>
     </Box>
   );

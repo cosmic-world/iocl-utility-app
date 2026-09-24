@@ -6,6 +6,7 @@ import {
   SetLocationList,
 } from "../action/userSlice";
 import { Box } from "@mui/material";
+import { apiUrl } from "../api";
 
 function App() {
   const [progress, setProgress] = useState(0);
@@ -27,52 +28,27 @@ function App() {
 
   useEffect(() => {
     if (progress === 100) {
-      dispatch(NavBarComponent("home"));
-      dispatch(SetSelectedApplication("Role Selection"));
+      dispatch(NavBarComponent("sign-in"));
+      dispatch(SetSelectedApplication("Sign In"));
     }
   }, [progress]);
 
-  useEffect(() => {
-    const fetchSheetData = async () => {
-      try {
-        const response = await fetch(
-          `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=credentials`,
-        );
-        const text = await response.text();
-        // Remove unwanted characters from response
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.map((row) => row.c.map((ele) => ele.v));
-        const cols = json.table.cols.map((col) => col.label);
-        // Convert rows into simple array
-        const formattedData = rows.map((row) => {
-          const obj = {};
-          row.forEach((cell, index) => {
-            obj[cols[index]] = cell;
-          });
-          return obj;
-        });
-        const filteredData = formattedData.filter(
-          (val) => val["Active"] == "Y",
-        );
-        dispatch(
-          SetLocationList(
-            filteredData.map((obj) =>
-              Object.fromEntries(
-                Object.entries(obj).filter(
-                  ([key]) => !["Passcode", "Admin_pass"].includes(key),
-                ),
-              ),
-            ),
-          ),
-        );
-      } catch (error) {
-        console.log(
-          "error progress...",
-          `${error} and also check internet connection`,
-        );
+  const handleGetLocations = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/utility-locations"));
+      if (!response.ok) {
+        throw new Error("Failed to load records");
       }
-    };
-    fetchSheetData();
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetLocationList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
+  useEffect(() => {
+    handleGetLocations();
   }, []);
 
   return (
@@ -115,7 +91,7 @@ function App() {
             style={{
               height: "100%",
               width: `${progress}%`,
-              background: "linear-gradient(90deg, #0d6efd, #6610f2)",
+              background: "linear-gradient(90deg, #1976d2, #6610f2)",
               transition: "width 0.1s ease",
             }}
           />

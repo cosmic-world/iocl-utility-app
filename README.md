@@ -200,3 +200,20 @@ BEGIN
     ALTER TABLE dbo.temp_pass_records
     ADD additional_doc_path NVARCHAR(MAX) NULL;
 END;
+
+INSERT INTO IOCLUtilityCredentials
+(
+    STATE_OFFICE,
+    LOCATION_NAME,
+    PASSCODE,
+    LOCATION_CODE,
+    ADMIN_MAIL_ID
+)
+VALUES
+(
+    'TNSO',
+    'COIMBATORE Terminal',
+    '4149',
+    '4149',
+    'roym1@indianoil.in'
+);

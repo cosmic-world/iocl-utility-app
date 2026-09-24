@@ -1,7 +1,6 @@
 import { useSelector } from "react-redux";
 import TempPassDashboard from "./tempPassRecords";
 import TempPassHistoryTable from "./TempPassHistoryTable";
-import Home from "./Home";
 import Home2 from "./Home2";
 import ProgressPage from "./ProgressPage";
 import Contacts from "./contacts";
@@ -16,6 +15,7 @@ import LayoutDisplay from "./layoutDisplay";
 import ModifyRecords from "./modifyRecords";
 import LabourApprovalDashboard from "./LabourApprovalDashboard";
 import LabourApprovalHistory from "./LabourApprovalHistory";
+import SignIn from "./SignIn";
 
 export default function LandingPage({
   state,
@@ -29,7 +29,6 @@ export default function LandingPage({
       style={{ height: "calc(100% - 50px)", overflowY: "auto" }}
     >
       {navBarComponent === "" ? <ProgressPage /> : null}
-      {navBarComponent === "home" ? <Home /> : null}
       {navBarComponent === "home2" ? <Home2 /> : null}
       {navBarComponent === "tempPassDashboard" ? <TempPassDashboard /> : null}
       {navBarComponent === "tempPassHistory" ? <TempPassHistoryTable /> : null}
@@ -59,6 +58,7 @@ export default function LandingPage({
       {navBarComponent === "modifyRecords" ? (
         <ModifyRecords handleReadMail={handleReadMail} />
       ) : null}
+      {navBarComponent === "sign-in" ? <SignIn /> : null}
     </div>
   );
 }

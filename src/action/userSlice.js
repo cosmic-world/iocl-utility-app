@@ -54,6 +54,20 @@ export const userSlice = createSlice({
     SetAuthorized: (state, action) => {
       state.authorized = action.payload;
     },
+    ResetAppState: () => ({
+      navBarComponent: "",
+      masterList: [],
+      userType: "",
+      selectedApplication: "",
+      labour_masterList: [],
+      officerList: [],
+      contractorList: [],
+      selectedTerminal: "",
+      PermitList: [],
+      locationList: [],
+      locationCode: "",
+      authorized: false,
+    }),
   },
 });
 
@@ -71,6 +85,7 @@ export const {
   SetLocationList,
   SetLocationCode,
   SetAuthorized,
+  ResetAppState,
 } = userSlice.actions;
 
 export default userSlice.reducer;
