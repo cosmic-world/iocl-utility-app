@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Cascader } from "antd";
 import { AlternateEmail, LocationOn, Password } from "@mui/icons-material";
@@ -147,6 +147,10 @@ function SignIn() {
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    handleRefreshLocations();
+  }, []);
 
   const handleRegisterLocation = async (event) => {
     event.preventDefault();
