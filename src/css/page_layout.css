@@ -4,6 +4,8 @@
 
 .ant-cascader-dropdown {
   font-size: 18px !important;
+  width: 100% !important;
+  max-width: 465px !important;
 }
 
 .ant-select-selection-placeholder {
