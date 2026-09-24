@@ -26,7 +26,6 @@ export default function MasterData() {
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState(null);
   const [mailID, setMailID] = useState("");
   const [name, setName] = useState("");
@@ -174,7 +173,6 @@ export default function MasterData() {
 
   const handleSync = async () => {
     setSaveLoader(true);
-    setSyncing(true);
     try {
       const officerRecords = await loadOfficerList();
       // officerRecords.length > 0
@@ -184,7 +182,6 @@ export default function MasterData() {
       console.error("Failed to fetch records", error);
     } finally {
       setSaveLoader(false);
-      setSyncing(false);
     }
   };
 

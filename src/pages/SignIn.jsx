@@ -25,13 +25,14 @@ import {
   SetSelectedApplication,
   SetUserType,
   SetLocationList,
+  SetLocationMasterList,
 } from "../action/userSlice";
 import { apiUrl } from "../api";
 import "../css/page_layout.css";
 
 function SignIn() {
   const dispatch = useDispatch();
-  const { selectedTerminal, locationList } = useSelector(
+  const { selectedTerminal, locationList, locationMasterList } = useSelector(
     (state) => state.myApp,
   );
   const [role, setRole] = useState("User");
@@ -46,7 +47,7 @@ function SignIn() {
   const [registration, setRegistration] = useState({
     stateOffice: "",
     locationName: "",
-    locationName: "",
+    locationCode: "",
     passcode: "",
     adminMailId: "",
   });
@@ -60,6 +61,38 @@ function SignIn() {
   });
   const [changeOtpSent, setChangeOtpSent] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  const handleGetAllLocations = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/locations-master"));
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetLocationMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
+  const locationMasterOptions = [];
+  (locationMasterList || []).forEach((location) => {
+    const stateOffice = locationMasterOptions.find(
+      (item) => item.value === location.STATE_OFFICE,
+    );
+    const child = {
+      label: location.LOCATION_NAME,
+      value: location.LOCATION_NAME,
+    };
+    if (stateOffice) stateOffice.children.push(child);
+    else
+      locationMasterOptions.push({
+        label: location.STATE_OFFICE,
+        value: location.STATE_OFFICE,
+        children: [child],
+      });
+  });
 
   const options = [];
   (locationList || []).forEach((location) => {
@@ -209,10 +242,22 @@ function SignIn() {
 
   useEffect(() => {
     handleRefreshLocations();
+    handleGetAllLocations();
   }, []);
 
   const handleRegisterLocation = async (event) => {
     event.preventDefault();
+    const isLocationRegistered = (locationList || []).some(
+      (location) => location.LOCATION_NAME === registration.locationName,
+    );
+    if (isLocationRegistered) {
+      alert("This location is already registered.");
+      return;
+    }
+    if (registration.locationCode == "") {
+      alert("Location code is missing. Contact Admin.");
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(apiUrl("/api/utility-locations/register"), {
@@ -263,7 +308,7 @@ function SignIn() {
       if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
       setChangeOtpSent(true);
       setMessage({ type: "success", text: data.message });
-      handleRefreshLocations()
+      handleRefreshLocations();
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -327,33 +372,47 @@ function SignIn() {
             </Typography>
             {isRegistration ? (
               <>
-                <TextField
-                  required
-                  label="State office"
-                  value={registration.stateOffice}
+                <Cascader
+                  options={locationMasterOptions}
+                  expandTrigger="hover"
+                  // popupMenuColumnStyle={{ maxHeight: 60 }}
+                  value={selectedTerminal || undefined}
                   onChange={(event) =>
                     setRegistration((current) => ({
                       ...current,
-                      stateOffice: event.target.value.toUpperCase(),
+                      stateOffice: event[0] || "",
+                      locationName: event[1] || "",
+                      locationCode:
+                        locationMasterList.find(
+                          (item) => item.LOCATION_NAME === (event[1] || ""),
+                        )?.LOCATION_CODE || "",
                     }))
                   }
+                  placeholder="Select Terminal..."
+                  style={{ width: "100%", height: 60 }}
                 />
                 <TextField
                   required
-                  label="Location name"
-                  value={registration.locationName}
-                  onChange={(event) =>
-                    setRegistration((current) => ({
-                      ...current,
-                      locationName: event.target.value.toLowerCase().replace(/\b\w/g, char => char.toUpperCase()),
-                    }))
+                  disabled
+                  value={
+                    registration.locationName != ""
+                      ? locationMasterList.find(
+                          (item) =>
+                            item.LOCATION_NAME === registration.locationName,
+                        ).LOCATION_CODE
+                        ? `Location Code: ${locationMasterList.find((item) => item.LOCATION_NAME === registration.locationName).LOCATION_CODE}`
+                        : ""
+                      : ""
                   }
-                />
-                <TextField
-                  required
-                  label="Location code"
-                  value={registration.locationCode}
-                  onChange={update("locationCode")}
+                  placeholder={
+                    registration.locationName != ""
+                      ? locationMasterList.find(
+                          (item) =>
+                            item.LOCATION_NAME === registration.locationName,
+                        )?.LOCATION_CODE ||
+                        "Location code to be updated. Contact Admin."
+                      : "Location code"
+                  }
                 />
                 <TextField
                   required
@@ -459,6 +518,21 @@ function SignIn() {
               onClick={() => {
                 setViewMode("login");
                 setMessage({ type: "", text: "" });
+                setRegistration({
+                  stateOffice: "",
+                  locationName: "",
+                  locationCode: "",
+                  passcode: "",
+                  adminMailId: "",
+                });
+                setChangeDetails({
+                  stateOffice: "",
+                  locationName: "",
+                  currentEmail: "",
+                  otp: "",
+                  newPasscode: "",
+                  newAdminMailId: "",
+                });
               }}
             >
               Back to login

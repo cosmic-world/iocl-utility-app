@@ -130,53 +130,68 @@ export default function Header({}) {
             </MenuItem>
             <Divider className="bg-dark m-0" />
             <MenuItem className="p-0">
-            <Accordion
-              disableGutters
-              elevation={0}
-              sx={{
-                width: "100%",
-                "&:before": { display: "none" },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
+              <Accordion
+                disableGutters
+                elevation={0}
                 sx={{
-                  justifyContent: "center",
-                  position: "relative",
-                  "& .MuiAccordionSummary-content": {
-                    flexGrow: 0,
-                    margin: 1.5,
-                  },
-                  "& .MuiAccordionSummary-expandIconWrapper": {
-                    position: "absolute",
-                    right: 8,
-                  },
+                  width: "100%",
+                  "&:before": { display: "none" },
                 }}
               >
-                <Button size="small"
-                sx={{ minWidth: 0, fontSize: "1.08rem", textTransform: "none", fontFamily: "Lucida Sans", fontWeight: "normal" }}>
-                  Help Manuals</Button>
-              </AccordionSummary>
-              <AccordionDetails sx={{ padding: 0 }}>
-                {manuals.map((manual, index) => (
-                  <React.Fragment key={manual.href}>
-                    {<Divider variant="middle" component="li" className="my-0" />}
-                    <MenuItem
-                      component="a"
-                      href={manual.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setAnchorE1(null)}
-                      className="d-flex justify-content-center p-3"
-                      style={{ fontSize: '17px' }}
-                    >
-                      <Download sx={{ mr: 1, color: '#1976d2' }} />
-                      {manual.label}
-                    </MenuItem>
-                  </React.Fragment>
-                ))}
-              </AccordionDetails>
-            </Accordion>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    justifyContent: "center",
+                    position: "relative",
+                    "& .MuiAccordionSummary-content": {
+                      flexGrow: 0,
+                      margin: 1.5,
+                    },
+                    "& .MuiAccordionSummary-expandIconWrapper": {
+                      position: "absolute",
+                      right: 8,
+                    },
+                  }}
+                >
+                  <Button
+                    size="small"
+                    sx={{
+                      minWidth: 0,
+                      fontSize: "1.08rem",
+                      textTransform: "none",
+                      fontFamily: "Lucida Sans",
+                      fontWeight: "normal",
+                    }}
+                  >
+                    Help Manuals
+                  </Button>
+                </AccordionSummary>
+                <AccordionDetails sx={{ padding: 0 }}>
+                  {manuals.map((manual, index) => (
+                    <React.Fragment key={manual.href}>
+                      {
+                        <Divider
+                          variant="middle"
+                          component="li"
+                          className="my-0"
+                        />
+                      }
+                      <MenuItem
+                        component="a"
+                        href={manual.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setAnchorE1(null)}
+                        className="d-flex justify-content-center p-3"
+                        style={{ fontSize: "17px" }}
+                      >
+                        <Download sx={{ mr: 1, color: "#1976d2" }} />
+                        {manual.label}
+                      </MenuItem>
+                    </React.Fragment>
+                  ))}
+                </AccordionDetails>
+              </Accordion>
             </MenuItem>
             <Divider className="bg-dark m-0" />
             {authorized ? (

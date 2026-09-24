@@ -27,8 +27,13 @@ function formatTime(dateStr) {
 
 function App() {
   const dispatch = useDispatch();
-  const { navBarComponent, selectedTerminal, PermitList, userType } =
-    useSelector((state) => state.myApp);
+  const {
+    navBarComponent,
+    selectedTerminal,
+    PermitList,
+    officerList,
+    locationList,
+  } = useSelector((state) => state.myApp);
 
   const permitListRef = useRef(PermitList);
 
@@ -41,6 +46,21 @@ function App() {
       dispatch(NavBarComponent(""));
     }
   }, []);
+
+  const findLocationName = (item) => {
+    const filteredOfficerName = officerList.find(
+      (officer) => officer["Emp_ID"] == item,
+    );
+    if (filteredOfficerName) {
+      const loc_code = filteredOfficerName["LOCATION_CODE"];
+      const locationName = locationList.find(
+        (location) => location["LOCATION_CODE"] == loc_code,
+      )?.["LOCATION_NAME"];
+      return locationName;
+    } else {
+      return item;
+    }
+  };
 
   const handleReadMail = async () => {
     try {
@@ -83,7 +103,7 @@ function App() {
                   "Clearance Till": item["Clearance Till"],
                   "Contractor Name": item["Contractor Name"],
                   "Permit No": item["Permit No"],
-                  "Location Name": selectedTerminal[1],
+                  "Location Name": findLocationName(item["Receiver Name"]),
                 }),
               }),
             });

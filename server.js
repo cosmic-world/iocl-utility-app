@@ -732,6 +732,19 @@ app.get("/api/contractor-master-data", (req, res) => {
   })();
 });
 
+app.get("/api/locations-master", (req, res) => {
+  (async () => {
+    try {
+      await sql.connect(sqlConfig);
+      const result = await sql.query("SELECT * FROM LocationMasterDatabase");
+      res.json(result.recordset);
+    } catch (error) {
+      console.error("Query error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  })();
+});
+
 app.get("/api/utility-locations", (req, res) => {
   (async () => {
     try {
