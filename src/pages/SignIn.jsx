@@ -237,7 +237,7 @@ function SignIn() {
         passcode: "",
         adminMailId: "",
       });
-      await handleRefreshLocations();
+      handleRefreshLocations();
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -263,6 +263,7 @@ function SignIn() {
       if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
       setChangeOtpSent(true);
       setMessage({ type: "success", text: data.message });
+      handleRefreshLocations()
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -396,7 +397,7 @@ function SignIn() {
                 <TextField
                   required
                   type="email"
-                  label="Current registered admin email"
+                  label="Current registered Admin Email"
                   value={changeDetails.currentEmail}
                   onChange={update("currentEmail")}
                 />

@@ -5,7 +5,6 @@
 .ant-cascader-dropdown {
   font-size: 18px !important;
   width: 100% !important;
-  max-width: 465px !important;
 }
 
 .ant-select-selection-placeholder {
@@ -122,4 +121,7 @@
   .ttes_table > tbody {
     min-height: 80%;
   }
+  .ant-cascader-dropdown {
+  max-width: 92% !important;
+}
 }
