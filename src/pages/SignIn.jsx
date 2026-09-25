@@ -30,6 +30,20 @@ import {
 import { apiUrl } from "../api";
 import "../css/page_layout.css";
 
+function maskEmail(email) {
+  if (!email) return "";
+  const [username, domain] = email.split("@");
+  const domainParts = domain.split(".");
+
+  const maskedUsername =
+    username.slice(0, 2) + "***";
+
+  const maskedDomain =
+    domainParts[0].slice(0, 2) + "***";
+
+  return `${maskedUsername}@${maskedDomain}.${domainParts.slice(1).join(".")}`;
+}
+
 function SignIn() {
   const dispatch = useDispatch();
   const { selectedTerminal, locationList, locationMasterList } = useSelector(
@@ -51,6 +65,9 @@ function SignIn() {
     passcode: "",
     adminMailId: "",
   });
+  const [registrationOtp, setRegistrationOtp] = useState("");
+  const [registrationOtpSent, setRegistrationOtpSent] = useState(false);
+  const [registrationOtpVerified, setRegistrationOtpVerified] = useState(false);
   const [changeDetails, setChangeDetails] = useState({
     stateOffice: "",
     locationName: "",
@@ -245,8 +262,108 @@ function SignIn() {
     handleGetAllLocations();
   }, []);
 
+  const handleSendRegistrationOtp = async () => {
+    if (!registration.adminMailId.trim()) {
+      setMessage({
+        type: "error",
+        text: "Enter the admin email to receive the OTP.",
+      });
+      return;
+    }
+          const duplicateLocation = (locationList || []).find(
+      (location) =>
+        String(location.ADMIN_MAIL_ID || "")
+          .trim()
+          .toLowerCase() === registration.adminMailId.trim().toLowerCase() &&
+        location.LOCATION_NAME !== registration.locationName,
+    );
+
+    if (duplicateLocation) {
+      const messageText = `This admin email already exists for ${duplicateLocation.LOCATION_NAME}.`;
+      alert(messageText);
+      setMessage({
+        type: "error",
+        text: messageText,
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        apiUrl("/api/utility-locations/register/request-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: registration.adminMailId.trim().toLowerCase(),
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Unable to send OTP.");
+
+      setRegistrationOtpSent(true);
+      setRegistrationOtpVerified(false);
+      setRegistrationOtp("");
+      setMessage({ type: "success", text: data.message });
+    } catch (error) {
+      setRegistrationOtpSent(false);
+      setRegistrationOtpVerified(false);
+      setMessage({ type: "error", text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyRegistrationOtp = async () => {
+    try {
+
+      if (!registrationOtpSent || !registrationOtp.trim()) {
+        throw new Error("Send and enter the OTP before continuing.");
+      }
+
+      const response = await fetch(
+        apiUrl("/api/utility-locations/register/verify-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: registration.adminMailId.trim().toLowerCase(),
+            otp: registrationOtp.trim(),
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Unable to verify OTP.");
+
+      setRegistrationOtpVerified(true);
+      setMessage({ type: "success", text: data.message });
+      return true;
+    } catch (error) {
+      setRegistrationOtpVerified(false);
+      setMessage({ type: "error", text: error.message });
+      return false;
+    }
+  };
+
   const handleRegisterLocation = async (event) => {
     event.preventDefault();
+
+    if (!registration.adminMailId.trim()) {
+      setMessage({
+        type: "error",
+        text: "Enter the admin email before registration.",
+      });
+      return;
+    }
+
+    if (!registrationOtpVerified) {
+      const verified = await handleVerifyRegistrationOtp();
+      if (!verified) return;
+    }
+
     const isLocationRegistered = (locationList || []).some(
       (location) => location.LOCATION_NAME === registration.locationName,
     );
@@ -282,7 +399,11 @@ function SignIn() {
         passcode: "",
         adminMailId: "",
       });
+      setRegistrationOtp("");
+      setRegistrationOtpSent(false);
+      setRegistrationOtpVerified(false);
       handleRefreshLocations();
+      alert("Registration successful. Contact admin for assigning a Super Admin user for this location.");
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -426,9 +547,44 @@ function SignIn() {
                   type="email"
                   label="Admin email"
                   value={registration.adminMailId}
-                  onChange={update("adminMailId")}
+                  onChange={(event) => {
+                    update("adminMailId")(event);
+                    setRegistrationOtp("");
+                    setRegistrationOtpSent(false);
+                    setRegistrationOtpVerified(false);
+                  }}
                 />
-                <Button type="submit" variant="contained" disabled={isLoading}>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={handleSendRegistrationOtp}
+                  disabled={isLoading || !registration.adminMailId.trim()}
+                >
+                  {isLoading ? "Sending..." : "Send OTP"}
+                </Button>
+                {registrationOtpSent ? (
+                  <>
+                    <TextField
+                      required
+                      label="Registration OTP"
+                      value={registrationOtp}
+                      onChange={(event) => setRegistrationOtp(event.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outlined"
+                      onClick={handleVerifyRegistrationOtp}
+                      disabled={isLoading || !registrationOtp.trim()}
+                    >
+                      {isLoading ? "Verifying..." : "Verify OTP"}
+                    </Button>
+                  </>
+                ) : null}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={isLoading || !registrationOtpVerified}
+                >
                   {isLoading ? "Registering..." : "Register Location"}
                 </Button>
               </>
@@ -456,9 +612,21 @@ function SignIn() {
                 <TextField
                   required
                   type="email"
-                  label="Current registered Admin Email"
+                  label="Current Registered Admin Email"
+                  disabled={changeDetails.locationName==''}
+                  placeholder={
+                    changeDetails.locationName !== ""
+                      ? maskEmail(
+                          locationList.find(
+                            (item) =>
+                              item.LOCATION_NAME === changeDetails.locationName,
+                          )?.ADMIN_MAIL_ID || "",
+                        )
+                      : ""
+                  }
                   value={changeDetails.currentEmail}
                   onChange={update("currentEmail")}
+                  InputLabelProps={{ shrink: true }}
                 />
                 <Button
                   type="button"
@@ -525,6 +693,9 @@ function SignIn() {
                   passcode: "",
                   adminMailId: "",
                 });
+                setRegistrationOtp("");
+                setRegistrationOtpSent(false);
+                setRegistrationOtpVerified(false);
                 setChangeDetails({
                   stateOffice: "",
                   locationName: "",

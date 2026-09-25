@@ -178,6 +178,80 @@ app.post("/api/admin/verify-otp", async (req, res) => {
   }
 });
 
+app.post("/api/utility-locations/register/request-otp", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Admin email is required." });
+    }
+
+    const otp = generateOtp();
+    const otpKey = `register:${email}`;
+    otpStore[otpKey] = {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+
+    await transporter.sendMail({
+      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      to: email,
+      subject: "Location Registration OTP",
+      text: `Your OTP for location registration is ${otp}. It is valid for 5 minutes.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h3 style="margin-bottom: 12px; color: #1a73e8;">Location Registration OTP</h3>
+          <p>Your OTP is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
+          <p>This OTP is valid for 5 minutes.</p>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to the admin email for registration verification.",
+    });
+  } catch (error) {
+    console.error("Location registration OTP request failed:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post("/api/utility-locations/register/verify-otp", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const otp = String(req.body.otp || "").trim();
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Email address and OTP are required." });
+    }
+
+    const otpKey = `register:${email}`;
+    const storedEntry = otpStore[otpKey];
+    if (!storedEntry) {
+      return res.status(400).json({ success: false, message: "OTP expired or not requested." });
+    }
+
+    if (Date.now() > storedEntry.expiresAt) {
+      delete otpStore[otpKey];
+      return res.status(400).json({ success: false, message: "OTP expired." });
+    }
+
+    if (storedEntry.otp !== otp) {
+      return res.status(401).json({ success: false, message: "Invalid OTP." });
+    }
+
+    delete otpStore[otpKey];
+    return res.status(200).json({
+      success: true,
+      message: "Admin email verified successfully. You can proceed with registration.",
+    });
+  } catch (error) {
+    console.error("Location registration OTP verification failed:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.post("/api/upload-temp-pass",
   upload.fields([
     { name: "request_letter", maxCount: 1 },
