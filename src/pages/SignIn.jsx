@@ -571,15 +571,19 @@ function SignIn() {
                   options={locationMasterOptions}
                   expandTrigger="hover"
                   // popupMenuColumnStyle={{ maxHeight: 60 }}
-                  value={selectedTerminal || undefined}
-                  onChange={(event) =>
+                  value={
+                    registration.stateOffice && registration.locationName
+                      ? [registration.stateOffice, registration.locationName]
+                      : []
+                  }
+                  onChange={(value) =>
                     setRegistration((current) => ({
                       ...current,
-                      stateOffice: event[0] || "",
-                      locationName: event[1] || "",
+                      stateOffice: value?.[0] || "",
+                      locationName: value?.[1] || "",
                       locationCode:
                         locationMasterList.find(
-                          (item) => item.LOCATION_NAME === (event[1] || ""),
+                          (item) => item.LOCATION_NAME === (value?.[1] || ""),
                         )?.LOCATION_CODE || "",
                     }))
                   }
@@ -659,7 +663,7 @@ function SignIn() {
                   variant="contained"
                   disabled={isLoading || !registrationOtpVerified}
                 >
-                  {isLoading ? "Registering..." : "Register Location"}
+                  {isLoading && registrationOtpVerified? "Registering..." : "Register Location"}
                 </Button>
               </>
             ) : (
