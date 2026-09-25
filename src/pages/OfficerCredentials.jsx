@@ -13,6 +13,10 @@ import {
 import { Download, Delete, SwapHoriz } from "@mui/icons-material";
 import { SetOfficerMasterList } from "../action/userSlice";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value) =>
+  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+
 export default function MasterData() {
   const dispatch = useDispatch();
   const {
@@ -112,6 +116,11 @@ export default function MasterData() {
       return;
     }
 
+    if (!isValidEmail(mailID)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     setSaveLoader(true);
     setSubmitting(true);
 
@@ -121,7 +130,7 @@ export default function MasterData() {
         name,
         empID,
         mobileNo,
-        mailID,
+        mailID: mailID.trim().toLowerCase(),
         role,
       };
       // Submit to server
@@ -453,9 +462,10 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              type="email"
               value={mailID}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMailID(e.target.value?.toUpperCase() || "")}
+              onChange={(e) => setMailID(e.target.value || "")}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {

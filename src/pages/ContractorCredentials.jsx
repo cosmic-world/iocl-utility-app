@@ -12,6 +12,10 @@ import {
 import { Download } from "@mui/icons-material";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value) =>
+  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+
 export default function MasterData() {
   const dispatch = useDispatch();
   const { navBarComponent, locationCode, selectedTerminal } = useSelector(
@@ -78,6 +82,11 @@ export default function MasterData() {
       return;
     }
 
+    if (!isValidEmail(mailID)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     if (!mobileNo) {
       alert("Please enter Mobile No.");
       return;
@@ -95,7 +104,7 @@ export default function MasterData() {
       const payload = {
         locationCode: String(locationCode),
         contractorName,
-        mailID,
+        mailID: mailID.trim().toLowerCase(),
         mobileNo,
       };
       // Submit to server
@@ -383,9 +392,10 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              type="email"
               value={mailID}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMailID(e.target.value?.toUpperCase() || "")}
+              onChange={(e) => setMailID(e.target.value || "")}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {

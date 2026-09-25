@@ -30,6 +30,10 @@ import {
 import { apiUrl } from "../api";
 import "../css/page_layout.css";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value) =>
+  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+
 function maskEmail(email) {
   if (!email) return "";
   const [username, domain] = email.split("@");
@@ -140,6 +144,14 @@ function SignIn() {
       });
       return;
     }
+    if (!isValidEmail(email)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const location = (locationList || []).find(
@@ -172,6 +184,10 @@ function SignIn() {
     try {
       if (!otpSent || !otp.trim()) {
         throw new Error("Send and enter the OTP before continuing.");
+      }
+      if (!isValidEmail(email)) {
+        alert("Enter a valid email address.");
+        throw new Error("Enter a valid email address.");
       }
       const response = await fetch(apiUrl("/api/admin/verify-otp"), {
         method: "POST",
@@ -206,6 +222,14 @@ function SignIn() {
       setMessage({
         type: "error",
         text: "Select a location and enter its passcode.",
+      });
+      return;
+    }
+    if (needsOfficerVerification && !isValidEmail(email)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
       });
       return;
     }
@@ -270,7 +294,15 @@ function SignIn() {
       });
       return;
     }
-          const duplicateLocation = (locationList || []).find(
+    if (!isValidEmail(registration.adminMailId)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
+      });
+      return;
+    }
+    const duplicateLocation = (locationList || []).find(
       (location) =>
         String(location.ADMIN_MAIL_ID || "")
           .trim()
@@ -322,6 +354,9 @@ function SignIn() {
       if (!registrationOtpSent || !registrationOtp.trim()) {
         throw new Error("Send and enter the OTP before continuing.");
       }
+      if (!isValidEmail(registration.adminMailId)) {
+        throw new Error("Enter a valid admin email address.");
+      }
 
       const response = await fetch(
         apiUrl("/api/utility-locations/register/verify-otp"),
@@ -355,6 +390,14 @@ function SignIn() {
       setMessage({
         type: "error",
         text: "Enter the admin email before registration.",
+      });
+      return;
+    }
+    if (!isValidEmail(registration.adminMailId)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
       });
       return;
     }
@@ -412,6 +455,21 @@ function SignIn() {
   };
 
   const handleSendChangeOtp = async () => {
+    if (!changeDetails.currentEmail.trim()) {
+      setMessage({
+        type: "error",
+        text: "Enter the current admin email.",
+      });
+      return;
+    }
+    if (!isValidEmail(changeDetails.currentEmail)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -439,6 +497,22 @@ function SignIn() {
 
   const handleChangeCredentials = async (event) => {
     event.preventDefault();
+    if (!changeDetails.currentEmail.trim() || !isValidEmail(changeDetails.currentEmail)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
+      });
+      return;
+    }
+    if (changeDetails.newAdminMailId && !isValidEmail(changeDetails.newAdminMailId)) {
+      alert("Enter a valid email address.");
+      setMessage({
+        type: "error",
+        text: "Enter a valid email address.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(apiUrl("/api/utility-locations/change"), {
@@ -612,7 +686,7 @@ function SignIn() {
                 <TextField
                   required
                   type="email"
-                  label="Current Registered Admin Email"
+                  label="Type Registered Admin Email"
                   disabled={changeDetails.locationName==''}
                   placeholder={
                     changeDetails.locationName !== ""
@@ -795,6 +869,7 @@ function SignIn() {
             <Stack spacing={2} sx={{ width: "100%", mb: 2 }}>
               <Typography variant="subtitle1">Role verification</Typography>
               <TextField
+                type="email"
                 label="Registered officer email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -810,7 +885,7 @@ function SignIn() {
                 type="button"
                 variant="outlined"
                 onClick={handleSendOtp}
-                disabled={isLoading || !email.trim()}
+                disabled={isLoading || !email.trim() || !isValidEmail(email)}
               >
                 Send OTP
               </Button>

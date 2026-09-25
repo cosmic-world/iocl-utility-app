@@ -59,6 +59,9 @@ const uploadExcel = multer({
 const app = express();
 const otpStore = {};
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value) =>
+  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
 const getSqlConfig = () => ({
   user: process.env.AZURE_SQL_USER,
   password: process.env.AZURE_SQL_PASSWORD,
@@ -81,6 +84,9 @@ app.post("/api/admin/request-otp", async (req, res) => {
     const locationCode = String(req.body.locationCode || "").trim();
     if (!email) {
       return res.status(400).json({ success: false, message: "Email address is required." });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
     }
 
     const config = getSqlConfig();
@@ -150,6 +156,9 @@ app.post("/api/admin/verify-otp", async (req, res) => {
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: "Email address and OTP are required." });
     }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
+    }
 
     const storedEntry = otpStore[email];
     if (!storedEntry) {
@@ -183,6 +192,9 @@ app.post("/api/utility-locations/register/request-otp", async (req, res) => {
     const email = String(req.body.email || "").trim().toLowerCase();
     if (!email) {
       return res.status(400).json({ success: false, message: "Admin email is required." });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid admin email address." });
     }
 
     const otp = generateOtp();
@@ -224,6 +236,9 @@ app.post("/api/utility-locations/register/verify-otp", async (req, res) => {
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: "Email address and OTP are required." });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid admin email address." });
     }
 
     const otpKey = `register:${email}`;
@@ -760,6 +775,10 @@ app.post("/api/upload-contractor-single",
   async (req, res) => {
     try {
       const bodyData = req.body || {};
+      const mailID = String(bodyData['mailID'] || '').trim().toLowerCase();
+      if (!isValidEmail(mailID)) {
+        return res.status(400).json({ error: "Please provide a valid contractor email address." });
+      }
 
       const sqlConfig = {
         user: process.env.AZURE_SQL_USER,
@@ -775,7 +794,7 @@ app.post("/api/upload-contractor-single",
       const request = new sql.Request();
       request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
       request.input('contractorName', sql.NVarChar, bodyData['contractorName'].toUpperCase() || null);
-      request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
+      request.input('mailID', sql.NVarChar, mailID);
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
       
       const insertSql = `INSERT INTO dbo.ContractorCredentials (
@@ -843,6 +862,9 @@ app.post("/api/utility-locations/register", async (req, res) => {
     if (!stateOffice || !locationName || !locationCode || !passcode || !adminMailId) {
       return res.status(400).json({ success: false, message: "All location registration fields are required." });
     }
+    if (!isValidEmail(adminMailId)) {
+      return res.status(400).json({ success: false, message: "Enter a valid admin email address." });
+    }
 
     await sql.connect(sqlConfig);
     const request = new sql.Request();
@@ -879,6 +901,9 @@ app.post("/api/utility-locations/change/request-otp", async (req, res) => {
     const currentEmail = String(req.body.currentEmail || "").trim().toLowerCase();
     if (!locationName || !currentEmail) {
       return res.status(400).json({ success: false, message: "Location and current admin email are required." });
+    }
+    if (!isValidEmail(currentEmail)) {
+      return res.status(400).json({ success: false, message: "Enter a valid current admin email address." });
     }
 
     await sql.connect(sqlConfig);
@@ -925,6 +950,12 @@ app.patch("/api/utility-locations/change", async (req, res) => {
 
     if (!locationName || !currentEmail || !otp || (!newPasscode && !newAdminMailId)) {
       return res.status(400).json({ success: false, message: "OTP and at least one new value are required." });
+    }
+    if (!isValidEmail(currentEmail)) {
+      return res.status(400).json({ success: false, message: "Enter a valid current admin email address." });
+    }
+    if (newAdminMailId && !isValidEmail(newAdminMailId)) {
+      return res.status(400).json({ success: false, message: "Enter a valid new admin email address." });
     }
 
     await sql.connect(sqlConfig);
@@ -1012,6 +1043,12 @@ app.patch("/api/utility-locations/change", async (req, res) => {
             message: "Officer email is required.",
           });
         }
+        if (!isValidEmail(email)) {
+          return res.status(400).json({
+            success: false,
+            message: "Enter a valid officer email address.",
+          });
+        }
 
         const officerRequest = new sql.Request();
         officerRequest.input("email", sql.NVarChar, email);
@@ -1078,6 +1115,10 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
                 const role = String(sanitizeValue(row['ROLE'])).toUpperCase();
 
+                if (!isValidEmail(mailID)) {
+                  throw new Error(`Invalid email for officer ${name || '(unknown)'}.`);
+                }
+
                 if (!['ADMIN', 'SUPER_ADMIN', 'SECURITY'].includes(role)) {
                   throw new Error(
                     `Invalid ROLE for officer ${name || '(unknown)'}: ${role}`,
@@ -1128,6 +1169,10 @@ app.post("/api/upload-officer-single",
   async (req, res) => {
     try {
       const bodyData = req.body || {};
+      const mailID = String(bodyData['mailID'] || '').trim().toLowerCase();
+      if (!isValidEmail(mailID)) {
+        return res.status(400).json({ error: "Please provide a valid officer email address." });
+      }
 
       const sqlConfig = {
         user: process.env.AZURE_SQL_USER,
@@ -1149,7 +1194,7 @@ app.post("/api/upload-officer-single",
       request.input('name', sql.NVarChar, bodyData['name'].toUpperCase() || null);
       request.input('empID', sql.NVarChar, normalizeOfficerEmpId(bodyData['empID'], role));
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
-      request.input('mailID', sql.NVarChar, bodyData['mailID'].toLowerCase() || null);
+      request.input('mailID', sql.NVarChar, mailID);
       request.input('role', sql.NVarChar, role);
       
       const insertSql = `INSERT INTO dbo.OfficerCredentials (
