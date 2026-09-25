@@ -189,7 +189,7 @@ app.post("/api/admin/request-otp", async (req, res) => {
     if (!result.recordset || result.recordset.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "The Email Address is not associated with the Role opted for the location selected.",
+        message: "The Email Address is not registered or associated with the Role opted for the location selected.",
       });
     }
     if (role!='CONTRACTOR' && String(result.recordset[0].STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
