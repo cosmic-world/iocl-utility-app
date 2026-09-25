@@ -12,6 +12,7 @@ import {
   NavBarComponent,
   SetPermitList,
   SetContractorMasterList,
+  SetLabourMasterList,
 } from "./action/userSlice";
 
 function formatDate(date1) {
@@ -40,12 +41,6 @@ function App() {
   useEffect(() => {
     permitListRef.current = PermitList;
   }, [PermitList]);
-
-  useEffect(() => {
-    if (navBarComponent == "") {
-      dispatch(NavBarComponent(""));
-    }
-  }, []);
 
   const findLocationName = (item) => {
     const filteredOfficerName = officerList.find(
@@ -306,6 +301,28 @@ function App() {
       console.error("Failed to fetch records", error);
     }
   };
+  const handleSync = async () => {
+    try {
+      const response = await fetch(apiUrl("/api/labour-master-data"));
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetLabourMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
+  useEffect(() => {
+    if (navBarComponent == "") {
+      dispatch(NavBarComponent(""));
+    }
+    handleSync();
+    handleSyncContractor();
+  }, []);
+
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
       <Header />
@@ -319,6 +336,7 @@ function App() {
                 state={state}
                 handleReadMail={handleReadMail}
                 handleSyncContractor={handleSyncContractor}
+                handleSync={handleSync}
               />
             }
           />

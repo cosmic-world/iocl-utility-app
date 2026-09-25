@@ -17,20 +17,18 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import {
-  SetLabourMasterList,
   SetOfficerMasterList,
   NavBarComponent,
   SetSelectedApplication,
   SetContractorMasterList,
 } from "../action/userSlice";
 
-export default function LabourPassDashboard({ handleSyncContractor }) {
+export default function LabourPassDashboard() {
   const dispatch = useDispatch();
   const {
     labour_masterList,
     officerList,
     navBarComponent,
-    userType,
     contractorList,
     locationCode,
     selectedTerminal,
@@ -58,8 +56,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
   const [submitting_1, setSubmitting_1] = useState(false);
 
   useEffect(() => {
-    handleSync();
-    handleSyncContractor();
     handleSyncOfficerList();
     fetchLabourEntryRecords();
   }, []);
@@ -102,25 +98,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
       // zlist.length > 0
       //   ? alert("Syncing completed successfully.")
       //   : alert("No records found in the database.");
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    } finally {
-      setSaveLoader(false);
-    }
-  };
-
-  const handleSync = async () => {
-    setSaveLoader(true);
-    try {
-      const response = await fetch(apiUrl("/api/labour-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetLabourMasterList(zlist));
     } catch (error) {
       console.error("Failed to fetch records", error);
     } finally {
@@ -579,7 +556,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
                   backgroundColor: "white",
-                  textTransform: "uppercase",
                 },
                 "& .MuiInputBase-input::placeholder": {
                   fontFamily: "Lucida Sans",
@@ -701,7 +677,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -717,16 +692,20 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
           </div>
 
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mobile No</Typography>
+            <Typography>Mobile No (10-digit)</Typography>
             <Autocomplete
               name="Mobile No"
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
               onInputChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue) : setMobileNo("");
+                newValue !== null
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
+                  : setMobileNo("");
               }}
               onChange={(event, newValue) => {
-                newValue !== null ? setMobileNo(newValue) : setMobileNo("");
+                newValue !== null
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
+                  : setMobileNo("");
               }}
               selectOnFocus
               clearOnBlur
@@ -762,7 +741,12 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  type="number"
+                  type="text"
+                  inputProps={{
+                    ...params.inputProps,
+                    inputMode: "numeric",
+                    maxLength: 10,
+                  }}
                   placeholder={
                     labourName == ""
                       ? "Select Worker Name First"
@@ -773,7 +757,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -787,7 +770,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
               )}
             />
           </div>
-
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
             <Typography>Aadhaar No / ID Proof No</Typography>
             <Autocomplete
@@ -846,7 +828,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -1094,7 +1075,6 @@ export default function LabourPassDashboard({ handleSyncContractor }) {
                 fontSize: "1rem",
                 fontFamily: "Lucida Sans",
                 backgroundColor: "white",
-                textTransform: "uppercase",
               },
               "& .MuiInputBase-input::placeholder": {
                 fontFamily: "Lucida Sans",

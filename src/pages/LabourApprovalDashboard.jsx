@@ -15,7 +15,7 @@ import { apiUrl } from "../api";
 import Table from "react-bootstrap/Table";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
-export default function LabourApprovalDashboard({ handleSyncContractor }) {
+export default function LabourApprovalDashboard() {
   const { userType, locationCode, contractorList, navBarComponent } =
     useSelector((state) => state.myApp);
   const dispatch = useDispatch();
@@ -32,9 +32,7 @@ export default function LabourApprovalDashboard({ handleSyncContractor }) {
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [gatePassNo, setGatePassNo] = useState({});
-  useEffect(() => {
-    handleSyncContractor();
-  }, []);
+
   const handleSubmit = async () => {
     try {
       const params = new URLSearchParams();
@@ -68,7 +66,7 @@ export default function LabourApprovalDashboard({ handleSyncContractor }) {
       .toUpperCase();
     if (!/^[RGY]-\d+$/.test(gatePass)) {
       alert(
-        "Gatepass no must start with 'R-', 'G-' or 'Y-' followed by a number",
+        "Gatepass no must start with 'R-' for Red Pass, 'G-' for Green Pass or 'Y-' for Yellow Pass followed by a number",
       );
       return;
     }

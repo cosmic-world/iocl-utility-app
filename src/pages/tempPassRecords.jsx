@@ -586,7 +586,6 @@ export default function tempPassDashboard() {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
                   backgroundColor: "white",
-                  textTransform: "uppercase",
                 },
                 "& .MuiInputBase-input::placeholder": {
                   fontFamily: "Lucida Sans",
@@ -711,7 +710,6 @@ export default function tempPassDashboard() {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -803,7 +801,6 @@ export default function tempPassDashboard() {
                     style: {
                       fontFamily: "Lucida Sans",
                       backgroundColor: "white",
-                      textTransform: "uppercase",
                     },
                     sx: {
                       "& input::placeholder": {
@@ -826,9 +823,7 @@ export default function tempPassDashboard() {
               value={ttNo !== "" ? ttNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setTTNo(
-                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
-                    )
+                  ? setTTNo(newValue.toLocaleUpperCase().replace(/\s/g, ""))
                   : setTTNo("");
                 if (reason === "input") {
                   newValue !== null
@@ -852,7 +847,7 @@ export default function tempPassDashboard() {
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setTTNo(newValue.trim().replace(/\s/g, ""))
+                  ? setTTNo(newValue.replace(/\s/g, ""))
                   : setTTNo("");
               }}
               selectOnFocus
@@ -913,19 +908,19 @@ export default function tempPassDashboard() {
           </div>
 
           <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mobile No</Typography>
+            <Typography>Mobile No (10-digit)</Typography>
             <Autocomplete
               name="Mobile No"
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
               onInputChange={(event, newValue) => {
                 newValue !== null
-                  ? setMobileNo(newValue.trim().replace(/\s/g, ""))
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
                   : setMobileNo("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setMobileNo(newValue.trim().replace(/\s/g, ""))
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
                   : setMobileNo("");
               }}
               selectOnFocus
@@ -962,7 +957,12 @@ export default function tempPassDashboard() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  type="number"
+                  type="text"
+                  inputProps={{
+                    ...params.inputProps,
+                    inputMode: "numeric",
+                    maxLength: 10,
+                  }}
                   placeholder={
                     crewName == ""
                       ? "Select Crew Name First"
@@ -997,13 +997,13 @@ export default function tempPassDashboard() {
               onInputChange={(event, newValue) => {
                 newValue !== null
                   ? setAadhaarNo(
-                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                      newValue.toLocaleUpperCase().replace(/\s/g, ""),
                     )
                   : setAadhaarNo("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setAadhaarNo(newValue.trim().replace(/\s/g, ""))
+                  ? setAadhaarNo(newValue.replace(/\s/g, ""))
                   : setAadhaarNo("");
               }}
               selectOnFocus
@@ -1074,13 +1074,13 @@ export default function tempPassDashboard() {
               onInputChange={(event, newValue) => {
                 newValue !== null
                   ? setDrivingLicence(
-                      newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                      newValue.toLocaleUpperCase().replace(/\s/g, ""),
                     )
                   : setDrivingLicence("");
               }}
               onChange={(event, newValue) => {
                 newValue !== null
-                  ? setDrivingLicence(newValue.trim().replace(/\s/g, ""))
+                  ? setDrivingLicence(newValue.replace(/\s/g, ""))
                   : setDrivingLicence("");
               }}
               selectOnFocus
@@ -1343,7 +1343,6 @@ export default function tempPassDashboard() {
                 fontSize: "1rem",
                 fontFamily: "Lucida Sans",
                 backgroundColor: "white",
-                textTransform: "uppercase",
               },
               "& .MuiInputBase-input::placeholder": {
                 fontFamily: "Lucida Sans",

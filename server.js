@@ -60,8 +60,18 @@ const app = express();
 const otpStore = {};
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FREE_EMAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "ymail.com",
+  "rediffmail.com", "rediff.com", "hotmail.com", "outlook.com", "live.com",
+  "msn.com", "icloud.com", "me.com", "aol.com", "protonmail.com", "proton.me",
+  "mail.com", "zoho.com",
+]);
 const isValidEmail = (value) =>
   EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+const isBusinessEmail = (value) => {
+  const domain = String(value || "").trim().toLowerCase().split("@")[1];
+  return Boolean(domain) && !FREE_EMAIL_DOMAINS.has(domain);
+};
 const getSqlConfig = () => ({
   user: process.env.AZURE_SQL_USER,
   password: process.env.AZURE_SQL_PASSWORD,
@@ -76,6 +86,62 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(UPLOAD_DIR));
+
+app.post("/api/credentials/request-otp", async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const credentialType = String(req.body.credentialType || "").trim().toLowerCase();
+    const role = String(req.body.role || "").trim().toUpperCase();
+    if (!["officer", "contractor"].includes(credentialType)) {
+      return res.status(400).json({ success: false, message: "Invalid credential type." });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
+    }
+    if (credentialType === "officer" && role === "ADMIN" && !isBusinessEmail(email)) {
+      return res.status(400).json({ success: false, message: "ADMIN must use a business email address." });
+    }
+
+    const otp = generateOtp();
+    const otpKey = `credentials:${credentialType}:${email}`;
+    otpStore[otpKey] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+    await transporter.sendMail({
+      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      to: email,
+      subject: `${credentialType === "officer" ? "Officer" : "Contractor"} Email Verification OTP`,
+      text: `Your email verification OTP is ${otp}. It is valid for 5 minutes.`,
+      html: `<p>Your email verification OTP is:</p><p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${otp}</p><p>This OTP is valid for 5 minutes.</p>`,
+    });
+
+    return res.json({ success: true, message: "OTP sent to the email address." });
+  } catch (error) {
+    console.error("Credential OTP request failed:", error);
+    return res.status(500).json({ success: false, message: "Unable to send OTP." });
+  }
+});
+
+app.post("/api/credentials/verify-otp", (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const credentialType = String(req.body.credentialType || "").trim().toLowerCase();
+  const otp = String(req.body.otp || "").trim();
+  const otpKey = `credentials:${credentialType}:${email}`;
+  const storedEntry = otpStore[otpKey];
+
+  if (!["officer", "contractor"].includes(credentialType) || !isValidEmail(email) || !/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ success: false, message: "Enter a valid email address and six-digit OTP." });
+  }
+  if (!storedEntry || Date.now() > storedEntry.expiresAt) {
+    delete otpStore[otpKey];
+    return res.status(400).json({ success: false, message: "OTP expired or not requested." });
+  }
+  if (storedEntry.otp !== otp) {
+    return res.status(401).json({ success: false, message: "Invalid OTP." });
+  }
+
+  delete otpStore[otpKey];
+  return res.json({ success: true, message: "Email verified successfully." });
+});
 
 app.post("/api/admin/request-otp", async (req, res) => {
   try {
@@ -103,7 +169,7 @@ app.post("/api/admin/request-otp", async (req, res) => {
     request.input("role", sql.NVarChar, role);
     request.input("locationCode", sql.NVarChar, locationCode);
     const result = await request.query(`
-      SELECT [ROLE]
+      SELECT [ROLE], [STATUS]
       FROM OfficerCredentials
       WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
         AND (LOCATION_CODE = @locationCode)
@@ -113,6 +179,12 @@ app.post("/api/admin/request-otp", async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "The Email Address is not associated with an authorized Admin or Security user for the location selected.",
+      });
+    }
+    if (String(result.recordset[0].STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
+      return res.status(403).json({
+        success: false,
+        message: "Your officer status is INACTIVE. Ask the location Admin or Super Admin to validate your email and make your status ACTIVE.",
       });
     }
     const otp = generateOtp();
@@ -501,6 +573,16 @@ const normalizeOfficerEmpId = (value, role) => {
   return empId && role !== 'SECURITY' ? empId.padStart(8, '0') : empId;
 };
 
+const isValidMobile = (value) => /^\d{10}$/.test(String(value || '').trim());
+const isValidAadhaar = (value) => /^\d{12}$/.test(String(value || '').trim());
+const bulkValidationResponse = (errors, res) => {
+  if (errors.length === 0) return false;
+  return res.status(400).json({
+    success: false,
+    message: `Bulk upload validation failed:\n${errors.slice(0, 20).join('\n')}${errors.length > 20 ? '\nMore validation errors were found.' : ''}`,
+  });
+};
+
 // Using a dedicated multer uploadExcel middleware for the incoming Excel file
 app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
@@ -521,6 +603,14 @@ app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (re
     if (!Array.isArray(sheetData) || sheetData.length === 0) {
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
+
+    const validationErrors = [];
+    sheetData.forEach((row, index) => {
+      const rowNumber = index + 2;
+      const mobile = sanitizeValue(row['MOBILE NO']);
+      if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
+    });
+    if (bulkValidationResponse(validationErrors, res)) return;
 
     const pool = await sql.connect(sqlConfig);
     let count = 0
@@ -653,6 +743,16 @@ app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (re
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
 
+    const validationErrors = [];
+    sheetData.forEach((row, index) => {
+      const rowNumber = index + 2;
+      const mobile = sanitizeValue(row['MOBILE NO']);
+      const aadhaar = sanitizeValue(row['AADHAAR NO']);
+      if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
+      if (!isValidAadhaar(aadhaar)) validationErrors.push(`Row ${rowNumber}: AADHAAR NO must contain exactly 12 digits.`);
+    });
+    if (bulkValidationResponse(validationErrors, res)) return;
+
     const pool = await sql.connect(sqlConfig);
     let count = 0
     let responseText = "";
@@ -771,6 +871,61 @@ app.get("/api/labour-master-data", (req, res) => {
   })();
 });
 
+app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+    const workbook = req.file.buffer
+      ? xlsx.read(req.file.buffer, { type: 'buffer' })
+      : xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) return res.status(400).json({ success: false, message: "Excel file contains no sheets" });
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    if (!Array.isArray(sheetData) || sheetData.length === 0) {
+      return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
+    }
+
+    const validationErrors = [];
+    sheetData.forEach((row, index) => {
+      const rowNumber = index + 2;
+      const mailID = sanitizeValue(row['MAIL ID']);
+      const mobile = sanitizeValue(row['MOBILE NO']);
+      if (!isValidEmail(mailID)) validationErrors.push(`Row ${rowNumber}: MAIL ID must be a valid email address.`);
+      if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
+    });
+    if (bulkValidationResponse(validationErrors, res)) return;
+
+    const pool = await sql.connect(sqlConfig);
+    let duplicateCount = 0;
+    for (const row of sheetData) {
+      try {
+        await pool.request()
+          .input('locationCode', sql.NVarChar, sanitizeValue(row['LOCATION CODE']))
+          .input('contractorName', sql.NVarChar, sanitizeValue(row['CONTRACTOR NAME'])?.toUpperCase())
+          .input('mailID', sql.NVarChar, sanitizeValue(row['MAIL ID'])?.toLowerCase())
+          .input('mobileNo', sql.NVarChar, sanitizeValue(row['MOBILE NO']))
+          .query(`
+            INSERT INTO dbo.ContractorCredentials (LOCATION_CODE, CONTRACTOR_NAME, MAIL_ID, MOBILE_NO)
+            VALUES (@locationCode, @contractorName, @mailID, @mobileNo)
+          `);
+      } catch (error) {
+        if (error.number === 2627 || error.number === 2601) {
+          duplicateCount += 1;
+          continue;
+        }
+        throw error;
+      }
+    }
+    await pool.close();
+    return res.json({
+      success: true,
+      message: `Successfully imported ${sheetData.length - duplicateCount} contractor records${duplicateCount ? `; skipped ${duplicateCount} duplicate records` : ''}.`,
+    });
+  } catch (error) {
+    console.error("Contractor Excel import failed:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/upload-contractor-single",
   async (req, res) => {
     try {
@@ -823,6 +978,147 @@ app.get("/api/contractor-master-data", (req, res) => {
       res.status(500).json({ error: error.message });
     }
   })();
+});
+
+app.patch("/api/contractor-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super user can edit contractor records." });
+    }
+
+    const id = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || "").trim();
+    const contractorName = String(req.body?.contractorName || "").trim().toUpperCase();
+    const mailID = String(req.body?.mailID || "").trim().toLowerCase();
+    const mobileNo = String(req.body?.mobileNo || "").trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode || !contractorName || !isValidEmail(mailID) || !/^\d{10}$/.test(mobileNo)) {
+      return res.status(400).json({ error: "Enter valid contractor details." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, id);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    request.input("contractorName", sql.NVarChar, contractorName);
+    request.input("mailID", sql.NVarChar, mailID);
+    request.input("mobileNo", sql.NVarChar, mobileNo);
+    const result = await request.query(`
+      UPDATE dbo.ContractorCredentials
+      SET CONTRACTOR_NAME = @contractorName, MAIL_ID = @mailID, MOBILE_NO = @mobileNo
+      WHERE ID = @id AND LOCATION_CODE = @locationCode
+    `);
+    await sql.close();
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Contractor record not found for this location." });
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Contractor update error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/contractor-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super user can delete contractor records." });
+    }
+
+    const id = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || "").trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode) {
+      return res.status(400).json({ error: "Invalid contractor record or location." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, id);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    const result = await request.query(
+      "DELETE FROM dbo.ContractorCredentials WHERE ID = @id AND LOCATION_CODE = @locationCode",
+    );
+    await sql.close();
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Contractor record not found for this location." });
+    }
+    return res.json({ success: true, id });
+  } catch (error) {
+    console.error("Contractor delete error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch("/api/labour-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super user can edit worker records." });
+    }
+
+    const id = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || "").trim();
+    const contractor = String(req.body?.contractor || "").trim().toUpperCase();
+    const labourName = String(req.body?.labourName || "").trim().toUpperCase();
+    const mobileNo = String(req.body?.mobileNo || "").trim();
+    const aadhaarNo = String(req.body?.aadhaarNo || "").trim().toUpperCase();
+    const address = String(req.body?.address || "").trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode || !contractor || !labourName || !/^\d{10}$/.test(mobileNo) || !aadhaarNo || !address) {
+      return res.status(400).json({ error: "Enter valid worker details." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, id);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    request.input("contractor", sql.NVarChar, contractor);
+    request.input("labourName", sql.NVarChar, labourName);
+    request.input("mobileNo", sql.NVarChar, mobileNo);
+    request.input("aadhaarNo", sql.NVarChar, aadhaarNo);
+    request.input("address", sql.NVarChar, address);
+    const result = await request.query(`
+      UPDATE dbo.LabourMasterRecord
+      SET LABOUR_NAME = @labourName, CONTRACTOR = @contractor,
+          MOBILE_NO = @mobileNo, AADHAAR_NO = @aadhaarNo, ADDRESS = @address
+      WHERE ID = @id AND LOCATION_CODE = @locationCode
+    `);
+    await sql.close();
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Worker record not found for this location." });
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Worker update error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/labour-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super user can delete worker records." });
+    }
+
+    const id = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || "").trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode) {
+      return res.status(400).json({ error: "Invalid worker record or location." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, id);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    const result = await request.query(
+      "DELETE FROM dbo.LabourMasterRecord WHERE ID = @id AND LOCATION_CODE = @locationCode",
+    );
+    await sql.close();
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Worker record not found for this location." });
+    }
+    return res.json({ success: true, id });
+  } catch (error) {
+    console.error("Worker delete error:", error);
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/api/locations-master", (req, res) => {
@@ -1054,7 +1350,7 @@ app.patch("/api/utility-locations/change", async (req, res) => {
         officerRequest.input("email", sql.NVarChar, email);
         officerRequest.input("locationCode", sql.NVarChar, result.recordset[0].LOCATION_CODE);
         const officerResult = await officerRequest.query(`
-          SELECT TOP 1 [ROLE]
+          SELECT TOP 1 [ROLE], [STATUS]
           FROM OfficerCredentials
           WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
             AND LOCATION_CODE = @locationCode
@@ -1065,6 +1361,12 @@ app.patch("/api/utility-locations/change", async (req, res) => {
           return res.status(403).json({
             success: false,
             message: "You are not authorized for this role and location.",
+          });
+        }
+        if (String(officerResult.recordset[0].STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
+          return res.status(403).json({
+            success: false,
+            message: "Your officer status is INACTIVE. Ask the location Admin or Super Admin to validate your email and make your status ACTIVE.",
           });
         }
         authenticatedRole = String(officerResult.recordset[0].ROLE).trim().toUpperCase();
@@ -1104,15 +1406,27 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
 
+    const validationErrors = [];
+    sheetData.forEach((row, index) => {
+      const rowNumber = index + 2;
+      const mobile = sanitizeValue(row['MOBILE NO']);
+      const mailID = sanitizeValue(row['MAIL ID'])?.toLowerCase();
+      const role = String(sanitizeValue(row['ROLE']) || '').toUpperCase();
+      if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
+      if (!isValidEmail(mailID)) validationErrors.push(`Row ${rowNumber}: MAIL ID must be a valid email address.`);
+      if (role === 'ADMIN' && !isBusinessEmail(mailID)) validationErrors.push(`Row ${rowNumber}: ADMIN must use a business email address.`);
+    });
+    if (bulkValidationResponse(validationErrors, res)) return;
+
     const pool = await sql.connect(sqlConfig);
     let count = 0
     let responseText = "";
     for (const row of sheetData) {
         try{
             const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const name     = sanitizeValue(row['NAME']).toLocaleUpperCase();
+                const name     = (sanitizeValue(row['NAME']) || '').toLocaleUpperCase();
                 const mobile         = sanitizeValue(row['MOBILE NO']);
-                const mailID       = sanitizeValue(row['MAIL ID']).toLocaleLowerCase();
+                const mailID       = (sanitizeValue(row['MAIL ID']) || '').toLocaleLowerCase();
                 const role = String(sanitizeValue(row['ROLE'])).toUpperCase();
 
                 if (!isValidEmail(mailID)) {
@@ -1134,8 +1448,8 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 .input('mailID', sql.VarChar, mailID)
                 .input('role', sql.VarChar, role)
                 .query(`
-                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE])
-                VALUES (@locationCode, @name, @empID, @mobile, @mailID, @role)
+                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE], [STATUS])
+                VALUES (@locationCode, @name, @empID, @mobile, @mailID, @role, 'INACTIVE')
                 `)
     }
     catch (err) {
@@ -1170,8 +1484,12 @@ app.post("/api/upload-officer-single",
     try {
       const bodyData = req.body || {};
       const mailID = String(bodyData['mailID'] || '').trim().toLowerCase();
+      const role = String(bodyData['role'] || "ADMIN").toUpperCase();
       if (!isValidEmail(mailID)) {
         return res.status(400).json({ error: "Please provide a valid officer email address." });
+      }
+      if (role === "ADMIN" && !isBusinessEmail(mailID)) {
+        return res.status(400).json({ error: "ADMIN must use a business email address." });
       }
 
       const sqlConfig = {
@@ -1186,7 +1504,6 @@ app.post("/api/upload-officer-single",
       };
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      const role = String(bodyData['role'] || "ADMIN").toUpperCase();
       if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(role)) {
         return res.status(400).json({ error: "Invalid officer role." });
       }
@@ -1198,8 +1515,8 @@ app.post("/api/upload-officer-single",
       request.input('role', sql.NVarChar, role);
       
       const insertSql = `INSERT INTO dbo.OfficerCredentials (
-        LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE]) 
-        VALUES (@locationCode, @name, @empID, @mobileNo, @mailID, @role)`;
+        LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE], [STATUS]) 
+        VALUES (@locationCode, @name, @empID, @mobileNo, @mailID, @role, 'ACTIVE')`;
       await request.query(insertSql)
       
       await sql.close();
@@ -1300,6 +1617,40 @@ app.patch("/api/officer-master-data/:id/role", async (req, res) => {
   } catch (error) {
     console.error("Officer role update error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch("/api/officer-master-data/:id/verify-email", async (req, res) => {
+  try {
+    const verifyingRole = String(req.get("x-user-role") || "").toUpperCase();
+    if (!["ADMIN", "SUPER_ADMIN"].includes(verifyingRole)) {
+      return res.status(403).json({ error: "Only an admin or super admin can verify officer emails." });
+    }
+
+    const officerId = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || "").trim();
+    if (!Number.isInteger(officerId) || officerId <= 0 || !locationCode) {
+      return res.status(400).json({ error: "Invalid officer id or location." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, officerId);
+    request.input("locationCode", sql.NVarChar, locationCode);
+    const result = await request.query(`
+      UPDATE dbo.OfficerCredentials
+      SET [STATUS] = 'ACTIVE'
+      WHERE ID = @id AND LOCATION_CODE = @locationCode
+    `);
+    await sql.close();
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Officer record not found for this location." });
+    }
+    return res.json({ success: true, id: officerId, status: "ACTIVE" });
+  } catch (error) {
+    console.error("Officer email verification update error:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
 

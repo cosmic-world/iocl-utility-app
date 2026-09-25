@@ -668,7 +668,6 @@ export default function ExportCustomToolbar({}) {
                 fontSize: "1rem",
                 fontFamily: "Lucida Sans",
                 backgroundColor: "white",
-                textTransform: "uppercase",
               },
               "& .MuiInputBase-input::placeholder": {
                 fontFamily: "Lucida Sans",
@@ -688,14 +687,14 @@ export default function ExportCustomToolbar({}) {
             onInputChange={(event, newValue) => {
               newValue !== null
                 ? setSearchVendor(
-                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                    newValue.toLocaleUpperCase().replace(/\s/g, ""),
                   )
                 : setSearchVendor("");
             }}
             onChange={(event, newValue) => {
               newValue !== null
                 ? setSearchVendor(
-                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
+                    newValue.toLocaleUpperCase().replace(/\s/g, ""),
                   )
                 : setSearchVendor("");
             }}
@@ -749,16 +748,12 @@ export default function ExportCustomToolbar({}) {
             value={searchTT !== "" ? searchTT : null}
             onInputChange={(event, newValue) => {
               newValue !== null
-                ? setSearchTT(
-                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
-                  )
+                ? setSearchTT(newValue.toLocaleUpperCase().replace(/\s/g, ""))
                 : setSearchTT("");
             }}
             onChange={(event, newValue) => {
               newValue !== null
-                ? setSearchTT(
-                    newValue.toLocaleUpperCase().trim().replace(/\s/g, ""),
-                  )
+                ? setSearchTT(newValue.toLocaleUpperCase().replace(/\s/g, ""))
                 : setSearchTT("");
             }}
             selectOnFocus

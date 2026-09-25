@@ -21,6 +21,7 @@ export default function LandingPage({
   state,
   handleReadMail,
   handleSyncContractor,
+  handleSync,
 }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
   return (
@@ -34,18 +35,20 @@ export default function LandingPage({
       {navBarComponent === "tempPassHistory" ? <TempPassHistoryTable /> : null}
       {navBarComponent === "masterData" ? <MasterData /> : null}
       {navBarComponent === "labourPassDashboard" ? (
-        <LabourPassDashboard handleSyncContractor={handleSyncContractor} />
+        <LabourPassDashboard />
       ) : null}
       {navBarComponent === "labourPassApproval" ? (
-        <LabourApprovalDashboard handleSyncContractor={handleSyncContractor} />
+        <LabourApprovalDashboard />
       ) : null}
       {navBarComponent == "labourPassHistory" ? (
-        <LabourApprovalHistory handleSyncContractor={handleSyncContractor} />
+        <LabourApprovalHistory />
       ) : null}
       {navBarComponent === "contractor_masterData" ? (
-        <LabourMasterData handleSyncContractor={handleSyncContractor} />
+        <LabourMasterData handleSync={handleSync} />
       ) : null}
-      {navBarComponent === "contractor_cred" ? <ContractorCredentials /> : null}
+      {navBarComponent === "contractor_cred" ? (
+        <ContractorCredentials handleSyncContractor={handleSyncContractor} />
+      ) : null}
       {navBarComponent === "officer_cred" ? <OfficerCredentials /> : null}
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}

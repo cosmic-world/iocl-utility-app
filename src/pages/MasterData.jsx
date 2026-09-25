@@ -316,7 +316,6 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -371,8 +370,16 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              value={vendor}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setVendor(e.target.value?.toUpperCase() || "")}
+              onChange={(e) =>
+                setVendor(
+                  e.target.value
+                    ?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                )
+              }
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -380,7 +387,6 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -391,8 +397,16 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              value={crewName}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setCrewName(e.target.value?.toUpperCase() || "")}
+              onChange={(e) =>
+                setCrewName(
+                  e.target.value
+                    ?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                )
+              }
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -400,7 +414,6 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -411,6 +424,7 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              value={ttNo}
               style={{ backgroundColor: "white" }}
               onChange={(e) => setTTNo(e.target.value?.toUpperCase() || "")}
               sx={{
@@ -427,13 +441,16 @@ export default function MasterData() {
           </div>
 
           <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Mobile No</Typography>
+            <Typography>Mobile No (10-digit)</Typography>
             <TextField
               fullWidth
               variant="outlined"
-              type="number"
+              type="text"
+              error={mobileNo && mobileNo.length !== 10}
+              inputProps={{ inputMode: "numeric", maxLength: 10 }}
+              value={mobileNo}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMobileNo(e.target.value?.toUpperCase() || "")}
+              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -441,7 +458,6 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -452,6 +468,7 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              value={aadhaarNo}
               style={{ backgroundColor: "white" }}
               onChange={(e) =>
                 setAadhaarNo(e.target.value?.toUpperCase() || "")
@@ -474,9 +491,15 @@ export default function MasterData() {
             <TextField
               fullWidth
               variant="outlined"
+              value={drivingLicence}
               style={{ backgroundColor: "white" }}
               onChange={(e) =>
-                setDrivingLicence(e.target.value?.toUpperCase() || "")
+                setDrivingLicence(
+                  e.target.value
+                    ?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                )
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text

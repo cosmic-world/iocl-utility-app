@@ -269,9 +269,13 @@ export default function Header({}) {
           }}
         >
           <label>{`Role:`}&nbsp;</label>
-          <label
-            style={{ color: "orange" }}
-          >{`${userType.toUpperCase().replace(/_/g, " ")}`}</label>
+          <label style={{ color: "orange" }}>{`${userType
+            .trim()
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .replace(/\b\w/g, (char) => char.toUpperCase())
+            .replace(/_/g, " ")}`}</label>
         </div>
       ) : null}
     </div>

@@ -28,22 +28,25 @@ import {
   SetLocationMasterList,
 } from "../action/userSlice";
 import { apiUrl } from "../api";
+import { useOtpCooldown } from "../otpCooldown";
 import "../css/page_layout.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value) =>
-  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+  EMAIL_REGEX.test(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
+  );
 
 function maskEmail(email) {
   if (!email) return "";
   const [username, domain] = email.split("@");
   const domainParts = domain.split(".");
 
-  const maskedUsername =
-    username.slice(0, 2) + "***";
+  const maskedUsername = username.slice(0, 2) + "***";
 
-  const maskedDomain =
-    domainParts[0].slice(0, 2) + "***";
+  const maskedDomain = domainParts[0].slice(0, 2) + "***";
 
   return `${maskedUsername}@${maskedDomain}.${domainParts.slice(1).join(".")}`;
 }
@@ -82,6 +85,9 @@ function SignIn() {
   });
   const [changeOtpSent, setChangeOtpSent] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const loginOtpCooldown = useOtpCooldown();
+  const registrationOtpCooldown = useOtpCooldown();
+  const changeOtpCooldown = useOtpCooldown();
 
   const handleGetAllLocations = async () => {
     try {
@@ -169,6 +175,7 @@ function SignIn() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
       setOtpSent(true);
+      loginOtpCooldown.startCooldown();
       setMessage({
         type: "success",
         text: "OTP sent to your registered email.",
@@ -332,12 +339,12 @@ function SignIn() {
         },
       );
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.message || "Unable to send OTP.");
+      if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
 
       setRegistrationOtpSent(true);
       setRegistrationOtpVerified(false);
       setRegistrationOtp("");
+      registrationOtpCooldown.startCooldown();
       setMessage({ type: "success", text: data.message });
     } catch (error) {
       setRegistrationOtpSent(false);
@@ -350,7 +357,6 @@ function SignIn() {
 
   const handleVerifyRegistrationOtp = async () => {
     try {
-
       if (!registrationOtpSent || !registrationOtp.trim()) {
         throw new Error("Send and enter the OTP before continuing.");
       }
@@ -445,8 +451,11 @@ function SignIn() {
       setRegistrationOtp("");
       setRegistrationOtpSent(false);
       setRegistrationOtpVerified(false);
+      registrationOtpCooldown.resetCooldown();
       handleRefreshLocations();
-      alert("Registration successful. Contact admin for assigning a Super Admin user for this location.");
+      alert(
+        "Registration successful. Contact admin for assigning a Super Admin user for this location.",
+      );
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -486,6 +495,7 @@ function SignIn() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
       setChangeOtpSent(true);
+      changeOtpCooldown.startCooldown();
       setMessage({ type: "success", text: data.message });
       handleRefreshLocations();
     } catch (error) {
@@ -497,7 +507,10 @@ function SignIn() {
 
   const handleChangeCredentials = async (event) => {
     event.preventDefault();
-    if (!changeDetails.currentEmail.trim() || !isValidEmail(changeDetails.currentEmail)) {
+    if (
+      !changeDetails.currentEmail.trim() ||
+      !isValidEmail(changeDetails.currentEmail)
+    ) {
       alert("Enter a valid email address.");
       setMessage({
         type: "error",
@@ -505,7 +518,10 @@ function SignIn() {
       });
       return;
     }
-    if (changeDetails.newAdminMailId && !isValidEmail(changeDetails.newAdminMailId)) {
+    if (
+      changeDetails.newAdminMailId &&
+      !isValidEmail(changeDetails.newAdminMailId)
+    ) {
       alert("Enter a valid email address.");
       setMessage({
         type: "error",
@@ -533,6 +549,7 @@ function SignIn() {
         newAdminMailId: "",
       });
       setChangeOtpSent(false);
+      changeOtpCooldown.resetCooldown();
       dispatch(SelectedTerminal(""));
       await handleRefreshLocations();
     } catch (error) {
@@ -624,21 +641,42 @@ function SignIn() {
                   required
                   type="email"
                   label="Admin email"
+                  error={
+                    Boolean(registration.adminMailId) &&
+                    !isValidEmail(registration.adminMailId)
+                  }
                   value={registration.adminMailId}
                   onChange={(event) => {
                     update("adminMailId")(event);
                     setRegistrationOtp("");
                     setRegistrationOtpSent(false);
                     setRegistrationOtpVerified(false);
+                    registrationOtpCooldown.resetCooldown();
+                  }}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      textTransform: "lowercase",
+                    },
                   }}
                 />
                 <Button
                   type="button"
                   variant="outlined"
                   onClick={handleSendRegistrationOtp}
-                  disabled={isLoading || !registration.adminMailId.trim()}
+                  disabled={
+                    isLoading ||
+                    !registration.adminMailId.trim() ||
+                    !registrationOtpCooldown.canResend
+                  }
                 >
-                  {isLoading ? "Sending..." : "Send OTP"}
+                  {isLoading
+                    ? "Sending..."
+                    : !registrationOtpCooldown.canResend
+                      ? `Resend in ${registrationOtpCooldown.timeLabel}`
+                      : registrationOtpSent
+                        ? "Resend OTP"
+                        : "Send OTP"}
                 </Button>
                 {registrationOtpSent ? (
                   <>
@@ -646,7 +684,9 @@ function SignIn() {
                       required
                       label="Registration OTP"
                       value={registrationOtp}
-                      onChange={(event) => setRegistrationOtp(event.target.value)}
+                      onChange={(event) =>
+                        setRegistrationOtp(event.target.value)
+                      }
                     />
                     <Button
                       type="button"
@@ -663,7 +703,9 @@ function SignIn() {
                   variant="contained"
                   disabled={isLoading || !registrationOtpVerified}
                 >
-                  {isLoading && registrationOtpVerified? "Registering..." : "Register Location"}
+                  {isLoading && registrationOtpVerified
+                    ? "Registering..."
+                    : "Register Location"}
                 </Button>
               </>
             ) : (
@@ -690,8 +732,12 @@ function SignIn() {
                 <TextField
                   required
                   type="email"
+                  error={
+                    Boolean(changeDetails.currentEmail) &&
+                    !isValidEmail(changeDetails.currentEmail)
+                  }
                   label="Type Registered Admin Email"
-                  disabled={changeDetails.locationName==''}
+                  disabled={changeDetails.locationName == ""}
                   placeholder={
                     changeDetails.locationName !== ""
                       ? maskEmail(
@@ -703,8 +749,18 @@ function SignIn() {
                       : ""
                   }
                   value={changeDetails.currentEmail}
-                  onChange={update("currentEmail")}
+                  onChange={(event) => {
+                    update("currentEmail")(event);
+                    setChangeOtpSent(false);
+                    changeOtpCooldown.resetCooldown();
+                  }}
                   InputLabelProps={{ shrink: true }}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      textTransform: "lowercase",
+                    },
+                  }}
                 />
                 <Button
                   type="button"
@@ -713,10 +769,17 @@ function SignIn() {
                   disabled={
                     isLoading ||
                     !changeDetails.locationName ||
-                    !changeDetails.currentEmail
+                    !changeDetails.currentEmail ||
+                    !changeOtpCooldown.canResend
                   }
                 >
-                  {isLoading ? "Sending..." : "Send OTP"}
+                  {isLoading
+                    ? "Sending..."
+                    : !changeOtpCooldown.canResend
+                      ? `Resend in ${changeOtpCooldown.timeLabel}`
+                      : changeOtpSent
+                        ? "Resend OTP"
+                        : "Send OTP"}
                 </Button>
                 {changeOtpSent ? (
                   <>
@@ -734,9 +797,18 @@ function SignIn() {
                     />
                     <TextField
                       type="email"
+                      error={
+                        Boolean(changeDetails.newAdminMailId) &&
+                        !isValidEmail(changeDetails.newAdminMailId)
+                      }
                       label="New admin email"
                       value={changeDetails.newAdminMailId}
                       onChange={update("newAdminMailId")}
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textTransform: "lowercase",
+                        },
+                      }}
                     />
                     <Button
                       type="submit"
@@ -853,6 +925,7 @@ function SignIn() {
                 setRole(event.target.value);
                 setOtpSent(false);
                 setOtpVerified(false);
+                loginOtpCooldown.resetCooldown();
                 setMessage({ type: "", text: "" });
               }}
             >
@@ -876,7 +949,14 @@ function SignIn() {
                 type="email"
                 label="Registered officer email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                error={Boolean(email) && !isValidEmail(email)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtp("");
+                  loginOtpCooldown.resetCooldown();
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -884,14 +964,28 @@ function SignIn() {
                     </InputAdornment>
                   ),
                 }}
+                sx={{
+                  "& .MuiInputBase-input": {
+                    textTransform: "lowercase",
+                  },
+                }}
               />
               <Button
                 type="button"
                 variant="outlined"
                 onClick={handleSendOtp}
-                disabled={isLoading || !email.trim() || !isValidEmail(email)}
+                disabled={
+                  isLoading ||
+                  !email.trim() ||
+                  !isValidEmail(email) ||
+                  !loginOtpCooldown.canResend
+                }
               >
-                Send OTP
+                {!loginOtpCooldown.canResend
+                  ? `Resend in ${loginOtpCooldown.timeLabel}`
+                  : otpSent
+                    ? "Resend"
+                    : "Send OTP"}
               </Button>
               {otpSent ? (
                 <>

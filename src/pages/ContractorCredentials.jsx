@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
+import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
 import {
   Button,
@@ -9,18 +10,31 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Download } from "@mui/icons-material";
-import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import { Download, Edit, Save, Cancel, Delete } from "@mui/icons-material";
+import {
+  NavBarComponent,
+  SetSelectedApplication,
+  SetContractorMasterList,
+} from "../action/userSlice";
+import { useOtpCooldown } from "../otpCooldown";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value) =>
-  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
-
-export default function MasterData() {
-  const dispatch = useDispatch();
-  const { navBarComponent, locationCode, selectedTerminal } = useSelector(
-    (state) => state.myApp,
+  EMAIL_REGEX.test(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
   );
+
+export default function ContractorCredentials({ handleSyncContractor }) {
+  const dispatch = useDispatch();
+  const {
+    navBarComponent,
+    locationCode,
+    selectedTerminal,
+    contractorList,
+    userType,
+  } = useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -28,8 +42,24 @@ export default function MasterData() {
   const [mailID, setMailID] = useState("");
   const [contractorName, setContractorName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [editingContractorId, setEditingContractorId] = useState(null);
+  const [editingContractor, setEditingContractor] = useState(null);
+  const [editOtp, setEditOtp] = useState("");
+  const [editOtpSent, setEditOtpSent] = useState(false);
+  const [editOtpVerified, setEditOtpVerified] = useState(false);
+  const [editOtpLoading, setEditOtpLoading] = useState(false);
+  const otpCooldown = useOtpCooldown();
+  const editOtpCooldown = useOtpCooldown();
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const fileInputRef = useRef(null);
+  const isSuperUser = userType === "SUPER_ADMIN";
+  const contractorsForLocation = contractorList.filter(
+    (record) => String(record.LOCATION_CODE) === String(locationCode),
+  );
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
@@ -54,6 +84,7 @@ export default function MasterData() {
 
       if (data.success) {
         alert(data.message);
+        handleSyncContractor();
       } else {
         alert("Upload failed: " + data.message);
       }
@@ -66,6 +97,66 @@ export default function MasterData() {
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset the file input
       }
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const email = mailID.trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/request-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, credentialType: "contractor" }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success)
+        throw new Error(data.message || "Unable to send OTP.");
+      setOtpSent(true);
+      setOtpVerified(false);
+      setOtp("");
+      otpCooldown.startCooldown();
+      alert("OTP sent to the email address.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const email = mailID.trim().toLowerCase();
+    if (!otpSent || !/^\d{6}$/.test(otp.trim())) {
+      alert("Please enter the six-digit OTP sent to the email address.");
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/verify-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp: otp.trim(),
+          credentialType: "contractor",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success)
+        throw new Error(data.message || "Unable to verify OTP.");
+      setOtpVerified(true);
+      alert("Email verified successfully.");
+    } catch (error) {
+      setOtpVerified(false);
+      alert(error.message);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -84,6 +175,11 @@ export default function MasterData() {
 
     if (!isValidEmail(mailID)) {
       alert("Please enter a valid email address.");
+      return;
+    }
+
+    if (!otpVerified) {
+      alert("Please verify the email address with OTP before submitting.");
       return;
     }
 
@@ -120,8 +216,13 @@ export default function MasterData() {
         alert("Record submitted successfully!");
         // Reset form
         setMailID("");
+        setOtp("");
+        setOtpSent(false);
+        setOtpVerified(false);
+        otpCooldown.resetCooldown();
         setContractorName("");
         setMobileNo("");
+        handleSyncContractor();
       } else {
         alert("Upload failed: " + data.error);
       }
@@ -130,6 +231,193 @@ export default function MasterData() {
     } finally {
       setSaveLoader(false);
       setSubmitting(false);
+    }
+  };
+  useEffect(() => {
+    handleSyncContractor();
+  }, [handleSyncContractor]);
+
+  const handleEditContractor = (record) => {
+    setEditingContractorId(record.ID);
+    setEditingContractor({
+      contractorName: record.CONTRACTOR_NAME || "",
+      mailID: record.MAIL_ID || "",
+      mobileNo: record.MOBILE_NO || "",
+    });
+    setEditOtp("");
+    setEditOtpSent(false);
+    setEditOtpVerified(false);
+    editOtpCooldown.resetCooldown();
+  };
+
+  const handleSendEditOtp = async () => {
+    const email = editingContractor?.mailID.trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setEditOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/request-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, credentialType: "contractor" }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to send OTP.");
+      }
+      setEditOtpSent(true);
+      setEditOtpVerified(false);
+      setEditOtp("");
+      editOtpCooldown.startCooldown();
+      alert("OTP sent to the contractor email address.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setEditOtpLoading(false);
+    }
+  };
+
+  const handleVerifyEditOtp = async () => {
+    const email = editingContractor?.mailID.trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (!editOtpSent || !/^\d{6}$/.test(editOtp.trim())) {
+      alert("Please enter the six-digit OTP sent to the email address.");
+      return;
+    }
+
+    setEditOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/verify-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          otp: editOtp.trim(),
+          credentialType: "contractor",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to verify OTP.");
+      }
+      setEditOtpVerified(true);
+      alert("Email verified successfully.");
+    } catch (error) {
+      setEditOtpVerified(false);
+      alert(error.message);
+    } finally {
+      setEditOtpLoading(false);
+    }
+  };
+
+  const handleSaveContractor = async (record) => {
+    if (!isSuperUser) return;
+    if (
+      !editingContractor?.contractorName ||
+      !isValidEmail(editingContractor.mailID) ||
+      !/^\d{10}$/.test(editingContractor.mobileNo)
+    ) {
+      alert(
+        "Enter a valid contractor name, email address, and 10-digit mobile number.",
+      );
+      return;
+    }
+    if (!editOtpVerified) {
+      alert(
+        "Please verify the contractor email address with OTP before saving.",
+      );
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/contractor-master-data/${record.ID}`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ locationCode, ...editingContractor }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to update contractor.");
+      dispatch(
+        SetContractorMasterList(
+          contractorList.map((item) =>
+            item.ID === record.ID
+              ? {
+                  ...item,
+                  CONTRACTOR_NAME: editingContractor.contractorName
+                    .trim()
+                    .replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()),
+                  MAIL_ID: editingContractor.mailID.trim().toLowerCase(),
+                  MOBILE_NO: editingContractor.mobileNo,
+                }
+              : item,
+          ),
+        ),
+      );
+      setEditingContractorId(null);
+      setEditingContractor(null);
+      setEditOtp("");
+      setEditOtpSent(false);
+      setEditOtpVerified(false);
+      alert("Contractor updated successfully.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
+  const handleDeleteContractor = async (record) => {
+    if (
+      !isSuperUser ||
+      !window.confirm("Are you sure you want to delete this contractor?")
+    ) {
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/contractor-master-data/${record.ID}`),
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ locationCode }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to delete contractor.");
+      dispatch(
+        SetContractorMasterList(
+          contractorList.filter(
+            (item) => String(item.ID) !== String(record.ID),
+          ),
+        ),
+      );
+      alert("Contractor deleted successfully.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
     }
   };
 
@@ -310,8 +598,11 @@ export default function MasterData() {
         className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
         style={{ border: "1px dashed #ccc" }}
       >
-        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <div
+          className="d-flex flex-wrap gap-20 justify-content-center align-items-center w-100 p-2"
+          style={{ gap: 20 }}
+        >
+          <div style={{ width: "100%", maxWidth: 350 }}>
             <Typography>Location Name</Typography>
             <TextField
               fullWidth
@@ -330,7 +621,6 @@ export default function MasterData() {
                   fontSize: "1rem",
                   fontFamily: "Lucida Sans",
                   backgroundColor: "white",
-                  textTransform: "uppercase",
                 },
                 "& .MuiInputBase-input::placeholder": {
                   fontFamily: "Lucida Sans",
@@ -342,7 +632,7 @@ export default function MasterData() {
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350 }}>
             <Typography>Contractor Name</Typography>
             <TextField
               fullWidth
@@ -350,7 +640,12 @@ export default function MasterData() {
               value={contractorName}
               style={{ backgroundColor: "white" }}
               onChange={(e) =>
-                setContractorName(e.target.value?.toUpperCase() || "")
+                setContractorName(
+                  e.target.value
+                    ?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                )
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text
@@ -359,21 +654,22 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mobile No</Typography>
+          <div style={{ width: "100%", maxWidth: 350 }}>
+            <Typography>Mobile No (10-digit)</Typography>
             <TextField
               fullWidth
               variant="outlined"
               value={mobileNo}
-              type="number"
+              type="text"
+              inputProps={{ inputMode: "numeric", maxLength: 10 }}
+              error={mobileNo && mobileNo.length !== 10}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMobileNo(e.target.value?.toUpperCase() || "")}
+              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -381,21 +677,27 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
           </div>
 
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+          <div style={{ width: "100%", maxWidth: 350 }}>
             <Typography>Mail ID</Typography>
             <TextField
               fullWidth
               variant="outlined"
               type="email"
               value={mailID}
+              error={Boolean(mailID) && !isValidEmail(mailID)}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMailID(e.target.value || "")}
+              onChange={(e) => {
+                setMailID(e.target.value?.toLowerCase() || "");
+                setOtpSent(false);
+                setOtpVerified(false);
+                setOtp("");
+                otpCooldown.resetCooldown();
+              }}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -403,10 +705,61 @@ export default function MasterData() {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
+                  textTransform: "lowercase",
                 },
               }}
             />
+          </div>
+
+          <div
+            className="break d-flex justify-content-center"
+            style={{ width: "100%" }}
+          >
+            <div
+              className="d-flex flex-wrap justify-content-center align-items-center gap-2"
+              style={{ width: "100%", maxWidth: 350 }}
+            >
+              <TextField
+                fullWidth
+                variant="outlined"
+                value={otp}
+                size="small"
+                type="text"
+                label="Email OTP"
+                inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                disabled={!otpSent || otpVerified}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                style={{ backgroundColor: "white", maxWidth: 350 }}
+                sx={{
+                  // 1. Increase font size of the placeholder/input text
+                  "& .MuiInputBase-input": {
+                    fontSize: "1rem",
+                    fontFamily: "Lucida Sans",
+                  },
+                }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleSendOtp}
+                disabled={otpLoading || otpVerified || !otpCooldown.canResend}
+                style={{ width: 150 }}
+              >
+                {!otpCooldown.canResend
+                  ? `Resend in ${otpCooldown.timeLabel}`
+                  : otpSent
+                    ? "Resend"
+                    : "Send OTP"}
+              </Button>
+              <Button
+                variant="outlined"
+                color="success"
+                onClick={handleVerifyOtp}
+                disabled={otpLoading || !otpSent || otpVerified}
+                style={{ width: 150 }}
+              >
+                {otpVerified ? "Email Verified" : "Verify OTP"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -423,6 +776,197 @@ export default function MasterData() {
           {submitting ? "Submitting..." : "SUBMIT"}
         </Button>
       </div>
+
+      <Typography variant="h6" sx={{ mt: 2 }}>
+        Existing Contractors for Location
+      </Typography>
+      <Table bordered hover striped className="ttes_table">
+        <thead className="table-head">
+          <tr>
+            <th style={{ minWidth: "100px" }}>LOCATION CODE</th>
+            <th>CONTRACTOR NAME</th>
+            <th>MAIL ID</th>
+            <th>MOBILE NO (10-digit)</th>
+            {isSuperUser ? <th>ACTION</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {contractorsForLocation.map((record) => {
+            const isEditing = editingContractorId === record.ID;
+            return (
+              <tr key={record.ID}>
+                <td>{record.LOCATION_CODE}</td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      value={editingContractor.contractorName}
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      onChange={(e) =>
+                        setEditingContractor({
+                          ...editingContractor,
+                          contractorName: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    record.CONTRACTOR_NAME
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
+                      <TextField
+                        size="small"
+                        type="email"
+                        value={editingContractor.mailID}
+                        error={
+                          Boolean(editingContractor.mailID) &&
+                          !isValidEmail(editingContractor.mailID)
+                        }
+                        sx={{
+                          "& .MuiInputBase-input": {
+                            textAlign: "center",
+                            backgroundColor: "#f5f5f5",
+                            textTransform: "lowercase",
+                          },
+                        }}
+                        onChange={(e) => {
+                          setEditingContractor({
+                            ...editingContractor,
+                            mailID: e.target.value,
+                          });
+                          setEditOtpSent(false);
+                          setEditOtpVerified(false);
+                          setEditOtp("");
+                          editOtpCooldown.resetCooldown();
+                        }}
+                      />
+                      <div className="d-flex gap-1">
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleSendEditOtp}
+                          disabled={editOtpLoading || editOtpVerified || !editOtpCooldown.canResend}
+                        >
+                          {!editOtpCooldown.canResend
+                            ? `Resend ${editOtpCooldown.timeLabel}`
+                            : editOtpSent
+                              ? "Resend OTP"
+                              : "Send OTP"}
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="success"
+                          onClick={handleVerifyEditOtp}
+                          disabled={
+                            editOtpLoading || !editOtpSent || editOtpVerified
+                          }
+                        >
+                          {editOtpVerified ? "Verified" : "Verify OTP"}
+                        </Button>
+                      </div>
+                      {editOtpSent && !editOtpVerified ? (
+                        <TextField
+                          size="small"
+                          label="Email OTP"
+                          value={editOtp}
+                          inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                          onChange={(e) =>
+                            setEditOtp(e.target.value.replace(/\D/g, ""))
+                          }
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                        />
+                      ) : null}
+                    </div>
+                  ) : (
+                    record.MAIL_ID
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      value={editingContractor.mobileNo}
+                      error={
+                        editingContractor.mobileNo &&
+                        editingContractor.mobileNo.length !== 10
+                      }
+                      inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      onChange={(e) =>
+                        setEditingContractor({
+                          ...editingContractor,
+                          mobileNo: e.target.value.replace(/\D/g, ""),
+                        })
+                      }
+                    />
+                  ) : (
+                    record.MOBILE_NO
+                  )}
+                </td>
+                {isSuperUser ? (
+                  <td>
+                    {isEditing ? (
+                      <>
+                        <Button
+                          startIcon={<Save />}
+                          onClick={() => handleSaveContractor(record)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          startIcon={<Cancel />}
+                          onClick={() => {
+                            setEditingContractorId(null);
+                            setEditingContractor(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          startIcon={<Edit />}
+                          onClick={() => handleEditContractor(record)}
+                          disabled={saveLoader}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          color="error"
+                          startIcon={<Delete />}
+                          onClick={() => handleDeleteContractor(record)}
+                          disabled={saveLoader}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
     </div>
   );
 }

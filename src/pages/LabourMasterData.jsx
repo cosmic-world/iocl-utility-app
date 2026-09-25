@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { apiUrl } from "../api";
 import { useDispatch, useSelector } from "react-redux";
+import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
 import {
   Button,
@@ -10,34 +11,40 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Download } from "@mui/icons-material";
+import { Download, Edit, Save, Cancel, Delete } from "@mui/icons-material";
 import {
-  SetContractorMasterList,
+  SetLabourMasterList,
   NavBarComponent,
   SetSelectedApplication,
 } from "../action/userSlice";
 
-export default function LabourMasterData({ handleSyncContractor }) {
+export default function LabourMasterData({ handleSync }) {
   const dispatch = useDispatch();
-  const { contractorList, navBarComponent, locationCode, selectedTerminal } =
-    useSelector((state) => state.myApp);
+  const {
+    contractorList,
+    navBarComponent,
+    locationCode,
+    selectedTerminal,
+    userType,
+    labour_masterList,
+  } = useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState(null);
   const [contractor, setContractor] = useState("");
   const [labourName, setLabourName] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const [aadhaarNo, setAadhaarNo] = useState("");
   const [address, setAddress] = useState("");
-
+  const [editingLabourId, setEditingLabourId] = useState(null);
+  const [editingLabour, setEditingLabour] = useState(null);
+  const contractorsForLocation = contractorList.filter(
+    (record) => String(record.LOCATION_CODE) === String(locationCode),
+  );
   const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    handleSyncContractor();
-  }, []);
+  const isSuperUser = userType === "SUPER_ADMIN";
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
@@ -62,6 +69,7 @@ export default function LabourMasterData({ handleSyncContractor }) {
 
       if (data.success) {
         alert(data.message);
+        handleSync();
       } else {
         alert("Upload failed: " + data.message);
       }
@@ -138,16 +146,124 @@ export default function LabourMasterData({ handleSyncContractor }) {
         setMobileNo("");
         setAadhaarNo("");
         setAddress("");
+        handleSync();
       } else {
         const error = await response.text();
-        console.error("Error submitting form:", error);
-        // alert("Error submitting form: " + error);
+        alert("Error submitting form: " + error);
       }
     } catch (error) {
       alert("Error: " + error.message);
     } finally {
       setSaveLoader(false);
       setSubmitting(false);
+    }
+  };
+
+  const handleEditLabour = (record) => {
+    setEditingLabourId(record.ID);
+    setEditingLabour({
+      contractor: record.CONTRACTOR || "",
+      labourName: record.LABOUR_NAME || "",
+      mobileNo: record.MOBILE_NO || "",
+      aadhaarNo: record.AADHAAR_NO || "",
+      address: record.ADDRESS || "",
+    });
+  };
+
+  const handleSaveLabour = async (record) => {
+    if (!isSuperUser) return;
+    if (
+      !editingLabour?.contractor ||
+      !editingLabour.labourName ||
+      !/^\d{10}$/.test(editingLabour.mobileNo) ||
+      !editingLabour.aadhaarNo ||
+      !editingLabour.address
+    ) {
+      alert("Enter valid worker details.");
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/labour-master-data/${record.ID}`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ locationCode, ...editingLabour }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to update worker.");
+      const updatedRecord = {
+        ...record,
+        CONTRACTOR: editingLabour.contractor,
+        LABOUR_NAME: editingLabour.labourName
+          .trim()
+          .replace(/\s+/g, " ")
+          .toLowerCase()
+          .replace(/\b\w/g, (char) => char.toUpperCase()),
+        MOBILE_NO: editingLabour.mobileNo,
+        AADHAAR_NO: editingLabour.aadhaarNo.toUpperCase(),
+        ADDRESS: editingLabour.address,
+      };
+      dispatch(
+        SetLabourMasterList(
+          labour_masterList.map((item) =>
+            item.ID === record.ID ? updatedRecord : item,
+          ),
+        ),
+      );
+      setEditingLabourId(null);
+      setEditingLabour(null);
+      alert("Worker updated successfully.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
+  const handleDeleteLabour = async (record) => {
+    if (
+      !isSuperUser ||
+      !window.confirm("Are you sure you want to delete this worker?")
+    ) {
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/labour-master-data/${record.ID}`),
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ locationCode }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to delete worker.");
+      dispatch(
+        SetLabourMasterList(
+          labour_masterList.filter(
+            (item) => String(item.ID) !== String(record.ID),
+          ),
+        ),
+      );
+      alert("Worker deleted successfully.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaveLoader(false);
     }
   };
 
@@ -324,19 +440,6 @@ export default function LabourMasterData({ handleSyncContractor }) {
         </form>
       </Box>
 
-      <Button
-        variant="outlined"
-        color="secondary"
-        sx={{ m: 2 }}
-        style={{ width: 250, backgroundColor: "white" }}
-        disabled={syncing}
-        onClick={(e) => {
-          handleSync(e);
-        }}
-      >
-        {syncing ? "Syncing Master..." : "SYNC CONTRACTOR LIST"}
-      </Button>
-
       <div
         className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
         style={{ border: "1px dashed #ccc" }}
@@ -357,7 +460,6 @@ export default function LabourMasterData({ handleSyncContractor }) {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -376,17 +478,7 @@ export default function LabourMasterData({ handleSyncContractor }) {
               clearOnBlur
               handleHomeEndKeys
               freeSolo
-              options={
-                contractorList.length > 0
-                  ? [
-                      ...new Set(
-                        contractorList
-                          .filter((ele) => ele.LOCATION_CODE == locationCode)
-                          .map((item) => item["CONTRACTOR_NAME"]),
-                      ),
-                    ]
-                  : []
-              }
+              options={contractorsForLocation}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -432,7 +524,15 @@ export default function LabourMasterData({ handleSyncContractor }) {
               value={labourName}
               style={{ backgroundColor: "white" }}
               onChange={(e) =>
-                setLabourName(e.target.value?.toUpperCase() || "")
+                setLabourName(
+                  e.target.value?.toLowerCase().replace(/\b\w/g, (char) =>
+                    char
+                      .trim()
+                      .replace(/\s+/g, " ")
+                      .toLowerCase()
+                      .replace(/\b\w/g, (char) => char.toUpperCase()),
+                  ) || "",
+                )
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text
@@ -441,21 +541,22 @@ export default function LabourMasterData({ handleSyncContractor }) {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
           </div>
 
           <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Mobile No</Typography>
+            <Typography>Mobile No (10-digit)</Typography>
             <TextField
               fullWidth
               variant="outlined"
               value={mobileNo}
-              type="number"
+              type="text"
+              inputProps={{ inputMode: "numeric", maxLength: 10 }}
               style={{ backgroundColor: "white" }}
-              onChange={(e) => setMobileNo(e.target.value?.toUpperCase() || "")}
+              error={mobileNo && mobileNo.length !== 10}
+              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -463,22 +564,22 @@ export default function LabourMasterData({ handleSyncContractor }) {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
           </div>
 
           <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Aadhaar No / ID Proof No</Typography>
+            <Typography>Aadhaar No (12-digit)</Typography>
             <TextField
               fullWidth
               variant="outlined"
               value={aadhaarNo}
+              type="text"
+              inputProps={{ inputMode: "numeric", maxLength: 12 }}
+              error={aadhaarNo && aadhaarNo.length !== 12}
               style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setAadhaarNo(e.target.value?.toUpperCase() || "")
-              }
+              onChange={(e) => setAadhaarNo(e.target.value.replace(/\D/g, ""))}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -486,7 +587,6 @@ export default function LabourMasterData({ handleSyncContractor }) {
                   fontFamily: "Lucida Sans",
                   paddingTop: "10px !important", // Reducer top whitespace
                   paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
                 },
               }}
             />
@@ -525,6 +625,197 @@ export default function LabourMasterData({ handleSyncContractor }) {
           {submitting ? "Submitting..." : "SUBMIT"}
         </Button>
       </div>
+
+      <Typography variant="h6" sx={{ mt: 2 }}>
+        Workers for Selected Contractor
+      </Typography>
+      <Table bordered hover striped className="ttes_table">
+        <thead className="table-head">
+          <tr>
+            <th style={{ minWidth: "100px" }}>LOCATION CODE</th>
+            <th>CONTRACTOR</th>
+            <th>WORKER NAME</th>
+            <th>MOBILE NO</th>
+            <th>AADHAAR / ID PROOF</th>
+            <th>ADDRESS</th>
+            {isSuperUser ? <th>ACTION</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {labour_masterList.map((record) => {
+            const isEditing = editingLabourId === record.ID;
+            return (
+              <tr key={record.ID}>
+                <td>{record.LOCATION_CODE}</td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      select
+                      size="small"
+                      value={editingLabour.contractor}
+                      SelectProps={{ native: true }}
+                      sx={{
+                        minWidth: 180,
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      onChange={(e) =>
+                        setEditingLabour({
+                          ...editingLabour,
+                          contractor: e.target.value,
+                        })
+                      }
+                    >
+                      {contractorsForLocation.map((contractorRecord) => (
+                        <option
+                          key={contractorRecord.ID}
+                          value={contractorRecord.CONTRACTOR_NAME}
+                        >
+                          {contractorRecord.CONTRACTOR_NAME}
+                        </option>
+                      ))}
+                    </TextField>
+                  ) : (
+                    record.CONTRACTOR
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      value={editingLabour.labourName}
+                      onChange={(e) =>
+                        setEditingLabour({
+                          ...editingLabour,
+                          labourName: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    record.LABOUR_NAME
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      value={editingLabour.mobileNo}
+                      inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                      onChange={(e) =>
+                        setEditingLabour({
+                          ...editingLabour,
+                          mobileNo: e.target.value.replace(/\D/g, ""),
+                        })
+                      }
+                    />
+                  ) : (
+                    record.MOBILE_NO
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      value={editingLabour.aadhaarNo}
+                      onChange={(e) =>
+                        setEditingLabour({
+                          ...editingLabour,
+                          aadhaarNo: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    record.AADHAAR_NO
+                  )}
+                </td>
+                <td>
+                  {isEditing ? (
+                    <TextField
+                      size="small"
+                      sx={{
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                      value={editingLabour.address}
+                      onChange={(e) =>
+                        setEditingLabour({
+                          ...editingLabour,
+                          address: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    record.ADDRESS
+                  )}
+                </td>
+                {isSuperUser ? (
+                  <td>
+                    {isEditing ? (
+                      <>
+                        <Button
+                          startIcon={<Save />}
+                          onClick={() => handleSaveLabour(record)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          startIcon={<Cancel />}
+                          onClick={() => {
+                            setEditingLabourId(null);
+                            setEditingLabour(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          startIcon={<Edit />}
+                          onClick={() => handleEditLabour(record)}
+                          disabled={saveLoader}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          color="error"
+                          startIcon={<Delete />}
+                          onClick={() => handleDeleteLabour(record)}
+                          disabled={saveLoader}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
     </div>
   );
 }

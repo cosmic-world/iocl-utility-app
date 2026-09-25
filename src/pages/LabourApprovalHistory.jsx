@@ -16,7 +16,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-export default function LabourApprovalHistory({ handleSyncContractor }) {
+export default function LabourApprovalHistory() {
   const { userType, locationCode, contractorList, navBarComponent } =
     useSelector((state) => state.myApp);
   const dispatch = useDispatch();
@@ -29,9 +29,6 @@ export default function LabourApprovalHistory({ handleSyncContractor }) {
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
   const [creation_date, setCreation_date] = useState("");
-  useEffect(() => {
-    handleSyncContractor();
-  }, []);
   const handleFetch = async () => {
     try {
       const params = new URLSearchParams();
