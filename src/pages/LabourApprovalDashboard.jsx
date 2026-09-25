@@ -50,7 +50,7 @@ export default function LabourApprovalDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length == 0 ? alert("No records found") : null;
+      zlist.length == 0 && searchContractor!="" ? alert("No records found") : null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.error("Failed to fetch records", error);
@@ -105,6 +105,9 @@ export default function LabourApprovalDashboard() {
     }
   };
 
+  useEffect(() => {
+    handleSubmit()
+  }, []);
   return (
     <div
       className={
@@ -136,6 +139,7 @@ export default function LabourApprovalDashboard() {
             dispatch(SetSelectedApplication("Worker Entry Request"));
             dispatch(NavBarComponent("labourPassDashboard"));
           }}
+          disabled={userType == "User"}
         >
           Worker Entry Request
         </Button>
@@ -192,6 +196,7 @@ export default function LabourApprovalDashboard() {
             dispatch(SetSelectedApplication("Worker Master Data"));
             dispatch(NavBarComponent("contractor_masterData"));
           }}
+          disabled={userType == "User"}
         >
           Worker Master Data
         </Button>
@@ -215,6 +220,7 @@ export default function LabourApprovalDashboard() {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
+          disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>
@@ -250,9 +256,7 @@ export default function LabourApprovalDashboard() {
                 contractorList.length > 0
                   ? [
                       ...new Set(
-                        contractorList
-                          .filter((ele) => ele.LOCATION_CODE == locationCode)
-                          .map((item) => item["CONTRACTOR_NAME"]),
+                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
                       ),
                     ]
                   : []
@@ -395,7 +399,7 @@ export default function LabourApprovalDashboard() {
                             }
                             disabled={
                               !record ||
-                              userType === "user" ||
+                              userType === "User" || userType === "Contractor" ||
                               !isApproved ||
                               (hasGatePass && !isEditingGatePass)
                             }
@@ -478,7 +482,7 @@ export default function LabourApprovalDashboard() {
                             color="success"
                             disabled={
                               !record ||
-                              userType === "user" ||
+                              userType === "User" || userType === "Contractor" ||
                               !isApproved ||
                               (hasGatePass && !isEditingGatePass)
                             }

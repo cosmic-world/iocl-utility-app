@@ -49,7 +49,7 @@ const isBusinessEmail = (value) => {
   return Boolean(domain) && !FREE_EMAIL_DOMAINS.has(domain);
 };
 
-export default function MasterData() {
+export default function OfficerCredentials({handleSyncOfficer}) {
   const dispatch = useDispatch();
   const {
     officerList,
@@ -79,11 +79,10 @@ export default function MasterData() {
   const [verificationOtpLoading, setVerificationOtpLoading] = useState(false);
   const otpCooldown = useOtpCooldown();
   const verificationOtpCooldown = useOtpCooldown();
-  const [searchLocationCode, setSearchLocationCode] = useState(
-    selectedLocationCode || "",
-  );
+
   const locationName = selectedTerminal[selectedTerminal.length - 1];
-  const [officersForLocation, setOfficersForLocation] = useState([]);
+  const officersForLocation = officerList;
+
   const fileInputRef = useRef(null);
 
   const handleExcelChange = (e) => {
@@ -109,7 +108,6 @@ export default function MasterData() {
 
       if (data.success) {
         alert(data.message);
-        handleSync(); // Refresh officer list after upload
       } else {
         alert("Upload failed: " + data.message);
       }
@@ -270,7 +268,7 @@ export default function MasterData() {
       const data = await response.json();
       if (data.success) {
         alert("Record submitted successfully!");
-        await loadOfficerList();
+        await handleSyncOfficer();
         // Reset form
         setMailID("");
         setOtp("");
@@ -290,37 +288,6 @@ export default function MasterData() {
     } finally {
       setSaveLoader(false);
       setSubmitting(false);
-    }
-  };
-
-  const loadOfficerList = async () => {
-    const response = await fetch(apiUrl("/api/officer-master-data"));
-    if (!response.ok) {
-      throw new Error("Failed to load officer records");
-    }
-    const data = await response.json();
-    const officerRecords = Array.isArray(data) ? data : [];
-    dispatch(SetOfficerMasterList(officerRecords));
-    return officerRecords;
-  };
-
-  useEffect(() => {
-    loadOfficerList().catch((error) => {
-      console.error("Failed to fetch officer records", error);
-    });
-  }, [dispatch]);
-
-  const handleSync = async () => {
-    setSaveLoader(true);
-    try {
-      const officerRecords = await loadOfficerList();
-      // officerRecords.length > 0
-      //   ? alert("Syncing completed successfully.")
-      //   : alert("No records found in the database.");
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    } finally {
-      setSaveLoader(false);
     }
   };
 
@@ -356,7 +323,6 @@ export default function MasterData() {
         ),
       );
       alert("Officer record deleted successfully.");
-      handleSync(); // Refresh officer list after deletion
     } catch (error) {
       alert("Error: " + error.message);
     } finally {
@@ -394,12 +360,23 @@ export default function MasterData() {
         throw new Error(data.error || "Failed to change officer role.");
       }
 
-      await handleSync();
       setSelectedRoles((currentRoles) => {
         const nextRoles = { ...currentRoles };
         delete nextRoles[officer.ID];
         return nextRoles;
       });
+      dispatch(
+              SetOfficerMasterList(
+                officerList.map((item) =>
+                  item.ID === officer.ID
+                    ? {
+                        ...item,
+                        ROLE: selectedRole,
+                      }
+                    : item,
+                ),
+              ),
+            );
       alert("Officer role changed successfully.");
     } catch (error) {
       alert("Error: " + error.message);
@@ -497,14 +474,6 @@ export default function MasterData() {
   };
 
   const isSuperAdmin = userType === "SUPER_ADMIN";
-
-  useEffect(() => {
-    setOfficersForLocation(
-      officerList.filter(
-        (officer) => officer["LOCATION_CODE"] == searchLocationCode,
-      ),
-    );
-  }, [officerList]);
 
   return (
     <div
@@ -805,48 +774,8 @@ export default function MasterData() {
       </div>
 
       <Typography variant="h6" sx={{ mt: 2 }}>
-        Existing Users
+        Existing Users at {locationName}
       </Typography>
-      <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-        <TextField
-          label="Location Code"
-          value={searchLocationCode}
-          onChange={(e) => setSearchLocationCode(e.target.value.toUpperCase())}
-          placeholder="Enter Location Code"
-          style={{ backgroundColor: "white", margin: 5, width: 350 }}
-        />
-        <Button
-          color="primary"
-          variant="contained"
-          sx={{ m: 1, width: 180 }}
-          onClick={() => (
-            <>
-              {setOfficersForLocation(
-                officerList.filter(
-                  (officer) => officer["LOCATION_CODE"] == searchLocationCode,
-                ),
-              )}
-              {officerList.filter(
-                (officer) => officer["LOCATION_CODE"] == searchLocationCode,
-              ).length === 0
-                ? alert("No officers found for the entered Location Code.")
-                : ""}
-            </>
-          )}
-        >
-          Search Officers
-        </Button>
-        <Button
-          color="secondary"
-          variant="outlined"
-          sx={{ m: 1, width: 180, backgroundColor: "white" }}
-          onClick={() => {
-            setSearchLocationCode("");
-          }}
-        >
-          Clear Search
-        </Button>
-      </div>
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>

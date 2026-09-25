@@ -43,9 +43,7 @@ export default function formControlPage({ show, setShow }) {
   const [permitNo, setPermitNo] = useState("");
   const [division, setDivision] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
-  const officerListForLocation = officerList.filter(
-    (officer) => officer["LOCATION_CODE"] == locationCode,
-  );
+  const officerListForLocation = officerList;
 
   const handleResetForm = () => {
     setSaveLoader(false);

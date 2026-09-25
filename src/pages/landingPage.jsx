@@ -22,6 +22,7 @@ export default function LandingPage({
   handleReadMail,
   handleSyncContractor,
   handleSync,
+  handleSyncOfficer,
 }) {
   const navBarComponent = useSelector((state) => state.myApp.navBarComponent);
   return (
@@ -49,7 +50,9 @@ export default function LandingPage({
       {navBarComponent === "contractor_cred" ? (
         <ContractorCredentials handleSyncContractor={handleSyncContractor} />
       ) : null}
-      {navBarComponent === "officer_cred" ? <OfficerCredentials /> : null}
+      {navBarComponent === "officer_cred" ? (
+        <OfficerCredentials handleSyncOfficer={handleSyncOfficer} />
+      ) : null}
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}
       {navBarComponent === "permitDisplay" ? (

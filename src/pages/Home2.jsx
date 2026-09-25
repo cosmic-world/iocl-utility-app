@@ -19,7 +19,7 @@ import { apiUrl } from "../api";
 
 export default function contacts() {
   const dispatch = useDispatch();
-  const { selectedApplication, officerList, locationCode } = useSelector(
+  const { selectedApplication } = useSelector(
     (state) => state.myApp,
   );
   const [selectedCard, setSelectedCard] = useState("");
@@ -32,34 +32,13 @@ export default function contacts() {
       dispatch(SetSelectedApplication("Permit Display Table View"));
       dispatch(NavBarComponent("permitDisplay"));
     } else if (selectedCard === "Labour Entry") {
-      dispatch(SetSelectedApplication("Labour Entry"));
-      dispatch(NavBarComponent("labourPassDashboard"));
+      dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
+      dispatch(NavBarComponent("labourPassApproval"));
     } else if (selectedCard === "TT IN-OUT") {
       dispatch(SetSelectedApplication("TT In-Out"));
       dispatch(NavBarComponent("ttInOutDashboard"));
     }
   };
-
-  useEffect(() => {
-    const loadOfficerList = async () => {
-      if (officerList && officerList.length > 0) return;
-
-      try {
-        if (!locationCode) return;
-        const response = await fetch(
-          apiUrl(
-            `/api/officer-master-data?locationCode=${encodeURIComponent(locationCode)}&roles=ADMIN,SUPER_ADMIN`,
-          ),
-        );
-        const data = await response.json();
-        dispatch(SetOfficerMasterList(data || []));
-      } catch (error) {
-        console.error("Failed to load officer list:", error);
-      }
-    };
-
-    loadOfficerList();
-  }, [dispatch, officerList, locationCode]);
 
   return (
     <Box className="d-flex flex-column w-100 h-100 align-items-center justify-content-start justify-content-xxl-center">

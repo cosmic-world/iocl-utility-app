@@ -124,6 +124,7 @@ export default function LabourApprovalHistory() {
             dispatch(SetSelectedApplication("Worker Entry Request"));
             dispatch(NavBarComponent("labourPassDashboard"));
           }}
+          disabled={userType == "User"}
         >
           Worker Entry Request
         </Button>
@@ -180,6 +181,7 @@ export default function LabourApprovalHistory() {
             dispatch(SetSelectedApplication("Worker Master Data"));
             dispatch(NavBarComponent("contractor_masterData"));
           }}
+          disabled={userType == "User"}
         >
           Worker Master Data
         </Button>
@@ -203,6 +205,7 @@ export default function LabourApprovalHistory() {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
+          disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>
@@ -226,9 +229,7 @@ export default function LabourApprovalHistory() {
                 contractorList.length > 0
                   ? [
                       ...new Set(
-                        contractorList
-                          .filter((ele) => ele.LOCATION_CODE == locationCode)
-                          .map((item) => item["CONTRACTOR_NAME"]),
+                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
                       ),
                     ]
                   : []

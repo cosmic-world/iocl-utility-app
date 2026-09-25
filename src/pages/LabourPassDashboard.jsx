@@ -32,6 +32,7 @@ export default function LabourPassDashboard() {
     contractorList,
     locationCode,
     selectedTerminal,
+    userType
   } = useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);
@@ -56,7 +57,6 @@ export default function LabourPassDashboard() {
   const [submitting_1, setSubmitting_1] = useState(false);
 
   useEffect(() => {
-    handleSyncOfficerList();
     fetchLabourEntryRecords();
   }, []);
 
@@ -82,28 +82,6 @@ export default function LabourPassDashboard() {
 
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
-
-  const handleSyncOfficerList = async () => {
-    setSaveLoader(true);
-    try {
-      const response = await fetch(apiUrl("/api/officer-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to sync officer master records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-
-      setSaveLoader(false);
-      dispatch(SetOfficerMasterList(zlist));
-      // zlist.length > 0
-      //   ? alert("Syncing completed successfully.")
-      //   : alert("No records found in the database.");
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    } finally {
-      setSaveLoader(false);
-    }
-  };
 
   const officerName =
     approvingOfficer !== ""
@@ -420,6 +398,7 @@ export default function LabourPassDashboard() {
             dispatch(SetSelectedApplication("Worker Entry Request"));
             dispatch(NavBarComponent("labourPassDashboard"));
           }}
+          disabled={userType == "User"}
         >
           Worker Entry Request
         </Button>
@@ -476,6 +455,7 @@ export default function LabourPassDashboard() {
             dispatch(SetSelectedApplication("Worker Master Data"));
             dispatch(NavBarComponent("contractor_masterData"));
           }}
+          disabled={userType == "User"}
         >
           Worker Master Data
         </Button>
@@ -499,6 +479,7 @@ export default function LabourPassDashboard() {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
+          disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>
@@ -575,9 +556,7 @@ export default function LabourPassDashboard() {
                 contractorList.length > 0
                   ? [
                       ...new Set(
-                        contractorList
-                          .filter((ele) => ele.LOCATION_CODE == locationCode)
-                          .map((item) => item["CONTRACTOR_NAME"]),
+                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
                       ),
                     ]
                   : []
@@ -644,11 +623,7 @@ export default function LabourPassDashboard() {
                   ? [
                       ...new Set(
                         labour_masterList
-                          .filter(
-                            (ele) =>
-                              ele.LOCATION_CODE == locationCode &&
-                              ele.CONTRACTOR == contractor,
-                          )
+                          .filter((ele) => ele.CONTRACTOR == contractor)
                           .map((item) => item["LABOUR_NAME"]),
                       ),
                     ]
@@ -719,9 +694,7 @@ export default function LabourPassDashboard() {
                         labour_masterList
                           .filter(
                             (ele) =>
-                              ele.LOCATION_CODE == locationCode &&
-                              ele.LABOUR_NAME == labourName &&
-                              ele.MOBILE_NO,
+                              ele.LABOUR_NAME == labourName && ele.MOBILE_NO,
                           )
                           .map((item) => item["MOBILE_NO"]),
                       ),
@@ -796,9 +769,7 @@ export default function LabourPassDashboard() {
                         labour_masterList
                           .filter(
                             (ele) =>
-                              ele.LOCATION_CODE == locationCode &&
-                              ele.LABOUR_NAME == labourName &&
-                              ele.AADHAAR_NO,
+                              ele.LABOUR_NAME == labourName && ele.AADHAAR_NO,
                           )
                           .map((item) => item["AADHAAR_NO"]),
                       ),
@@ -866,9 +837,7 @@ export default function LabourPassDashboard() {
                         labour_masterList
                           .filter(
                             (ele) =>
-                              ele.LOCATION_CODE == locationCode &&
-                              ele.LABOUR_NAME == labourName &&
-                              ele.ADDRESS,
+                              ele.LABOUR_NAME == labourName && ele.ADDRESS,
                           )
                           .map((item) => item["ADDRESS"]),
                       ),
@@ -1105,9 +1074,7 @@ export default function LabourPassDashboard() {
               contractorList.length > 0
                 ? [
                     ...new Set(
-                      contractorList
-                        .filter((ele) => ele.LOCATION_CODE == locationCode)
-                        .map((item) => item["CONTRACTOR_NAME"]),
+                      contractorList.map((item) => item["CONTRACTOR_NAME"]),
                     ),
                   ]
                 : []

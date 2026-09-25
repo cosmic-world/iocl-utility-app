@@ -523,7 +523,7 @@ export default function tempPassDashboard() {
             dispatch(SetSelectedApplication("TT Crew Master Data"));
             dispatch(NavBarComponent("masterData"));
           }}
-          disabled={userType == "user"}
+          disabled={userType == "User" || userType == "Contractor"}
         >
           TT Crew Master Data (Admin Only)
         </Button>
@@ -1627,7 +1627,8 @@ export default function tempPassDashboard() {
                             }
                             color="success"
                             disabled={
-                              userType == "user" ||
+                              userType == "User" ||
+                              userType == "Contractor" ||
                               approvingId === record.Id ||
                               parseApprovalHistory(
                                 record.approval_history,

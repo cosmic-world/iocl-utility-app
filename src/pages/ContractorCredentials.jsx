@@ -57,9 +57,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const fileInputRef = useRef(null);
   const isSuperUser = userType === "SUPER_ADMIN";
-  const contractorsForLocation = contractorList.filter(
-    (record) => String(record.LOCATION_CODE) === String(locationCode),
-  );
+  const contractorsForLocation = contractorList;
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
@@ -453,6 +451,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
             dispatch(SetSelectedApplication("Worker Entry Request"));
             dispatch(NavBarComponent("labourPassDashboard"));
           }}
+          disabled={userType == "User"}
         >
           Worker Entry Request
         </Button>
@@ -509,6 +508,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
             dispatch(SetSelectedApplication("Worker Master Data"));
             dispatch(NavBarComponent("contractor_masterData"));
           }}
+          disabled={userType == "User"}
         >
           Worker Master Data
         </Button>
@@ -532,6 +532,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
+          disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>

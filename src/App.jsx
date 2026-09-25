@@ -13,6 +13,7 @@ import {
   SetPermitList,
   SetContractorMasterList,
   SetLabourMasterList,
+  SetOfficerMasterList,
 } from "./action/userSlice";
 
 function formatDate(date1) {
@@ -34,26 +35,23 @@ function App() {
     PermitList,
     officerList,
     locationList,
+    locationCode,
   } = useSelector((state) => state.myApp);
 
   const permitListRef = useRef(PermitList);
-
-  useEffect(() => {
-    permitListRef.current = PermitList;
-  }, [PermitList]);
 
   const findLocationName = (item) => {
     const filteredOfficerName = officerList.find(
       (officer) => officer["Emp_ID"] == item,
     );
     if (filteredOfficerName) {
-      const loc_code = filteredOfficerName["LOCATION_CODE"];
+      const loc_code = filteredOfficerName["LOCATION_CODE"];     
       const locationName = locationList.find(
         (location) => location["LOCATION_CODE"] == loc_code,
       )?.["LOCATION_NAME"];
       return locationName;
     } else {
-      return item;
+      return '';
     }
   };
 
@@ -84,6 +82,7 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
+          if(findLocationName(item["Receiver Name"])){
           try {
             await fetch(sheet_url, {
               method: "POST",
@@ -101,7 +100,7 @@ function App() {
                   "Location Name": findLocationName(item["Receiver Name"]),
                 }),
               }),
-            });
+            });            
           } catch (error) {
             console.log(
               "error form...",
@@ -109,13 +108,132 @@ function App() {
             );
           }
         }
+        }
       }
     } catch (error) {
       console.error("Failed to load permits:", error);
     }
   };
 
-  useEffect(() => {
+  const locationName = selectedTerminal[selectedTerminal.length - 1];
+
+  const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
+
+  const permit_type_array =
+    PermitList.length > 0 ? PermitList.map((val) => val["Permit Type"]) : [];
+  const permit_labels = [
+    "Hot Work ",
+    "Cold Work ",
+    "Electrical Work ",
+    "Height Work",
+  ];
+  const series = permit_labels.map((type) => {
+    return permit_type_array.filter((item) => item == type.trim()).length;
+  });
+
+  const [state, setState] = useState({
+    series: series,
+    options: {
+      chart: {
+        width: 380,
+        type: "pie",
+      },
+      legend: {
+        show: false,
+      },
+      colors: ["#e7028c", "#d9d90b", "#6ccded", "#b9b5b5"],
+      fill: {
+        type: "gradient",
+        gradient: {
+          type: "horizontal",
+          gradientToColors: [
+            "#e7028c", // solid
+            "#d9d90b", // solid
+            "#6ccded",
+            "#b9b5b5",
+          ],
+          stops: [0, 100],
+        },
+      },
+      dataLabels: {
+        style: {
+          fontSize: "16px",
+          fontFamily: "Lucida Sans",
+          colors: ["#ffffff"],
+        },
+      },
+      plotOptions: {
+        pie: {
+          dataLabels: {
+            offset: -20,
+          },
+        },
+      },
+      labels: permit_labels,
+      responsive: [
+        {
+          breakpoint: 480,
+          options: {
+            chart: {
+              width: 200,
+            },
+            legend: {
+              position: "bottom",
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  const handleSyncContractor = async () => {  
+    try {
+      const response = await fetch(
+        apiUrl(`/api/contractor-master-data?locationCode=${locationCode || ""}`),
+      );
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetContractorMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+  const handleSync = async () => {
+    try {
+      const response = await fetch(
+        apiUrl(`/api/labour-master-data?location_code=${locationCode || ""}`),
+      );
+      if (!response.ok) {
+        throw new Error("Failed to load records");
+      }
+      const data = await response.json();
+      const zlist = Array.isArray(data) ? data : [];
+      dispatch(SetLabourMasterList(zlist));
+    } catch (error) {
+      console.error("Failed to fetch records", error);
+    }
+  };
+
+    const handleSyncOfficer = async () => {
+      try{
+      const response = await fetch(
+        apiUrl(`/api/officer-master-data?locationCode=${locationCode || ""}`),
+      );
+      if (!response.ok) {
+        throw new Error("Failed to load officer records");
+      }
+      const data = await response.json();
+      const officerRecords = Array.isArray(data) ? data : [];
+      dispatch(SetOfficerMasterList(officerRecords));
+    } catch (error) {
+      console.error("Failed to fetch officer records", error);
+    }
+    };
+
+    useEffect(() => {
     let intervalId;
     if (selectedTerminal !== "") {
       handleReadMail();
@@ -128,11 +246,7 @@ function App() {
     };
   }, [selectedTerminal]);
 
-  const locationName = selectedTerminal[selectedTerminal.length - 1];
-
-  const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
-
-  useEffect(() => {
+    useEffect(() => {
     let intervalId;
     const fetchSheetData = async () => {
       try {
@@ -221,107 +335,21 @@ function App() {
     };
   }, [selectedTerminal]);
 
-  const permit_type_array =
-    PermitList.length > 0 ? PermitList.map((val) => val["Permit Type"]) : [];
-  const permit_labels = [
-    "Hot Work ",
-    "Cold Work ",
-    "Electrical Work ",
-    "Height Work",
-  ];
-  const series = permit_labels.map((type) => {
-    return permit_type_array.filter((item) => item == type.trim()).length;
-  });
-
-  const [state, setState] = useState({
-    series: series,
-    options: {
-      chart: {
-        width: 380,
-        type: "pie",
-      },
-      legend: {
-        show: false,
-      },
-      colors: ["#e7028c", "#d9d90b", "#6ccded", "#b9b5b5"],
-      fill: {
-        type: "gradient",
-        gradient: {
-          type: "horizontal",
-          gradientToColors: [
-            "#e7028c", // solid
-            "#d9d90b", // solid
-            "#6ccded",
-            "#b9b5b5",
-          ],
-          stops: [0, 100],
-        },
-      },
-      dataLabels: {
-        style: {
-          fontSize: "16px",
-          fontFamily: "Lucida Sans",
-          colors: ["#ffffff"],
-        },
-      },
-      plotOptions: {
-        pie: {
-          dataLabels: {
-            offset: -20,
-          },
-        },
-      },
-      labels: permit_labels,
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 200,
-            },
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      ],
-    },
-  });
-
-  const handleSyncContractor = async () => {
-    try {
-      const response = await fetch(apiUrl("/api/contractor-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-      dispatch(SetContractorMasterList(zlist));
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    }
-  };
-  const handleSync = async () => {
-    try {
-      const response = await fetch(apiUrl("/api/labour-master-data"));
-      if (!response.ok) {
-        throw new Error("Failed to load records");
-      }
-      const data = await response.json();
-      const zlist = Array.isArray(data) ? data : [];
-      dispatch(SetLabourMasterList(zlist));
-    } catch (error) {
-      console.error("Failed to fetch records", error);
-    }
-  };
+    useEffect(() => {
+    permitListRef.current = PermitList;
+  }, [PermitList]);
 
   useEffect(() => {
     if (navBarComponent == "") {
       dispatch(NavBarComponent(""));
     }
+  }, []);
+
+  useEffect(() => {
+    handleSyncOfficer();
     handleSync();
     handleSyncContractor();
-  }, []);
+  }, [selectedTerminal, locationCode]);
 
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
@@ -337,6 +365,7 @@ function App() {
                 handleReadMail={handleReadMail}
                 handleSyncContractor={handleSyncContractor}
                 handleSync={handleSync}
+                handleSyncOfficer={handleSyncOfficer}
               />
             }
           />

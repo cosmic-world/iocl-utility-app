@@ -436,6 +436,7 @@ const ModifyRecords = ({ handleReadMail }) => {
         <Button
           variant={navBarComponent === "formControl" ? "contained" : "outlined"}
           color="warning"
+          disabled={userType == "User"}
           sx={{
             my: 1,
             mx: 5,
@@ -524,7 +525,7 @@ const ModifyRecords = ({ handleReadMail }) => {
             dispatch(SetSelectedApplication("Modify Permit Records"));
             dispatch(NavBarComponent("modifyRecords"));
           }}
-          disabled={userType == "user"}
+          disabled={userType == "User" || userType == "Contractor"}
         >
           Modify Records (Admin Only)
         </Button>

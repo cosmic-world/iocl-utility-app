@@ -17,6 +17,7 @@ export const userSlice = createSlice({
     locationCode: "", // to store location code data from Google Sheets
     authorized: false,
     locationMasterList: [], // to store all location master data
+    userName: "", // to store logged in officer/contractor name
   },
   reducers: {
     NavBarComponent: (state, action) => {
@@ -58,6 +59,9 @@ export const userSlice = createSlice({
     SetAuthorized: (state, action) => {
       state.authorized = action.payload;
     },
+    SetUserName: (state, action) => {
+      state.userName = action.payload;
+    },
     ResetAppState: () => ({
       navBarComponent: "",
       masterList: [],
@@ -72,6 +76,7 @@ export const userSlice = createSlice({
       locationCode: "",
       authorized: false,
       locationMasterList: [],
+      userName: "",
     }),
   },
 });
@@ -91,6 +96,7 @@ export const {
   SetLocationCode,
   SetAuthorized,
   SetLocationMasterList,
+  SetUserName,
   ResetAppState,
 } = userSlice.actions;
 

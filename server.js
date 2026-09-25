@@ -168,20 +168,31 @@ app.post("/api/admin/request-otp", async (req, res) => {
     request.input("email", sql.NVarChar, email);
     request.input("role", sql.NVarChar, role);
     request.input("locationCode", sql.NVarChar, locationCode);
-    const result = await request.query(`
-      SELECT [ROLE], [STATUS]
-      FROM OfficerCredentials
-      WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
-        AND (LOCATION_CODE = @locationCode)
-    `);
+    let sql_query=''
+    if (role=='CONTRACTOR'){
+      sql_query = `
+        SELECT CONTRACTOR_NAME
+        FROM ContractorCredentials
+        WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+          AND (LOCATION_CODE = @locationCode)
+      `;
+    }else{
+      sql_query = `
+        SELECT [ROLE], [STATUS]
+        FROM OfficerCredentials
+        WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+          AND (LOCATION_CODE = @locationCode)
+      `;
+    }
+    const result = await request.query(sql_query);
 
     if (!result.recordset || result.recordset.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "The Email Address is not associated with an authorized Admin or Security user for the location selected.",
+        message: "The Email Address is not associated with the Role opted for the location selected.",
       });
     }
-    if (String(result.recordset[0].STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
+    if (role!='CONTRACTOR' && String(result.recordset[0].STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
       return res.status(403).json({
         success: false,
         message: "Your officer status is INACTIVE. Ask the location Admin or Super Admin to validate your email and make your status ACTIVE.",
@@ -191,7 +202,7 @@ app.post("/api/admin/request-otp", async (req, res) => {
     otpStore[email] = {
       otp,
       expiresAt: Date.now() + 5 * 60 * 1000,
-      role: String(result.recordset[0].ROLE).toUpperCase(),
+      role: role!='CONTRACTOR'? String(result.recordset[0].ROLE).toUpperCase() : "CONTRACTOR",
     };
 
     const mailOptions = {
@@ -971,7 +982,13 @@ app.get("/api/contractor-master-data", (req, res) => {
   (async () => {
     try {
       await sql.connect(sqlConfig);
-      const result = await sql.query("SELECT * FROM ContractorCredentials");
+      const locationCode = String(req.query.locationCode || "").trim();
+      const request = new sql.Request();
+      request.input("locationCode", sql.NVarChar, locationCode);
+      const result = await request.query(`
+        SELECT * FROM ContractorCredentials
+        WHERE (@locationCode = '' OR LOCATION_CODE = @locationCode)
+      `);
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -1305,7 +1322,7 @@ app.patch("/api/utility-locations/change", async (req, res) => {
       const email = String(req.body.email || "").trim().toLowerCase();
       const acceptedRoles = role === "Admin" ? ["ADMIN", "SUPER_ADMIN"] : [role.toUpperCase()];
 
-      if (!locationName || !passcode || !["User", "Admin", "Security"].includes(role)) {
+      if (!locationName || !passcode || !["User", "Admin", "Security", "Contractor"].includes(role)) {
         return res.status(400).json({
           success: false,
           message: "Location, passcode, and a valid role are required.",
@@ -1316,7 +1333,7 @@ app.patch("/api/utility-locations/change", async (req, res) => {
       const request = new sql.Request();
       request.input("locationName", sql.NVarChar, locationName);
       request.input("passcode", sql.NVarChar, passcode);
-
+      
       const result = await request.query(`
         SELECT TOP 1 LOCATION_CODE
         FROM IOCLUtilityCredentials
@@ -1331,18 +1348,19 @@ app.patch("/api/utility-locations/change", async (req, res) => {
         });
       }
 
-      let authenticatedRole = "user";
-      if (role !== "User") {
+      let authenticatedRole = role;
+      let userName = "";
+      if (role !== "User" && role !== "Contractor") {
         if (!email) {
           return res.status(400).json({
             success: false,
-            message: "Officer email is required.",
+            message: "For this role email is required.",
           });
         }
         if (!isValidEmail(email)) {
           return res.status(400).json({
             success: false,
-            message: "Enter a valid officer email address.",
+            message: "Enter a valid email address.",
           });
         }
 
@@ -1350,7 +1368,7 @@ app.patch("/api/utility-locations/change", async (req, res) => {
         officerRequest.input("email", sql.NVarChar, email);
         officerRequest.input("locationCode", sql.NVarChar, result.recordset[0].LOCATION_CODE);
         const officerResult = await officerRequest.query(`
-          SELECT TOP 1 [ROLE], [STATUS]
+          SELECT TOP 1 [ROLE], [STATUS], [OFFICER_NAME]
           FROM OfficerCredentials
           WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
             AND LOCATION_CODE = @locationCode
@@ -1370,12 +1388,25 @@ app.patch("/api/utility-locations/change", async (req, res) => {
           });
         }
         authenticatedRole = String(officerResult.recordset[0].ROLE).trim().toUpperCase();
+        userName = officerResult.recordset[0].OFFICER_NAME || "";
+      } else if (role === "Contractor" && email && isValidEmail(email)) {
+        const contractorRequest = new sql.Request();
+        contractorRequest.input("email", sql.NVarChar, email);
+        contractorRequest.input("locationCode", sql.NVarChar, result.recordset[0].LOCATION_CODE);
+        const contractorResult = await contractorRequest.query(`
+          SELECT TOP 1 CONTRACTOR_NAME
+          FROM ContractorCredentials
+          WHERE LOWER(LTRIM(RTRIM(MAIL_ID))) = @email
+            AND LOCATION_CODE = @locationCode
+        `);
+        userName = contractorResult.recordset?.[0]?.CONTRACTOR_NAME || "";
       }
 
       return res.json({
         success: true,
         role: authenticatedRole,
         locationCode: result.recordset[0].LOCATION_CODE,
+        userName,
       });
     } catch (error) {
       console.error("Login query error:", error);

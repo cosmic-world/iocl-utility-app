@@ -26,6 +26,7 @@ import {
   SetUserType,
   SetLocationList,
   SetLocationMasterList,
+  SetUserName,
 } from "../action/userSlice";
 import { apiUrl } from "../api";
 import { useOtpCooldown } from "../otpCooldown";
@@ -202,13 +203,14 @@ function SignIn() {
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           otp: otp.trim(),
+          role,
         }),
       });
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.message || "Unable to verify OTP.");
       const acceptedRoles =
-        role === "Security" ? ["SECURITY"] : ["ADMIN", "SUPER_ADMIN"];
+        role === "Security" ? ["SECURITY"] :role === "Contractor" ? ["CONTRACTOR"] : ["ADMIN", "SUPER_ADMIN"];        
       if (!acceptedRoles.includes(String(data.role).toUpperCase())) {
         throw new Error(
           "This officer account is not registered for the selected role.",
@@ -262,6 +264,7 @@ function SignIn() {
         throw new Error(data.message || "Unable to verify access.");
       dispatch(SetLocationCode(data.locationCode));
       dispatch(SetUserType(data.role));
+      dispatch(SetUserName(data.userName || ""));
       dispatch(SetAuthorized(true));
       dispatch(SetSelectedApplication("Role Selection"));
       dispatch(NavBarComponent("home2"));
@@ -929,16 +932,21 @@ function SignIn() {
                 setMessage({ type: "", text: "" });
               }}
             >
-              <FormControlLabel value="User" control={<Radio />} label="User" />
+              <FormControlLabel value="User" control={<Radio />} label="Viewer" />
               <FormControlLabel
                 value="Admin"
                 control={<Radio />}
-                label="Admin"
+                label="Officer"
               />
               <FormControlLabel
                 value="Security"
                 control={<Radio />}
                 label="Security"
+              />
+              <FormControlLabel
+                value="Contractor"
+                control={<Radio />}
+                label="Contractor"
               />
             </RadioGroup>
           </FormControl>
@@ -947,7 +955,7 @@ function SignIn() {
               <Typography variant="subtitle1">Role verification</Typography>
               <TextField
                 type="email"
-                label="Registered officer email"
+                label="Registered Email ID"
                 value={email}
                 error={Boolean(email) && !isValidEmail(email)}
                 onChange={(event) => {

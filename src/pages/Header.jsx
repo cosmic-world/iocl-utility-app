@@ -8,6 +8,8 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import Download from "@mui/icons-material/Download";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import BadgeIcon from "@mui/icons-material/Badge";
 import {
   Accordion,
   AccordionDetails,
@@ -16,6 +18,7 @@ import {
   MenuItem,
   Divider,
   Button,
+  Tooltip,
 } from "@mui/material";
 import persistSessionStorage from "redux-persist/lib/storage/session";
 
@@ -27,6 +30,7 @@ export default function Header({}) {
     userType,
     selectedTerminal,
     authorized,
+    userName,
   } = useSelector((state) => state.myApp);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [anchorE1, setAnchorE1] = React.useState(null);
@@ -107,7 +111,7 @@ export default function Header({}) {
             <MenuItem
               selected={navBarComponent == "officer_cred"}
               className="d-flex justify-content-center p-3"
-              disabled={userType == "user"}
+              disabled={userType == "User" || userType == "Contractor"}
               onClick={() => {
                 dispatch(NavBarComponent("officer_cred"));
                 dispatch(SetSelectedApplication("Admin Control"));
@@ -214,6 +218,14 @@ export default function Header({}) {
         </>
       ) : null}
 
+      {userType ? (
+        <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
+          <Tooltip title={userName} arrow>
+            <AccountCircleIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
+          </Tooltip>
+        </div>
+      ) : null}
+
       <MenuIcon
         style={{
           cursor: userType != "" ? "pointer" : "default",
@@ -226,13 +238,29 @@ export default function Header({}) {
           userType != "" ? setAnchorE1(event.currentTarget) : null
         }
       />
+      {userType ? (
+        <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
+          <Tooltip title={<>
+            <label>{`Role:`}&nbsp;</label>
+          <label style={{ color: "orange" }}>{`${userType
+            .trim()
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .replace(/\b\w/g, (char) => char.toUpperCase())
+            .replace(/_/g, " ")}`}</label>
+            </>} arrow>
+            <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
+          </Tooltip>
+        </div>
+      ) : null}
       {/* current date-time stamp display */}
       <div
         className="d-none d-xxl-flex justify-content-center align-items-center h-100"
         style={{
           color: "#1976d2",
           fontWeight: "bold",
-          width: "350px",
+          width: "300px",
         }}
       >
         <label>
@@ -248,17 +276,35 @@ export default function Header({}) {
         {`${selectedApplication} ${selectedTerminal != "" ? "-" : ""} ${selectedTerminal[1] || ""}`}
       </div>
 
-      <div
-        className="d-none d-xxl-flex justify-content-center align-items-center h-100"
+      {userName?<div
+        className="d-none d-xxl-flex justify-content-center align-items-center h-100 mx-1"
+        title={userName}
         style={{
           color: "#1976d2",
           fontWeight: "bold",
           borderRight: userType != "" ? "1px solid #1976d2" : null,
-          width: 400,
+          width: 300,
+          overflow: "hidden",
         }}
       >
-        <label>{`Developed by Manas Roy`}</label>
-      </div>
+                  <label style={{ flexShrink: 0 }}>{`Welcome!`}&nbsp;</label>
+          <label
+            style={{
+              color: "orange",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >{`${userName
+            .trim()
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .replace(/\b\w/g, (char) => char.toUpperCase())
+            .replace(/_/g, " ")}`}</label>
+
+      </div>:null}
+
       {userType != "" ? (
         <div
           className="d-none d-xxl-flex justify-content-center align-items-center h-100"
@@ -278,6 +324,20 @@ export default function Header({}) {
             .replace(/_/g, " ")}`}</label>
         </div>
       ) : null}
+
+      <div
+        className="d-none d-xxl-flex justify-content-center align-items-center h-100"
+        style={{
+          color: "#6c757d",
+          fontWeight: 400,
+          fontStyle: "italic",
+          fontSize: "1.2rem",
+          borderLeft: userType != "" ? "1px solid #1976d2" : null,
+          width: 250,
+        }}
+      >
+        <label>{`Developed by Manas Roy`}</label>
+      </div>
     </div>
   );
 }

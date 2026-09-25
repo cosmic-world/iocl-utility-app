@@ -40,9 +40,7 @@ export default function LabourMasterData({ handleSync }) {
   const [address, setAddress] = useState("");
   const [editingLabourId, setEditingLabourId] = useState(null);
   const [editingLabour, setEditingLabour] = useState(null);
-  const contractorsForLocation = contractorList.filter(
-    (record) => String(record.LOCATION_CODE) === String(locationCode),
-  );
+  const contractorsForLocation = contractorList;
   const fileInputRef = useRef(null);
   const isSuperUser = userType === "SUPER_ADMIN";
 
@@ -299,6 +297,7 @@ export default function LabourMasterData({ handleSync }) {
             dispatch(SetSelectedApplication("Worker Entry Request"));
             dispatch(NavBarComponent("labourPassDashboard"));
           }}
+          disabled={userType == "User"}
         >
           Worker Entry Request
         </Button>
@@ -355,6 +354,7 @@ export default function LabourMasterData({ handleSync }) {
             dispatch(SetSelectedApplication("Worker Master Data"));
             dispatch(NavBarComponent("contractor_masterData"));
           }}
+          disabled={userType == "User"}
         >
           Worker Master Data
         </Button>
@@ -378,6 +378,7 @@ export default function LabourMasterData({ handleSync }) {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
+          disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>

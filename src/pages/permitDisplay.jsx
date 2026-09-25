@@ -20,9 +20,7 @@ export default function PermitDisplay({ handleReadMail }) {
   const step = tbody_rows_count;
   const [show, setShow] = useState(false);
   const [clock, setClock] = React.useState(0);
-  const officerListForLocation = officerList.filter(
-    (officer) => officer["LOCATION_CODE"] == locationCode,
-  );
+  const officerListForLocation = officerList;
 
   useEffect(() => {
     setInterval(() => {
@@ -81,6 +79,7 @@ export default function PermitDisplay({ handleReadMail }) {
         <Button
           variant={navBarComponent === "formControl" ? "contained" : "outlined"}
           color="warning"
+          disabled={userType == "User"}
           sx={{
             my: 1,
             mx: 5,
@@ -169,7 +168,7 @@ export default function PermitDisplay({ handleReadMail }) {
             dispatch(SetSelectedApplication("Modify Permit Records"));
             dispatch(NavBarComponent("modifyRecords"));
           }}
-          disabled={userType == "user"}
+          disabled={userType == "User" || userType == "Contractor"}
         >
           Modify Records (Admin Only)
         </Button>
