@@ -32,7 +32,7 @@ export default function LabourPassDashboard() {
     contractorList,
     locationCode,
     selectedTerminal,
-    userType
+    userType,
   } = useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);

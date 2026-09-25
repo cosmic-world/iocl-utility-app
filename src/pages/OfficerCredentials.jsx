@@ -49,7 +49,7 @@ const isBusinessEmail = (value) => {
   return Boolean(domain) && !FREE_EMAIL_DOMAINS.has(domain);
 };
 
-export default function OfficerCredentials({handleSyncOfficer}) {
+export default function OfficerCredentials({ handleSyncOfficer }) {
   const dispatch = useDispatch();
   const {
     officerList,
@@ -366,17 +366,17 @@ export default function OfficerCredentials({handleSyncOfficer}) {
         return nextRoles;
       });
       dispatch(
-              SetOfficerMasterList(
-                officerList.map((item) =>
-                  item.ID === officer.ID
-                    ? {
-                        ...item,
-                        ROLE: selectedRole,
-                      }
-                    : item,
-                ),
-              ),
-            );
+        SetOfficerMasterList(
+          officerList.map((item) =>
+            item.ID === officer.ID
+              ? {
+                  ...item,
+                  ROLE: selectedRole,
+                }
+              : item,
+          ),
+        ),
+      );
       alert("Officer role changed successfully.");
     } catch (error) {
       alert("Error: " + error.message);
@@ -386,7 +386,7 @@ export default function OfficerCredentials({handleSyncOfficer}) {
   };
 
   const handleSendOfficerVerificationOtp = async (officer) => {
-    if (!['ADMIN', 'SUPER_ADMIN'].includes(userType)) {
+    if (!["ADMIN", "SUPER_ADMIN"].includes(userType)) {
       alert("Only an admin or super admin can verify officer emails.");
       return;
     }
@@ -395,19 +395,26 @@ export default function OfficerCredentials({handleSyncOfficer}) {
     setVerificationOfficerId(officer.ID);
     setVerificationOtpLoading(true);
     try {
-      const email = String(officer.MAIL_ID || "").trim().toLowerCase();
-      const requestResponse = await fetch(apiUrl("/api/credentials/request-otp"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          credentialType: "officer",
-          role: officer.ROLE,
-        }),
-      });
+      const email = String(officer.MAIL_ID || "")
+        .trim()
+        .toLowerCase();
+      const requestResponse = await fetch(
+        apiUrl("/api/credentials/request-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            credentialType: "officer",
+            role: officer.ROLE,
+          }),
+        },
+      );
       const requestData = await requestResponse.json();
       if (!requestResponse.ok || !requestData.success) {
-        throw new Error(requestData.message || "Unable to send verification OTP.");
+        throw new Error(
+          requestData.message || "Unable to send verification OTP.",
+        );
       }
       setVerificationOtpSent(true);
       setVerificationOtp("");
@@ -421,7 +428,9 @@ export default function OfficerCredentials({handleSyncOfficer}) {
   };
 
   const handleVerifyOfficerEmail = async (officer) => {
-    const email = String(officer.MAIL_ID || "").trim().toLowerCase();
+    const email = String(officer.MAIL_ID || "")
+      .trim()
+      .toLowerCase();
     if (!/^\d{6}$/.test(verificationOtp.trim())) {
       alert("Please enter the six-digit OTP sent to the officer email.");
       return;
@@ -429,11 +438,18 @@ export default function OfficerCredentials({handleSyncOfficer}) {
 
     setVerificationOtpLoading(true);
     try {
-      const verifyResponse = await fetch(apiUrl("/api/credentials/verify-otp"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: verificationOtp.trim(), credentialType: "officer" }),
-      });
+      const verifyResponse = await fetch(
+        apiUrl("/api/credentials/verify-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            otp: verificationOtp.trim(),
+            credentialType: "officer",
+          }),
+        },
+      );
       const verifyData = await verifyResponse.json();
       if (!verifyResponse.ok || !verifyData.success) {
         throw new Error(verifyData.message || "Invalid or expired OTP.");
@@ -780,11 +796,11 @@ export default function OfficerCredentials({handleSyncOfficer}) {
         <thead className="table-head">
           <tr>
             <th>NAME</th>
-            <th style={{width:100}}>EMP ID</th>
-            <th style={{width:150}}>MOBILE NO</th>
+            <th style={{ width: 100 }}>EMP ID</th>
+            <th style={{ width: 150 }}>MOBILE NO</th>
             <th>MAIL ID</th>
-            <th style={{width:200}}>ROLE</th>
-            <th style={{width:100}}>STATUS</th>
+            <th style={{ width: 200 }}>ROLE</th>
+            <th style={{ width: 100 }}>STATUS</th>
             <th style={{ minWidth: 500 }}>ACTION</th>
           </tr>
         </thead>
@@ -839,7 +855,7 @@ export default function OfficerCredentials({handleSyncOfficer}) {
                     disabled={
                       saveLoader || !isSuperAdmin || !selectedRoles[officer.ID]
                     }
-                    sx={{ width:200 }}
+                    sx={{ width: 200 }}
                   >
                     Change Role
                   </Button>
@@ -849,11 +865,12 @@ export default function OfficerCredentials({handleSyncOfficer}) {
                     startIcon={<Delete />}
                     onClick={() => handleDeleteOfficer(officer.ID)}
                     disabled={saveLoader || !isSuperAdmin}
-                    sx={{ width:150 }}
+                    sx={{ width: 150 }}
                   >
                     Delete
                   </Button>
-                  {String(officer.STATUS || "ACTIVE").toUpperCase() === "INACTIVE" &&
+                  {String(officer.STATUS || "ACTIVE").toUpperCase() ===
+                    "INACTIVE" &&
                   ["ADMIN", "SUPER_ADMIN"].includes(userType) ? (
                     verificationOfficerId === officer.ID ? (
                       <>
@@ -863,7 +880,9 @@ export default function OfficerCredentials({handleSyncOfficer}) {
                           value={verificationOtp}
                           inputProps={{ maxLength: 6, inputMode: "numeric" }}
                           onChange={(event) =>
-                            setVerificationOtp(event.target.value.replace(/\D/g, ""))
+                            setVerificationOtp(
+                              event.target.value.replace(/\D/g, ""),
+                            )
                           }
                           sx={{
                             width: 110,
@@ -874,15 +893,22 @@ export default function OfficerCredentials({handleSyncOfficer}) {
                           color="success"
                           variant="outlined"
                           onClick={() => handleVerifyOfficerEmail(officer)}
-                          disabled={verificationOtpLoading || !verificationOtpSent}
+                          disabled={
+                            verificationOtpLoading || !verificationOtpSent
+                          }
                           sx={{ width: 120 }}
                         >
                           Verify OTP
                         </Button>
                         <Button
                           variant="outlined"
-                          onClick={() => handleSendOfficerVerificationOtp(officer)}
-                          disabled={verificationOtpLoading || !verificationOtpCooldown.canResend}
+                          onClick={() =>
+                            handleSendOfficerVerificationOtp(officer)
+                          }
+                          disabled={
+                            verificationOtpLoading ||
+                            !verificationOtpCooldown.canResend
+                          }
                           sx={{ width: 100 }}
                         >
                           {!verificationOtpCooldown.canResend
@@ -894,7 +920,9 @@ export default function OfficerCredentials({handleSyncOfficer}) {
                       <Button
                         color="success"
                         variant="outlined"
-                        onClick={() => handleSendOfficerVerificationOtp(officer)}
+                        onClick={() =>
+                          handleSendOfficerVerificationOtp(officer)
+                        }
                         disabled={saveLoader || verificationOtpLoading}
                         sx={{ width: 150 }}
                       >

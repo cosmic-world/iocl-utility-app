@@ -853,7 +853,11 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                           size="small"
                           variant="outlined"
                           onClick={handleSendEditOtp}
-                          disabled={editOtpLoading || editOtpVerified || !editOtpCooldown.canResend}
+                          disabled={
+                            editOtpLoading ||
+                            editOtpVerified ||
+                            !editOtpCooldown.canResend
+                          }
                         >
                           {!editOtpCooldown.canResend
                             ? `Resend ${editOtpCooldown.timeLabel}`

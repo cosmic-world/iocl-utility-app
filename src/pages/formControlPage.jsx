@@ -28,7 +28,7 @@ class DraggableModalDialog extends React.Component {
 
 export default function formControlPage({ show, setShow }) {
   const dispatch = useDispatch();
-  const { selectedTerminal, officerList, locationCode } = useSelector(
+  const { selectedTerminal, officerList, contractorList } = useSelector(
     (state) => state.myApp,
   );
   const [saveLoader, setSaveLoader] = useState(false);
@@ -44,6 +44,7 @@ export default function formControlPage({ show, setShow }) {
   const [division, setDivision] = useState("");
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const officerListForLocation = officerList;
+  const contractorListForLocation = contractorList;
 
   const handleResetForm = () => {
     setSaveLoader(false);
@@ -77,6 +78,10 @@ export default function formControlPage({ show, setShow }) {
       contractorName == ""
     ) {
       alert("All fields must be filled");
+      return;
+    }
+    if (!/[HCWE]/.test(permitNo)) {
+      alert("Invalid Permit No!");
       return;
     }
     setSaveLoader(true);
@@ -281,7 +286,7 @@ export default function formControlPage({ show, setShow }) {
               alignContent: "center",
             }}
           >
-            Work Location
+            Work Area
           </div>
           <div className="col-8">
             <TextField
@@ -457,19 +462,38 @@ export default function formControlPage({ show, setShow }) {
             Contractor Name
           </div>
           <div className="col-8">
-            <TextField
+            <Autocomplete
               className="w-100"
-              style={{ fontFamily: "Lucida Sans", fontSize: 20 }}
-              value={contractorName}
-              error={contractorName == ""}
-              onChange={(e) => setContractorName(e.target.value)}
-              InputProps={{
-                sx: {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "20px",
-                },
-                inputProps: { autoComplete: "off" },
+              options={contractorListForLocation.map(
+                (item) => item["CONTRACTOR_NAME"],
+              )}
+              name="contractorName"
+              value={contractorName !== "" ? contractorName : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setContractorName(newValue.toLocaleUpperCase().trim())
+                  : setContractorName("");
               }}
+              onChange={(e, newValue) =>
+                newValue !== null
+                  ? setContractorName(newValue)
+                  : setContractorName("")
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={"Select From Dropdown or Type For New..."}
+                  error={contractorName == ""}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      fontSize: 20,
+                    },
+                  }}
+                />
+              )}
             />
           </div>
         </div>

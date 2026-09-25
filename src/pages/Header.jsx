@@ -221,7 +221,9 @@ export default function Header({}) {
       {userType ? (
         <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
           <Tooltip title={userName} arrow>
-            <AccountCircleIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
+            <AccountCircleIcon
+              style={{ color: "#1976d2", fontSize: "1.8rem" }}
+            />
           </Tooltip>
         </div>
       ) : null}
@@ -240,16 +242,21 @@ export default function Header({}) {
       />
       {userType ? (
         <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
-          <Tooltip title={<>
-            <label>{`Role:`}&nbsp;</label>
-          <label style={{ color: "orange" }}>{`${userType
-            .trim()
-            .replace(/_/g, " ")
-            .replace(/\s+/g, " ")
-            .toLowerCase()
-            .replace(/\b\w/g, (char) => char.toUpperCase())
-            .replace(/_/g, " ")}`}</label>
-            </>} arrow>
+          <Tooltip
+            title={
+              <>
+                <label>{`Role:`}&nbsp;</label>
+                <label style={{ color: "orange" }}>{`${userType
+                  .trim()
+                  .replace(/_/g, " ")
+                  .replace(/\s+/g, " ")
+                  .toLowerCase()
+                  .replace(/\b\w/g, (char) => char.toUpperCase())
+                  .replace(/_/g, " ")}`}</label>
+              </>
+            }
+            arrow
+          >
             <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
           </Tooltip>
         </div>
@@ -276,18 +283,19 @@ export default function Header({}) {
         {`${selectedApplication} ${selectedTerminal != "" ? "-" : ""} ${selectedTerminal[1] || ""}`}
       </div>
 
-      {userName?<div
-        className="d-none d-xxl-flex justify-content-center align-items-center h-100 mx-1"
-        title={userName}
-        style={{
-          color: "#1976d2",
-          fontWeight: "bold",
-          borderRight: userType != "" ? "1px solid #1976d2" : null,
-          width: 300,
-          overflow: "hidden",
-        }}
-      >
-                  <label style={{ flexShrink: 0 }}>{`Welcome!`}&nbsp;</label>
+      {userName ? (
+        <div
+          className="d-none d-xxl-flex justify-content-center align-items-center h-100 mx-1"
+          title={userName}
+          style={{
+            color: "#1976d2",
+            fontWeight: "bold",
+            borderRight: userType != "" ? "1px solid #1976d2" : null,
+            width: 300,
+            overflow: "hidden",
+          }}
+        >
+          <label style={{ flexShrink: 0 }}>{`Welcome!`}&nbsp;</label>
           <label
             style={{
               color: "orange",
@@ -302,8 +310,8 @@ export default function Header({}) {
             .toLowerCase()
             .replace(/\b\w/g, (char) => char.toUpperCase())
             .replace(/_/g, " ")}`}</label>
-
-      </div>:null}
+        </div>
+      ) : null}
 
       {userType != "" ? (
         <div

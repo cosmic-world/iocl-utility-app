@@ -210,7 +210,11 @@ function SignIn() {
       if (!response.ok)
         throw new Error(data.message || "Unable to verify OTP.");
       const acceptedRoles =
-        role === "Security" ? ["SECURITY"] :role === "Contractor" ? ["CONTRACTOR"] : ["ADMIN", "SUPER_ADMIN"];        
+        role === "Security"
+          ? ["SECURITY"]
+          : role === "Contractor"
+            ? ["CONTRACTOR"]
+            : ["ADMIN", "SUPER_ADMIN"];
       if (!acceptedRoles.includes(String(data.role).toUpperCase())) {
         throw new Error(
           "This officer account is not registered for the selected role.",
@@ -932,7 +936,11 @@ function SignIn() {
                 setMessage({ type: "", text: "" });
               }}
             >
-              <FormControlLabel value="User" control={<Radio />} label="Viewer" />
+              <FormControlLabel
+                value="User"
+                control={<Radio />}
+                label="Viewer"
+              />
               <FormControlLabel
                 value="Admin"
                 control={<Radio />}

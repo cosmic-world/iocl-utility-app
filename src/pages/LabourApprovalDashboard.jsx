@@ -50,7 +50,9 @@ export default function LabourApprovalDashboard() {
       }
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
-      zlist.length == 0 && searchContractor!="" ? alert("No records found") : null;
+      zlist.length == 0 && searchContractor != ""
+        ? alert("No records found")
+        : null;
       setRecordsLaborsEntry(zlist);
     } catch (error) {
       console.error("Failed to fetch records", error);
@@ -106,7 +108,7 @@ export default function LabourApprovalDashboard() {
   };
 
   useEffect(() => {
-    handleSubmit()
+    handleSubmit();
   }, []);
   return (
     <div
@@ -399,7 +401,8 @@ export default function LabourApprovalDashboard() {
                             }
                             disabled={
                               !record ||
-                              userType === "User" || userType === "Contractor" ||
+                              userType === "User" ||
+                              userType === "Contractor" ||
                               !isApproved ||
                               (hasGatePass && !isEditingGatePass)
                             }
@@ -482,7 +485,8 @@ export default function LabourApprovalDashboard() {
                             color="success"
                             disabled={
                               !record ||
-                              userType === "User" || userType === "Contractor" ||
+                              userType === "User" ||
+                              userType === "Contractor" ||
                               !isApproved ||
                               (hasGatePass && !isEditingGatePass)
                             }

@@ -45,13 +45,13 @@ function App() {
       (officer) => officer["Emp_ID"] == item,
     );
     if (filteredOfficerName) {
-      const loc_code = filteredOfficerName["LOCATION_CODE"];     
+      const loc_code = filteredOfficerName["LOCATION_CODE"];
       const locationName = locationList.find(
         (location) => location["LOCATION_CODE"] == loc_code,
       )?.["LOCATION_NAME"];
       return locationName;
     } else {
-      return '';
+      return "";
     }
   };
 
@@ -82,32 +82,32 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
-          if(findLocationName(item["Receiver Name"])){
-          try {
-            await fetch(sheet_url, {
-              method: "POST",
-              mode: "no-cors",
-              body: new URLSearchParams({
-                data: JSON.stringify({
-                  "Permit Type": item["Permit Type"],
-                  "Work Description": item["Work Description"],
-                  "Work Location": item["Work Location"],
-                  "Receiver Name": item["Receiver Name"],
-                  "Clearance From": item["Clearance From"],
-                  "Clearance Till": item["Clearance Till"],
-                  "Contractor Name": item["Contractor Name"],
-                  "Permit No": item["Permit No"],
-                  "Location Name": findLocationName(item["Receiver Name"]),
+          if (findLocationName(item["Receiver Name"])) {
+            try {
+              await fetch(sheet_url, {
+                method: "POST",
+                mode: "no-cors",
+                body: new URLSearchParams({
+                  data: JSON.stringify({
+                    "Permit Type": item["Permit Type"],
+                    "Work Description": item["Work Description"],
+                    "Work Location": item["Work Location"],
+                    "Receiver Name": item["Receiver Name"],
+                    "Clearance From": item["Clearance From"],
+                    "Clearance Till": item["Clearance Till"],
+                    "Contractor Name": item["Contractor Name"],
+                    "Permit No": item["Permit No"],
+                    "Location Name": findLocationName(item["Receiver Name"]),
+                  }),
                 }),
-              }),
-            });            
-          } catch (error) {
-            console.log(
-              "error form...",
-              `${error} and also check internet connection`,
-            );
+              });
+            } catch (error) {
+              console.log(
+                "error form...",
+                `${error} and also check internet connection`,
+              );
+            }
           }
-        }
         }
       }
     } catch (error) {
@@ -186,10 +186,12 @@ function App() {
     },
   });
 
-  const handleSyncContractor = async () => {  
+  const handleSyncContractor = async () => {
     try {
       const response = await fetch(
-        apiUrl(`/api/contractor-master-data?locationCode=${locationCode || ""}`),
+        apiUrl(
+          `/api/contractor-master-data?locationCode=${locationCode || ""}`,
+        ),
       );
       if (!response.ok) {
         throw new Error("Failed to load records");
@@ -217,8 +219,8 @@ function App() {
     }
   };
 
-    const handleSyncOfficer = async () => {
-      try{
+  const handleSyncOfficer = async () => {
+    try {
       const response = await fetch(
         apiUrl(`/api/officer-master-data?locationCode=${locationCode || ""}`),
       );
@@ -231,9 +233,9 @@ function App() {
     } catch (error) {
       console.error("Failed to fetch officer records", error);
     }
-    };
+  };
 
-    useEffect(() => {
+  useEffect(() => {
     let intervalId;
     if (selectedTerminal !== "") {
       handleReadMail();
@@ -246,7 +248,7 @@ function App() {
     };
   }, [selectedTerminal]);
 
-    useEffect(() => {
+  useEffect(() => {
     let intervalId;
     const fetchSheetData = async () => {
       try {
@@ -335,7 +337,7 @@ function App() {
     };
   }, [selectedTerminal]);
 
-    useEffect(() => {
+  useEffect(() => {
     permitListRef.current = PermitList;
   }, [PermitList]);
 

@@ -732,7 +732,12 @@ export default function tempPassDashboard() {
               value={crewName !== "" ? crewName : null}
               onInputChange={(event, newValue, reason) => {
                 newValue !== null
-                  ? setCrewName(newValue.toLocaleUpperCase().trim())
+                  ? setCrewName(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
                   : setCrewName("");
                 if (reason === "input") {
                   newValue !== null
