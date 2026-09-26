@@ -11,6 +11,7 @@ const sql = require("mssql");
 const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
 const PDFDocument = require('pdfkit');
+const PERMIT_SYNC_INSTANCE_ID = `${process.env.HOSTNAME || process.env.COMPUTERNAME || 'unknown-host'}:${process.pid}:${crypto.randomUUID()}`;
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -2556,7 +2557,7 @@ async function fetchTodayPermitEmailsFromImap() {
       parsedEmails,
       (email) => email.json?.['Permit No'],
     );
-    console.info(`[permit-sync] Gmail permits: raw=${parsedEmails.length}, unique=${permitEmails.length}`);
+    console.info(`[permit-sync] Gmail permits: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${parsedEmails.length}, unique=${permitEmails.length}`);
   } catch (error) {
     console.error('Error fetching permit emails:', error);
     permitEmails = [];
@@ -2716,7 +2717,7 @@ async function refreshSheetPermitNosCache() {
     sheetPermitNosCache = refreshedPermitNos;
     permitSheetRowsCache = uniqueRows;
     sheetPermitNosCacheReady = true;
-    console.info(`[permit-sync] sheet rows: raw=${rows.length}, uniquePermits=${uniqueRows.length}`);
+    console.info(`[permit-sync] sheet rows: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${rows.length}, uniquePermits=${uniqueRows.length}, duplicateRows=${rows.length - uniqueRows.length}`);
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
@@ -2763,7 +2764,7 @@ function resolvePermitLocationName(permitNo) {
   return matches.length === 1 ? matches[0].LOCATION_NAME ?? null : null;
 }
 
-async function writePermitToSheet(item, locationName, source) {
+async function writePermitToSheet(item, locationName, source, cycleId = 'manual') {
   if (!sheetPermitNosCacheReady) {
     await refreshSheetPermitNosCache();
   }
@@ -2775,7 +2776,7 @@ async function writePermitToSheet(item, locationName, source) {
 
   const permitNoKey = normalizePermitNo(item['Permit No']);
   if (sentPermitNos.has(permitNoKey) || sheetPermitNosCache.has(permitNoKey)) {
-    console.info(`[permit-sync] duplicate skipped: source=${source}, permitNo=${permitNoKey}`);
+    console.info(`[permit-sync] duplicate skipped: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}`);
     return false;
   }
 
@@ -2783,7 +2784,7 @@ async function writePermitToSheet(item, locationName, source) {
   if (!claim) {
     sentPermitNos.add(permitNoKey);
     sheetPermitNosCache.add(permitNoKey);
-    console.info(`[permit-sync] durable duplicate claim skipped: source=${source}, permitNo=${permitNoKey}`);
+    console.info(`[permit-sync] durable duplicate claim skipped: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}`);
     return false;
   }
 
@@ -2794,13 +2795,14 @@ async function writePermitToSheet(item, locationName, source) {
     Object.entries(item).filter(([key]) => key !== 'locationCode'),
   );
   payload['Location Name'] = locationName;
-  console.info(`[permit-sync] writing: source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
+  console.info(`[permit-sync] writing: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
   const response = await fetch(PERMIT_SHEET_URL, {
     method: 'POST',
     body: new URLSearchParams({ data: JSON.stringify(payload) }),
   });
   if (!response.ok) {
-    console.error(`[permit-sync] write rejected: permitNo=${permitNoKey}, httpStatus=${response.status}`);
+    const responseBody = (await response.text()).slice(0, 500);
+    console.error(`[permit-sync] write rejected: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
     throw new Error(`Sheet write returned HTTP ${response.status}`);
   }
 
@@ -2810,7 +2812,7 @@ async function writePermitToSheet(item, locationName, source) {
   } catch (error) {
     console.warn(`[permit-sync] could not mark successful write claim for ${permitNoKey}:`, error.message);
   }
-  console.info(`[permit-sync] write accepted: permitNo=${permitNoKey}, httpStatus=${response.status}`);
+  console.info(`[permit-sync] write accepted: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}`);
   return true;
 }
 
@@ -2838,6 +2840,7 @@ app.post('/api/permits/manual', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Unable to uniquely resolve the permit terminal.' });
     }
 
+    console.info(`[permit-sync] manual submit received: instance=${PERMIT_SYNC_INSTANCE_ID}, permitNo=${normalizePermitNo(permitNo)}, ip=${req.ip}, userAgent=${req.get('user-agent') || 'unknown'}`);
     const written = await writePermitToSheet({ ...item, 'Permit No': permitNo }, locationName, 'manual');
     if (!written) {
       return res.status(409).json({ success: false, message: 'This Permit No is already in the sheet.' });
@@ -2854,13 +2857,17 @@ app.post('/api/permits/manual', async (req, res) => {
 // the same permit as pending before either marks it sent, causing a double-post.
 let isSyncingPermits = false;
 let lastPermitSyncSummaryAt = 0;
+let permitSyncCycleSequence = 0;
+let activePermitSyncCycleId = null;
 
 async function syncPermitsToSheet() {
   if (isSyncingPermits) {
-    console.warn('[permit-sync] skipped overlapping sync cycle');
+    console.warn(`[permit-sync] skipped overlapping sync cycle: instance=${PERMIT_SYNC_INSTANCE_ID}, activeCycle=${activePermitSyncCycleId}`);
     return;
   }
   isSyncingPermits = true;
+  const cycleId = ++permitSyncCycleSequence;
+  activePermitSyncCycleId = cycleId;
   try {
     if (!sheetPermitNosCacheReady) {
       await refreshSheetPermitNosCache();
@@ -2883,7 +2890,7 @@ async function syncPermitsToSheet() {
         && !sheetPermitNosCache.has(normalizePermitNo(item['Permit No'])),
     );
     if (pending.length || Date.now() - lastPermitSyncSummaryAt >= 60000) {
-      console.info(`[permit-sync] cycle: mailbox=${permitEmails.length}, active=${zlist.length}, unique=${uniqueByPermitNo.length}, pending=${pending.length}, sentThisProcess=${sentPermitNos.size}, sheetCache=${sheetPermitNosCache.size}`);
+      console.info(`[permit-sync] cycle: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, mailbox=${permitEmails.length}, active=${zlist.length}, unique=${uniqueByPermitNo.length}, pending=${pending.length}, sentThisProcess=${sentPermitNos.size}, sheetCache=${sheetPermitNosCache.size}, pendingPermitNos=${pending.map((item) => normalizePermitNo(item['Permit No'])).join(',') || 'none'}`);
       lastPermitSyncSummaryAt = Date.now();
     }
 
@@ -2894,7 +2901,7 @@ async function syncPermitsToSheet() {
         continue;
       }
       try {
-        await writePermitToSheet(item, locationName, 'email');
+        await writePermitToSheet(item, locationName, 'email', cycleId);
       } catch (error) {
         // The sheet may have accepted the POST before the connection failed; don't retry
         // an uncertain delivery during this process lifetime and risk creating a duplicate.
@@ -2905,6 +2912,7 @@ async function syncPermitsToSheet() {
     console.error('Failed to sync permits to sheet:', error);
   } finally {
     isSyncingPermits = false;
+    activePermitSyncCycleId = null;
   }
 }
 
@@ -2920,9 +2928,9 @@ refreshSheetPermitNosCache().then(() => {
 setInterval(refreshSheetPermitNosCache, 30000);
 if (ENABLE_PERMIT_SYNC) {
   setInterval(syncPermitsToSheet, 10000);
-  console.info(`[permit-sync] background Gmail-to-sheet worker enabled; pid=${process.pid}`);
+  console.info(`[permit-sync] background Gmail-to-sheet worker enabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
 } else {
-  console.info(`[permit-sync] background Gmail-to-sheet worker disabled; pid=${process.pid}`);
+  console.info(`[permit-sync] background Gmail-to-sheet worker disabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
 }
 
 const PORT = Number(process.env.PORT) || 5000;
