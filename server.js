@@ -2605,7 +2605,7 @@ app.get('/api/permits', async (req, res) => {
 const PERMIT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec';
 const PERMIT_SHEET_ID = '1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc';
 const PERMIT_CLAIM_DIR = path.join(UPLOAD_DIR, 'permit-sync-claims');
-const PERMIT_CLAIM_RECONCILE_GRACE_MS = 2 * 60 * 1000;
+const PERMIT_CLAIM_RECONCILE_GRACE_MS = 10 * 60 * 1000;
 fs.mkdirSync(PERMIT_CLAIM_DIR, { recursive: true });
 let utilityLocationsCache = [];
 // sentPermitNos is only this process's own memory of what it already POSTed; it resets on
@@ -2665,7 +2665,7 @@ async function markPermitClaimWritten(claimPath, permitNo, createdAt) {
 
 async function reconcilePermitClaims(sheetPermitNos) {
   const claimFiles = await fs.promises.readdir(PERMIT_CLAIM_DIR);
-  let clearedClaims = 0;
+  const clearedPermitNos = [];
 
   for (const filename of claimFiles.filter((name) => name.endsWith('.claim'))) {
     const claimPath = path.join(PERMIT_CLAIM_DIR, filename);
@@ -2694,15 +2694,15 @@ async function reconcilePermitClaims(sheetPermitNos) {
         && Date.now() - recordedAt >= PERMIT_CLAIM_RECONCILE_GRACE_MS) {
         await fs.promises.unlink(claimPath);
         sentPermitNos.delete(permitKey);
-        clearedClaims += 1;
+        clearedPermitNos.push(permitKey);
       }
     } catch (error) {
       console.warn(`[permit-sync] unable to reconcile claim ${filename}:`, error.message);
     }
   }
 
-  if (clearedClaims) {
-    console.info(`[permit-sync] cleared ${clearedClaims} old claim(s) for permits absent from the sheet`);
+  if (clearedPermitNos.length) {
+    console.warn(`[permit-sync] released old claims after 10-minute sheet absence: ${clearedPermitNos.join(',')}`);
   }
 }
 
