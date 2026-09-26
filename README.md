@@ -218,3 +218,7 @@ VALUES
     '4149',
     'roym1@indianoil.in'
 );
+
+## Permit Records (Azure SQL)
+
+Run `permit_records.sql` once against the application Azure SQL database before deploying the permit API. It creates `dbo.PermitRecords` and enforces a unique index on `PERMIT_NO` so repeated Gmail messages or concurrent sync cycles cannot create duplicate permit rows.

@@ -16,15 +16,12 @@ import {
   SetOfficerMasterList,
 } from "./action/userSlice";
 
-function formatDate(date1) {
-  const date = new Date(...date1.slice(5, -1).split(","));
-  return date.toLocaleDateString("en-GB").replace(",", "").replaceAll("/", "-");
-}
-function formatTime(dateStr) {
-  const parts = dateStr.match(/\d+/g);
-  const hour = parts[3].padStart(2, "0");
-  const minute = parts[4].padStart(2, "0");
-  return `${hour}:${minute}`;
+function isClearanceActive(clearanceTill) {
+  const match = String(clearanceTill || "").match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return false;
+  const clearanceMinutes = Number(match[1]) * 60 + Number(match[2]);
+  const now = new Date();
+  return clearanceMinutes > now.getHours() * 60 + now.getMinutes();
 }
 
 function App() {
@@ -160,7 +157,9 @@ function App() {
     let intervalId;
     const fetchSheetData = async () => {
       try {
-        const response = await fetch(apiUrl("/api/permit-sheet"));
+        const response = await fetch(
+          apiUrl(`/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`),
+        );
         if (!response.ok) {
           throw new Error("Failed to load permit records");
         }
@@ -177,25 +176,10 @@ function App() {
                       : "test"),
                 )
                 .filter((ele) => {
-                  return (
-                    formatTime(ele["Clearance Till"]) >
-                    new Date().toLocaleTimeString("en-GB")
-                  );
+                  return isClearanceActive(ele["Clearance Till"]);
                 })
             : [];
-        const filteredData2 = filteredData1.map((item) => ({
-          ...item,
-          Date: formatDate(item.Timestamp),
-          "Clearance From": formatTime(item["Clearance From"]),
-          "Clearance Till": formatTime(item["Clearance Till"]),
-        }));
-        const filteredData = filteredData2.map((obj) =>
-          Object.fromEntries(
-            Object.entries(obj).filter(
-              ([key]) => !["Timestamp", "Jdbc_Status"].includes(key),
-            ),
-          ),
-        );
+        const filteredData = filteredData1;
         dispatch(SetPermitList(filteredData));
         const permit_type_array = filteredData.map((val) => val["Permit Type"]);
         const permit_labels = [

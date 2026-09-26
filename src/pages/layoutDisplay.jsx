@@ -13,9 +13,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import NavbarPermit from "../components/NavbarPermit";
+import { apiUrl } from "../api";
 
 export default function LayoutDisplay({ state}) {
-  const { PermitList, selectedTerminal, officerList } = useSelector(
+  const { PermitList, selectedTerminal, officerList, locationCode } = useSelector(
     (state) => state.myApp,
   );
   const [saveLoader, setSaveLoader] = useState(false);
@@ -81,7 +82,6 @@ export default function LayoutDisplay({ state}) {
     setMark("new");
   };
 
-  const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
   const handleSubmit = async () => {
     const x_list = uniquePermitList.filter(
       (val) => val["Unique ID"] === oldrowNumber,
@@ -90,45 +90,33 @@ export default function LayoutDisplay({ state}) {
     const y = x_list.length > 0 ? x_list[0].page_top : null;
     setSaveLoader(true);
     try {
-      await fetch(sheet_url, {
-        method: "POST",
-        // mode: "no-cors",
-        body: new URLSearchParams({
-          row: rowNumber,
-          updates: JSON.stringify([
-            { col: 12, value: mark === "existing" ? y : markerPosition.mouseY },
-            { col: 13, value: mark === "existing" ? x : markerPosition.mouseX },
-          ]),
+      const response = await fetch(apiUrl(`/api/permit-records/${rowNumber}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locationCode,
+          page_top: mark === "existing" ? y : markerPosition.mouseY,
+          page_left: mark === "existing" ? x : markerPosition.mouseX,
         }),
       });
-      mark != "existing" ? setSaveLoader(false) : null;
+      if (!response.ok) throw new Error("Unable to save permit marker");
+
+      if (mark === "existing") {
+        const clearResponse = await fetch(apiUrl(`/api/permit-records/${oldrowNumber}`), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ locationCode, page_top: null, page_left: null }),
+        });
+        if (!clearResponse.ok) throw new Error("Unable to clear the previous permit marker");
+      }
       handleMenuClose();
     } catch (error) {
       console.log(
-        "error layout new...",
+        "error saving permit layout...",
         `${error} and also check internet connection`,
       );
-    }
-    if (mark === "existing") {
-      try {
-        await fetch(sheet_url, {
-          method: "POST",
-          mode: "no-cors",
-          body: new URLSearchParams({
-            row: oldrowNumber,
-            updates: JSON.stringify([
-              { col: 12, value: "" },
-              { col: 13, value: "" },
-            ]),
-          }),
-        });
-        setSaveLoader(false);
-      } catch (error) {
-        console.log(
-          "error layout existing...",
-          `${error} and also check internet connection`,
-        );
-      }
+    } finally {
+      setSaveLoader(false);
     }
   };
 

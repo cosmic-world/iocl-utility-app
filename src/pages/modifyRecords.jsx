@@ -21,6 +21,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import UserConfirmationModalWithoutPin from "./UserConfirmationModalWithoutPin";
 import NavbarPermit from "../components/NavbarPermit";
+import { apiUrl } from "../api";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -36,20 +37,9 @@ const EditToolbar = () => {
   );
 };
 
-function formatDate(date1) {
-  const date = new Date(...date1.slice(5, -1).split(","));
-  return date.toLocaleDateString("en-GB").replace(",", "").replaceAll("/", "-");
-}
-function formatTime(dateStr) {
-  const parts = dateStr.match(/\d+/g);
-  const hour = parts[3].padStart(2, "0");
-  const minute = parts[4].padStart(2, "0");
-  return `${hour}:${minute}`;
-}
-
 const ModifyRecords = () => {
   const dispatch = useDispatch();
-  const { selectedTerminal, userType, navBarComponent } = useSelector(
+  const { selectedTerminal, userType, navBarComponent, locationCode } = useSelector(
     (state) => state.myApp,
   );
   const [rows, setRows] = React.useState([]);
@@ -62,71 +52,18 @@ const ModifyRecords = () => {
   const [selectedId, setSelectedId] = useState("");
   const [saveLoader, setSaveLoader] = useState(false);
   const [show, setShow] = useState(false);
-  const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
   const locationName = selectedTerminal[selectedTerminal.length - 1];
-  const sheet_url = `https://script.google.com/macros/s/AKfycbzWr167t9azcmb8iEHUYwdjuf77mFuOuA6i1F07QYIKbJHY47UjVitbgW7cCkOrhvA/exec`;
-  const delete_sheet_url = `https://script.google.com/macros/s/AKfycbzkp6GfBX8y_DJeLV4bR9Pm5slAtKNWaxTS4YNpzVczo2MUx3aOT6JMLD0k5PsZ-cnB/exec`;
 
   const fetchSheetData = async () => {
     try {
       const response = await fetch(
-        `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details`,
+        apiUrl(`/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`),
       );
-      const text = await response.text();
-      // Remove unwanted characters from response
-      const json = JSON.parse(text.substring(47).slice(0, -2));
-      const rows = json.table.rows.map((row) =>
-        row.c.map((ele) => ele?.v ?? ""),
-      );
-      const cols = json.table.cols.map((col) => col.label);
-      // Convert rows into simple array
-      const formattedData1 = rows.map((row) => {
-        const obj = {};
-        row.forEach((cell, index) => {
-          obj[cols[index]] = cell;
-        });
-        return obj;
-      });
-      const formattedData = formattedData1.filter(
-        (obj) => !(Object.keys(obj).length === 1 && obj[""] === ""),
-      );
-      const filteredData1 =
-        formattedData.length > 0
-          ? formattedData.filter(
-              (ele) =>
-                ele["Location Name"].toLowerCase() ===
-                ((locationName !== "") & (locationName != undefined)
-                  ? locationName.toLowerCase()
-                  : "test"),
-            )
-          : [];
-
-      const filteredData2 = filteredData1.map((item) => ({
-        ...item,
-        Date: formatDate(item.Timestamp),
-        "Clearance From": formatTime(item["Clearance From"]),
-        "Clearance Till": formatTime(item["Clearance Till"]),
-      }));
-
-      const filteredData = filteredData2.map((obj) =>
-        Object.fromEntries(
-          Object.entries(obj).filter(
-            ([key]) => !["Timestamp", "Jdbc_Status"].includes(key),
-          ),
-        ),
-      );
-      const res1 =
-        filteredData.length > 0
-          ? filteredData.map((val) => val["Unique ID"])
-          : [{ id: 0 }].map((val) => val["Unique ID"]);
-      var result = Math.max(...res1);
-      const unique_filteredData = [
-        ...new Map(
-          filteredData.map((item) => [item["Permit No"], item]),
-        ).values(),
-      ];
-      setRows(unique_filteredData.map((val, index) => ({ id: index, ...val })));
-      setlocalID(result + 1);
+      if (!response.ok) throw new Error("Failed to load permit records");
+      const result = await response.json();
+      const records = Array.isArray(result.data) ? result.data : [];
+      setRows(records.map((record) => ({ id: record["Unique ID"], ...record })));
+      setlocalID(Math.max(0, ...records.map((record) => Number(record["Unique ID"]) || 0)) + 1);
     } catch (error) {
       console.log(
         "error admin...",
@@ -139,7 +76,7 @@ const ModifyRecords = () => {
     if (selectedTerminal !== "") {
       fetchSheetData();
     }
-  }, [locationName]);
+  }, [locationName, locationCode]);
 
   const handleRowEditStart = (params, event) => {
     event.defaultMuiPrevented = true;
@@ -160,12 +97,11 @@ const ModifyRecords = () => {
   const handleDeleteClick = async (id) => {
     setSaveLoader(true);
     try {
-      await fetch(delete_sheet_url, {
-        method: "POST",
-        body: new URLSearchParams({
-          row: id,
-        }),
-      });
+      const response = await fetch(
+        apiUrl(`/api/permit-records/${id}?locationCode=${encodeURIComponent(locationCode)}`),
+        { method: "DELETE" },
+      );
+      if (!response.ok) throw new Error("Unable to delete permit record");
       setSaveLoader(false);
       setSuccessOpen(true);
       fetchSheetData();
@@ -199,22 +135,25 @@ const ModifyRecords = () => {
     setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
     setSaveLoader(true);
     try {
-      await fetch(sheet_url, {
-        method: "POST",
-        body: new URLSearchParams({
-          row: newRow["Unique ID"],
-          updates: JSON.stringify([
-            { col: 2, value: newRow["Permit Type"] },
-            { col: 3, value: newRow["Work Description"] },
-            { col: 4, value: newRow["Work Location"] },
-            { col: 5, value: newRow["Receiver Name"] },
-            { col: 6, value: newRow["Clearance From"] },
-            { col: 7, value: newRow["Clearance Till"] },
-            { col: 8, value: newRow["Contractor Name"] },
-            { col: 9, value: newRow["Permit No"] },
-          ]),
+      const response = await fetch(apiUrl(`/api/permit-records/${newRow["Unique ID"]}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locationCode,
+          "Permit Type": newRow["Permit Type"],
+          "Work Description": newRow["Work Description"],
+          "Work Location": newRow["Work Location"],
+          "Receiver Name": newRow["Receiver Name"],
+          "Clearance From": newRow["Clearance From"],
+          "Clearance Till": newRow["Clearance Till"],
+          "Contractor Name": newRow["Contractor Name"],
+          "Permit No": newRow["Permit No"],
         }),
       });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Unable to update permit record");
+      }
       fetchSheetData();
       setSaveLoader(false);
       setSuccessOpen(true);

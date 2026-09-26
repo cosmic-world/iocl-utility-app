@@ -12,7 +12,7 @@ export const userSlice = createSlice({
     officerList: [], // to store master data
     contractorList: [], // to store master data
     selectedTerminal: "", // to store selected material name
-    PermitList: [], // to store Permit List data from Google Sheets
+    PermitList: [], // to store permit records from Azure SQL
     locationList: [], // to store location list data from Google Sheets
     locationCode: "", // to store location code data from Google Sheets
     authorized: false,

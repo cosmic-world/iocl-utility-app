@@ -7,18 +7,17 @@ const crypto = require("crypto");
 const cors = require("cors");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const sql = require("mssql");
-// const cron = require('node-cron');
+const cron = require('node-cron');
 const imaps = require('imap-simple');
 const { simpleParser } = require('mailparser');
 const PDFDocument = require('pdfkit');
-const PERMIT_SYNC_INSTANCE_ID = `${process.env.HOSTNAME || process.env.COMPUTERNAME || 'unknown-host'}:${process.pid}:${crypto.randomUUID()}`;
 
+const PERMIT_SYNC_INSTANCE_ID = `${process.env.HOSTNAME || process.env.COMPUTERNAME || 'unknown-host'}:${process.pid}:${crypto.randomUUID()}`;
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// Choose multer storage mode: memory for Azure uploads, disk for local storage
 const useAzureStorage = !!process.env.AZURE_STORAGE_CONNECTION_STRING;
 const useAzureStorage_1 = !!process.env.AZURE_STORAGE_CONNECTION_STRING_1;
 const memoryStorage = multer.memoryStorage();
@@ -34,13 +33,7 @@ const upload = multer({
   storage: useAzureStorage ? memoryStorage : diskStorage,
   limits: { fileSize: 30 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = [
-      "application/pdf",
-      "image/png",
-      "image/jpeg",
-      "image/jpg",
-      "image/webp",
-    ];
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"];
     cb(null, allowed.includes(file.mimetype));
   },
 });
@@ -67,8 +60,7 @@ const FREE_EMAIL_DOMAINS = new Set([
   "msn.com", "icloud.com", "me.com", "aol.com", "protonmail.com", "proton.me",
   "mail.com", "zoho.com",
 ]);
-const isValidEmail = (value) =>
-  EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+const isValidEmail = (value) => EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
 const isBusinessEmail = (value) => {
   const domain = String(value || "").trim().toLowerCase().split("@")[1];
   return Boolean(domain) && !FREE_EMAIL_DOMAINS.has(domain);
@@ -2599,22 +2591,8 @@ app.get('/api/permits', async (req, res) => {
   res.json({ success: true, count: permitEmails.length, data: permitEmails });
 });
 
-// Forwards permit mail to the shared permit-tracking Google Sheet. This runs centrally
-// here (PM2-managed, single process) instead of in the React frontend, since relying on
-// whichever browser tabs happen to be open led to uncoordinated duplicate/mislabeled writes.
-const PERMIT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec';
-const PERMIT_SHEET_ID = '1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc';
-const PERMIT_CLAIM_DIR = path.join(UPLOAD_DIR, 'permit-sync-claims');
-const PERMIT_CLAIM_RECONCILE_GRACE_MS = 10 * 60 * 1000;
-fs.mkdirSync(PERMIT_CLAIM_DIR, { recursive: true });
+// Azure SQL is the system of record for permit data and duplicate prevention.
 let utilityLocationsCache = [];
-// sentPermitNos is only this process's own memory of what it already POSTed; it resets on
-// every restart. sheetPermitNosCache is read back from the sheet itself, so a restart can
-// still tell a permit was already recorded there and won't repost it.
-const sentPermitNos = new Set();
-let sheetPermitNosCache = new Set();
-let sheetPermitNosCacheReady = false;
-let permitSheetRowsCache = [];
 
 function normalizePermitNo(permitNo) {
   return String(permitNo || '').trim().toUpperCase();
@@ -2630,135 +2608,6 @@ function dedupePermitRecords(records, getPermitNo) {
   }
   return [...byPermitNo.values()];
 }
-
-function getPermitClaimPath(permitNo) {
-  const permitKey = normalizePermitNo(permitNo);
-  const filename = `${crypto.createHash('sha256').update(permitKey).digest('hex')}.claim`;
-  return path.join(PERMIT_CLAIM_DIR, filename);
-}
-
-async function claimPermitForSheetWrite(permitNo) {
-  const permitKey = normalizePermitNo(permitNo);
-  const claimPath = getPermitClaimPath(permitKey);
-  const createdAt = new Date().toISOString();
-  let claimFile;
-  try {
-    claimFile = await fs.promises.open(claimPath, 'wx');
-    await claimFile.writeFile(`${permitKey}\n${createdAt}\nPID=${process.pid}\nstatus=pending\n`);
-    return { claimPath, createdAt };
-  } catch (error) {
-    if (error.code === 'EEXIST') {
-      return null;
-    }
-    throw error;
-  } finally {
-    await claimFile?.close();
-  }
-}
-
-async function markPermitClaimWritten(claimPath, permitNo, createdAt) {
-  await fs.promises.writeFile(
-    claimPath,
-    `${normalizePermitNo(permitNo)}\n${createdAt}\nPID=${process.pid}\nstatus=written\nwrittenAt=${new Date().toISOString()}\n`,
-  );
-}
-
-async function reconcilePermitClaims(sheetPermitNos) {
-  const claimFiles = await fs.promises.readdir(PERMIT_CLAIM_DIR);
-  const clearedPermitNos = [];
-
-  for (const filename of claimFiles.filter((name) => name.endsWith('.claim'))) {
-    const claimPath = path.join(PERMIT_CLAIM_DIR, filename);
-    try {
-      const contents = await fs.promises.readFile(claimPath, 'utf8');
-      const [permitKeyLine, createdAtLine, , statusLine, writtenAtLine] = contents.split(/\r?\n/);
-      const permitKey = normalizePermitNo(permitKeyLine);
-      if (!permitKey) continue;
-
-      const isInSheet = sheetPermitNos.has(permitKey);
-      const isWritten = statusLine === 'status=written' || !statusLine;
-      const recordedAt = Date.parse(
-        statusLine === 'status=written'
-          ? writtenAtLine?.replace('writtenAt=', '')
-          : createdAtLine,
-      );
-
-      if (isInSheet) {
-        if (!isWritten) {
-          await markPermitClaimWritten(claimPath, permitKey, createdAtLine);
-        }
-        continue;
-      }
-
-      if (isWritten && Number.isFinite(recordedAt)
-        && Date.now() - recordedAt >= PERMIT_CLAIM_RECONCILE_GRACE_MS) {
-        await fs.promises.unlink(claimPath);
-        sentPermitNos.delete(permitKey);
-        clearedPermitNos.push(permitKey);
-      }
-    } catch (error) {
-      console.warn(`[permit-sync] unable to reconcile claim ${filename}:`, error.message);
-    }
-  }
-
-  if (clearedPermitNos.length) {
-    console.warn(`[permit-sync] released old claims after 10-minute sheet absence: ${clearedPermitNos.join(',')}`);
-  }
-}
-
-async function refreshSheetPermitNosCache() {
-  try {
-    const response = await fetch(
-      `https://docs.google.com/spreadsheets/d/${PERMIT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details&_=${Date.now()}`,
-    );
-    if (!response.ok) {
-      throw new Error(`Sheet read returned HTTP ${response.status}`);
-    }
-    const text = await response.text();
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const cols = json.table.cols.map((col) => col.label);
-    const permitNoIndex = cols.indexOf('Permit No');
-    if (permitNoIndex === -1) {
-      throw new Error('Permit No column is missing from the sheet');
-    }
-    const rows = json.table.rows.map((row) => {
-      const cells = row.c || [];
-      return Object.fromEntries(
-        cols.map((col, index) => [col, cells[index]?.v ?? '']),
-      );
-    });
-    const sheetPermitCounts = new Map();
-    for (const row of rows) {
-      const permitNo = normalizePermitNo(row['Permit No']);
-      if (permitNo) {
-        sheetPermitCounts.set(permitNo, (sheetPermitCounts.get(permitNo) || 0) + 1);
-      }
-    }
-    const uniqueRows = dedupePermitRecords(rows, (row) => row['Permit No']);
-    const permitNos = uniqueRows.map((row) => normalizePermitNo(row['Permit No']));
-    const duplicatePermitNos = [...sheetPermitCounts]
-      .filter(([, count]) => count > 1)
-      .map(([permitNo, count]) => `${permitNo}x${count}`);
-    const missingPermitNoRows = rows.filter(
-      (row) => !normalizePermitNo(row['Permit No']),
-    ).length;
-    const refreshedPermitNos = new Set(permitNos);
-    await reconcilePermitClaims(refreshedPermitNos);
-    sheetPermitNosCache = refreshedPermitNos;
-    permitSheetRowsCache = uniqueRows;
-    sheetPermitNosCacheReady = true;
-    console.info(`[permit-sync] sheet rows: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${rows.length}, uniquePermits=${uniqueRows.length}, duplicateRows=${[...sheetPermitCounts.values()].reduce((sum, count) => sum + Math.max(0, count - 1), 0)}, missingPermitNoRows=${missingPermitNoRows}, duplicatePermitNos=${duplicatePermitNos.join(',') || 'none'}`);
-  } catch (error) {
-    console.error('Failed to refresh sheet permit-no cache:', error);
-  }
-}
-
-app.get('/api/permit-sheet', (req, res) => {
-  if (!sheetPermitNosCacheReady) {
-    return res.status(503).json({ success: false, message: 'Permit data is not ready yet.' });
-  }
-  return res.json({ success: true, data: permitSheetRowsCache });
-});
 
 async function refreshUtilityLocationsCache() {
   try {
@@ -2794,58 +2643,203 @@ function resolvePermitLocationName(permitNo) {
   return matches.length === 1 ? matches[0].LOCATION_NAME ?? null : null;
 }
 
-async function writePermitToSheet(item, locationName, source, cycleId = 'manual') {
-  if (!sheetPermitNosCacheReady) {
-    await refreshSheetPermitNosCache();
-  }
-  if (!sheetPermitNosCacheReady) {
-    const error = new Error('Unable to verify existing permits in the sheet.');
-    error.statusCode = 503;
-    throw error;
-  }
-
-  const permitNoKey = normalizePermitNo(item['Permit No']);
-  if (sentPermitNos.has(permitNoKey) || sheetPermitNosCache.has(permitNoKey)) {
-    console.info(`[permit-sync] duplicate skipped: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}`);
-    return false;
-  }
-
-  const claim = await claimPermitForSheetWrite(permitNoKey);
-  if (!claim) {
-    sentPermitNos.add(permitNoKey);
-    sheetPermitNosCache.add(permitNoKey);
-    console.info(`[permit-sync] durable duplicate claim skipped: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}`);
-    return false;
-  }
-
-  sentPermitNos.add(permitNoKey);
-  console.log('sentPermitNos',sentPermitNos);
-  
-  const payload = Object.fromEntries(
-    Object.entries(item).filter(([key]) => key !== 'locationCode'),
-  );
-  payload['Location Name'] = locationName;
-  const requestId = crypto.randomUUID();
-  console.info(`[permit-sync] writing: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
-  const response = await fetch(PERMIT_SHEET_URL, {
-    method: 'POST',
-    body: new URLSearchParams({ data: JSON.stringify(payload) }),
-  });
-  const responseBody = (await response.text()).slice(0, 500);
-  if (!response.ok) {
-    console.error(`[permit-sync] write rejected: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
-    throw new Error(`Sheet write returned HTTP ${response.status}`);
-  }
-
-  sheetPermitNosCache.add(permitNoKey);
-  try {
-    await markPermitClaimWritten(claim.claimPath, permitNoKey, claim.createdAt);
-  } catch (error) {
-    console.warn(`[permit-sync] could not mark successful write claim for ${permitNoKey}:`, error.message);
-  }
-  console.info(`[permit-sync] write accepted: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
-  return true;
+function formatPermitRecord(record) {
+  const createdAt = new Date(record.CREATED_AT);
+  return {
+    'Unique ID': record.ID,
+    'Permit No': record.PERMIT_NO,
+    'Permit Type': record.PERMIT_TYPE || '',
+    'Work Description': record.WORK_DESCRIPTION || '',
+    'Work Location': record.WORK_LOCATION || '',
+    'Receiver Name': record.RECEIVER_NAME || '',
+    'Clearance From': String(record.CLEARANCE_FROM || '').slice(0, 5),
+    'Clearance Till': String(record.CLEARANCE_TILL || '').slice(0, 5),
+    'Contractor Name': record.CONTRACTOR_NAME || '',
+    'Location Name': record.LOCATION_NAME || '',
+    page_top: record.PAGE_TOP ?? '',
+    page_left: record.PAGE_LEFT ?? '',
+    Timestamp: createdAt.toISOString(),
+    Date: createdAt.toLocaleDateString('en-GB').replaceAll('/', '-'),
+  };
 }
+
+async function insertPermitRecord(item, locationCode, locationName, source, emailUid = null) {
+  const permitNo = normalizePermitNo(item['Permit No']);
+  const pool = await new sql.ConnectionPool(sqlConfig).connect();
+  try {
+    const request = pool.request();
+    request.input('permitNo', sql.NVarChar(50), permitNo);
+    request.input('permitType', sql.NVarChar(100), item['Permit Type'] || null);
+    request.input('workDescription', sql.NVarChar(sql.MAX), item['Work Description'] || null);
+    request.input('workLocation', sql.NVarChar(500), item['Work Location'] || null);
+    request.input('receiverName', sql.NVarChar(200), item['Receiver Name'] || null);
+    request.input('clearanceFrom', sql.NVarChar(8), String(item['Clearance From'] || '').slice(0, 8) || null);
+    request.input('clearanceTill', sql.NVarChar(8), String(item['Clearance Till'] || '').slice(0, 8) || null);
+    request.input('contractorName', sql.NVarChar(300), item['Contractor Name'] || null);
+    request.input('locationCode', sql.NVarChar(50), String(locationCode));
+    request.input('locationName', sql.NVarChar(200), locationName);
+    request.input('source', sql.NVarChar(20), source);
+    request.input('emailUid', sql.NVarChar(200), emailUid ? String(emailUid) : null);
+    await request.query(`
+      INSERT INTO dbo.PermitRecords
+        (PERMIT_NO, PERMIT_TYPE, WORK_DESCRIPTION, WORK_LOCATION, RECEIVER_NAME,
+         CLEARANCE_FROM, CLEARANCE_TILL, CONTRACTOR_NAME, LOCATION_CODE,
+         LOCATION_NAME, RECORD_SOURCE, EMAIL_UID)
+      VALUES
+        (@permitNo, @permitType, @workDescription, @workLocation, @receiverName,
+         @clearanceFrom, @clearanceTill, @contractorName, @locationCode,
+         @locationName, @source, @emailUid)
+    `);
+    console.info(`[permit-db] inserted source=${source}, permitNo=${permitNo}`);
+    return true;
+  } catch (error) {
+    if (error.number === 2627 || error.number === 2601) {
+      console.info(`[permit-db] duplicate skipped source=${source}, permitNo=${permitNo}`);
+      return false;
+    }
+    throw error;
+  } finally {
+    await pool.close();
+  }
+}
+
+app.get('/api/permit-records', async (req, res) => {
+  let pool;
+  try {
+    const locationCode = String(req.query.locationCode || '').trim();
+    if (!locationCode) {
+      return res.status(400).json({ success: false, message: 'Location code is required.' });
+    }
+    pool = await new sql.ConnectionPool(sqlConfig).connect();
+    const request = pool.request();
+    request.input('locationCode', sql.NVarChar(50), locationCode);
+    const result = await request.query(`
+      SELECT ID, PERMIT_NO, PERMIT_TYPE, WORK_DESCRIPTION, WORK_LOCATION,
+             RECEIVER_NAME, CLEARANCE_FROM, CLEARANCE_TILL, CONTRACTOR_NAME,
+             LOCATION_NAME, PAGE_TOP, PAGE_LEFT, CREATED_AT
+      FROM dbo.PermitRecords
+      WHERE LOCATION_CODE = @locationCode
+      ORDER BY CREATED_AT, ID
+    `);
+    return res.json({ success: true, data: result.recordset.map(formatPermitRecord) });
+  } catch (error) {
+    console.error('Permit database read failed:', error);
+    return res.status(500).json({ success: false, message: 'Unable to load permits.' });
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.patch('/api/permit-records/:id', async (req, res) => {
+  let pool;
+  try {
+    const id = Number(req.params.id);
+    const locationCode = String(req.body?.locationCode || '').trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode) {
+      return res.status(400).json({ success: false, message: 'Permit ID and location code are required.' });
+    }
+
+    const fields = [
+      ['Permit Type', 'PERMIT_TYPE', sql.NVarChar(100)],
+      ['Work Description', 'WORK_DESCRIPTION', sql.NVarChar(sql.MAX)],
+      ['Work Location', 'WORK_LOCATION', sql.NVarChar(500)],
+      ['Receiver Name', 'RECEIVER_NAME', sql.NVarChar(200)],
+      ['Clearance From', 'CLEARANCE_FROM', sql.NVarChar(8)],
+      ['Clearance Till', 'CLEARANCE_TILL', sql.NVarChar(8)],
+      ['Contractor Name', 'CONTRACTOR_NAME', sql.NVarChar(300)],
+      ['Permit No', 'PERMIT_NO', sql.NVarChar(50)],
+    ];
+    const updates = fields.filter(([key]) => Object.hasOwn(req.body, key));
+    const hasTop = Object.hasOwn(req.body, 'page_top');
+    const hasLeft = Object.hasOwn(req.body, 'page_left');
+    if (!updates.length && !hasTop && !hasLeft) {
+      return res.status(400).json({ success: false, message: 'No permit fields were provided.' });
+    }
+
+    pool = await new sql.ConnectionPool(sqlConfig).connect();
+    const request = pool.request();
+    request.input('id', sql.Int, id);
+    request.input('locationCode', sql.NVarChar(50), locationCode);
+    const setClauses = updates.map(([key, column, type], index) => {
+      const parameter = `field${index}`;
+      let value = req.body[key];
+      if (key === 'Permit No') {
+        value = normalizePermitNo(value);
+        if (!value.startsWith(locationCode)) {
+          throw Object.assign(new Error('Permit No must start with the location code.'), { statusCode: 400 });
+        }
+      }
+      if (key === 'Clearance From' || key === 'Clearance Till') {
+        value = String(value || '').slice(0, 8) || null;
+      }
+      request.input(parameter, type, value === '' ? null : value);
+      return `[${column}] = @${parameter}`;
+    });
+    if (hasTop) {
+      const value = req.body.page_top === '' || req.body.page_top == null ? null : Number(req.body.page_top);
+      if (value !== null && (!Number.isFinite(value) || value < 0 || value > 100)) {
+        return res.status(400).json({ success: false, message: 'page_top must be between 0 and 100.' });
+      }
+      request.input('pageTop', sql.Float, value);
+      setClauses.push('[PAGE_TOP] = @pageTop');
+    }
+    if (hasLeft) {
+      const value = req.body.page_left === '' || req.body.page_left == null ? null : Number(req.body.page_left);
+      if (value !== null && (!Number.isFinite(value) || value < 0 || value > 100)) {
+        return res.status(400).json({ success: false, message: 'page_left must be between 0 and 100.' });
+      }
+      request.input('pageLeft', sql.Float, value);
+      setClauses.push('[PAGE_LEFT] = @pageLeft');
+    }
+
+    const result = await request.query(`
+      UPDATE dbo.PermitRecords
+      SET ${setClauses.join(', ')}
+      WHERE ID = @id AND LOCATION_CODE = @locationCode
+    `);
+    if (!result.rowsAffected?.[0]) {
+      return res.status(404).json({ success: false, message: 'Permit not found for this location.' });
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    if (error.number === 2627 || error.number === 2601) {
+      return res.status(409).json({ success: false, message: 'That Permit No already exists.' });
+    }
+    console.error('Permit update failed:', error);
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Unable to update permit.' });
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.delete('/api/permit-records/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const locationCode = String(req.query.locationCode || '').trim();
+    if (!Number.isInteger(id) || id <= 0 || !locationCode) {
+      return res.status(400).json({ success: false, message: 'Permit ID and location code are required.' });
+    }
+    const pool = await new sql.ConnectionPool(sqlConfig).connect();
+    const request = pool.request();
+    request.input('id', sql.Int, id);
+    request.input('locationCode', sql.NVarChar(50), locationCode);
+    let result;
+    try {
+      result = await request.query(
+        'DELETE FROM dbo.PermitRecords WHERE ID = @id AND LOCATION_CODE = @locationCode',
+      );
+    } finally {
+      await pool.close();
+    }
+    if (!result.rowsAffected?.[0]) {
+      return res.status(404).json({ success: false, message: 'Permit not found for this location.' });
+    }
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Permit delete failed:', error);
+    return res.status(500).json({ success: false, message: 'Unable to delete permit.' });
+  }
+});
 
 app.post('/api/permits/manual', async (req, res) => {
   try {
@@ -2871,27 +2865,40 @@ app.post('/api/permits/manual', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Unable to uniquely resolve the permit terminal.' });
     }
 
-    console.info(`[permit-sync] manual submit received: instance=${PERMIT_SYNC_INSTANCE_ID}, permitNo=${normalizePermitNo(permitNo)}, ip=${req.ip}, userAgent=${req.get('user-agent') || 'unknown'}`);
-    const written = await writePermitToSheet({ ...item, 'Permit No': permitNo }, locationName, 'manual');
+    console.info(`[permit-db] manual submit: permitNo=${normalizePermitNo(permitNo)}, ip=${req.ip}`);
+    const written = await insertPermitRecord(
+      { ...item, 'Permit No': permitNo },
+      locationCode,
+      locationName,
+      'MANUAL',
+    );
     if (!written) {
-      return res.status(409).json({ success: false, message: 'This Permit No is already in the sheet.' });
+      return res.status(409).json({ success: false, message: 'This Permit No is already recorded.' });
     }
     return res.json({ success: true, message: 'Permit submitted successfully.' });
   } catch (error) {
-    console.error('Manual permit sheet write failed:', error);
-    return res.status(error.statusCode || 502).json({ success: false, message: error.message || 'Unable to submit permit.' });
+    console.error('Manual permit database insert failed:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Unable to submit permit.' });
   }
 });
 
-// Guards against a new cycle starting while a previous one (IMAP fetch + sequential
-// sheet POSTs) is still running past the 10s interval, which would let both cycles see
-// the same permit as pending before either marks it sent, causing a double-post.
+// Guards against overlapping IMAP/database sync cycles.
 let isSyncingPermits = false;
 let lastPermitSyncSummaryAt = 0;
 let permitSyncCycleSequence = 0;
 let activePermitSyncCycleId = null;
 
-async function syncPermitsToSheet() {
+async function getExistingPermitNos() {
+  const pool = await new sql.ConnectionPool(sqlConfig).connect();
+  try {
+    const result = await pool.request().query('SELECT PERMIT_NO FROM dbo.PermitRecords');
+    return new Set(result.recordset.map((row) => normalizePermitNo(row.PERMIT_NO)));
+  } finally {
+    await pool.close();
+  }
+}
+
+async function syncPermitsToDatabase() {
   if (isSyncingPermits) {
     console.warn(`[permit-sync] skipped overlapping sync cycle: instance=${PERMIT_SYNC_INSTANCE_ID}, activeCycle=${activePermitSyncCycleId}`);
     return;
@@ -2900,12 +2907,6 @@ async function syncPermitsToSheet() {
   const cycleId = ++permitSyncCycleSequence;
   activePermitSyncCycleId = cycleId;
   try {
-    if (!sheetPermitNosCacheReady) {
-      await refreshSheetPermitNosCache();
-      if (!sheetPermitNosCacheReady) {
-        return;
-      }
-    }
     await fetchTodayPermitEmails();
     const zlist = permitEmails
       .map((item) => item.json)
@@ -2916,31 +2917,30 @@ async function syncPermitsToSheet() {
         return clearanceTill > new Date().toLocaleTimeString('en-GB');
       });
     const uniqueByPermitNo = dedupePermitRecords(zlist, (item) => item['Permit No']);
+      const existingPermitNos = await getExistingPermitNos();
     const pending = uniqueByPermitNo.filter(
-      (item) => !sentPermitNos.has(normalizePermitNo(item['Permit No']))
-        && !sheetPermitNosCache.has(normalizePermitNo(item['Permit No'])),
+        (item) => !existingPermitNos.has(normalizePermitNo(item['Permit No'])),
     );
     if (pending.length || Date.now() - lastPermitSyncSummaryAt >= 60000) {
-      console.info(`[permit-sync] cycle: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, mailbox=${permitEmails.length}, active=${zlist.length}, unique=${uniqueByPermitNo.length}, pending=${pending.length}, sentThisProcess=${sentPermitNos.size}, sheetCache=${sheetPermitNosCache.size}, pendingPermitNos=${pending.map((item) => normalizePermitNo(item['Permit No'])).join(',') || 'none'}`);
+        console.info(`[permit-sync] cycle: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, mailbox=${permitEmails.length}, active=${zlist.length}, unique=${uniqueByPermitNo.length}, pending=${pending.length}, databasePermits=${existingPermitNos.size}, pendingPermitNos=${pending.map((item) => normalizePermitNo(item['Permit No'])).join(',') || 'none'}`);
       lastPermitSyncSummaryAt = Date.now();
     }
 
     for (const item of pending) {
+        const locationCode = String(item['Permit No']).match(/^\d{4}/)?.[0];
       const locationName = resolvePermitLocationName(item['Permit No']);
-      if (locationName == null) {
+        if (!locationCode || locationName == null) {
         console.warn(`[permit-sync] unresolved terminal; not writing permitNo=${normalizePermitNo(item['Permit No'])}`);
         continue;
       }
       try {
-        await writePermitToSheet(item, locationName, 'email', cycleId);
+          await insertPermitRecord(item, locationCode, locationName, 'EMAIL', item.id);
       } catch (error) {
-        // The sheet may have accepted the POST before the connection failed; don't retry
-        // an uncertain delivery during this process lifetime and risk creating a duplicate.
-        console.error('Permit sheet delivery outcome is uncertain; suppressing retry:', item['Permit No'], error);
+          console.error(`[permit-sync] database insert failed: cycle=${cycleId}, permitNo=${normalizePermitNo(item['Permit No'])}`, error);
       }
     }
   } catch (error) {
-    console.error('Failed to sync permits to sheet:', error);
+      console.error('Failed to sync permits to Azure SQL:', error);
   } finally {
     isSyncingPermits = false;
     activePermitSyncCycleId = null;
@@ -2951,17 +2951,25 @@ refreshUtilityLocationsCache();
 setInterval(refreshUtilityLocationsCache, 5 * 60 * 1000);
 const ENABLE_PERMIT_SYNC = true;
 
-refreshSheetPermitNosCache().then(() => {
-  if (ENABLE_PERMIT_SYNC) {
-    syncPermitsToSheet();
-  }
-});
-setInterval(refreshSheetPermitNosCache, 30000);
 if (ENABLE_PERMIT_SYNC) {
-  setInterval(syncPermitsToSheet, 10000);
-  console.info(`[permit-sync] background Gmail-to-sheet worker enabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
+  syncPermitsToDatabase();
+  setInterval(syncPermitsToDatabase, 10000);
+  cron.schedule('0 0 * * *', async () => {
+    let pool;
+    try {
+      pool = await new sql.ConnectionPool(sqlConfig).connect();
+      const result = await pool.request().query('DELETE FROM dbo.PermitRecords');
+      console.info(`[permit-db] midnight cleanup complete: deletedRows=${result.rowsAffected[0] || 0}, timezone=Asia/Kolkata`);
+    } catch (error) {
+      console.error('[permit-db] midnight cleanup failed:', error);
+    } finally {
+      if (pool) await pool.close();
+    }
+  }, { timezone: 'Asia/Kolkata' });
+  console.info('[permit-db] daily permit cleanup scheduled for 00:00 Asia/Kolkata');
+  console.info(`[permit-sync] background Gmail-to-Azure-SQL worker enabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
 } else {
-  console.info(`[permit-sync] background Gmail-to-sheet worker disabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
+  console.info(`[permit-sync] background Gmail-to-Azure-SQL worker disabled; instance=${PERMIT_SYNC_INSTANCE_ID}, script=${__filename}`);
 }
 
 const PORT = Number(process.env.PORT) || 5000;
