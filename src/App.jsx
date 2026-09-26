@@ -44,12 +44,8 @@ function App() {
     const filteredOfficerName = officerList.find(
       (officer) => officer["Emp_ID"] == item,
     );
-    console.log('item', item, 'filteredOfficerName', filteredOfficerName);
-    
     if (filteredOfficerName) {
       const loc_code = filteredOfficerName["LOCATION_CODE"];
-      console.log('loc_code',loc_code);
-      
       const locationName = locationList.find(
         (location) => location["LOCATION_CODE"] == loc_code,
       )?.["LOCATION_NAME"];
@@ -86,6 +82,7 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
+          console.log("Processing item:", item, findLocationName(item["Receiver Name"]));
           if (findLocationName(item["Receiver Name"]) != "") {
             try {
               await fetch(sheet_url, {

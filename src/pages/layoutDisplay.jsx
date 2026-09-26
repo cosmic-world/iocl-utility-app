@@ -133,6 +133,7 @@ export default function LayoutDisplay({ state, handleReadMail }) {
   };
 
   const [imgExists, setImgExists] = useState(true);
+
   const imagePath = `${process.env.PUBLIC_URL}/asset/${locationName ? locationName.replace(/\s+/g, "_").toLowerCase() : ""}.png`;
   useEffect(() => {
     const img = new Image();
