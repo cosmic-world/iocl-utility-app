@@ -2582,6 +2582,8 @@ app.get('/api/permits', async (req, res) => {
 // whichever browser tabs happen to be open led to uncoordinated duplicate/mislabeled writes.
 const PERMIT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec';
 const PERMIT_SHEET_ID = '1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc';
+const PERMIT_CLAIM_DIR = path.join(UPLOAD_DIR, 'permit-sync-claims');
+fs.mkdirSync(PERMIT_CLAIM_DIR, { recursive: true });
 let utilityLocationsCache = [];
 // sentPermitNos is only this process's own memory of what it already POSTed; it resets on
 // every restart. sheetPermitNosCache is read back from the sheet itself, so a restart can
@@ -2593,6 +2595,27 @@ let permitSheetRowsCache = [];
 
 function normalizePermitNo(permitNo) {
   return String(permitNo || '').trim().toUpperCase();
+}
+
+async function claimPermitForSheetWrite(permitNo) {
+  const permitKey = normalizePermitNo(permitNo);
+  const claimPath = path.join(
+    PERMIT_CLAIM_DIR,
+    `${crypto.createHash('sha256').update(permitKey).digest('hex')}.claim`,
+  );
+  let claimFile;
+  try {
+    claimFile = await fs.promises.open(claimPath, 'wx');
+    await claimFile.writeFile(`${permitKey}\n${new Date().toISOString()}\nPID=${process.pid}\n`);
+    return true;
+  } catch (error) {
+    if (error.code === 'EEXIST') {
+      return false;
+    }
+    throw error;
+  } finally {
+    await claimFile?.close();
+  }
 }
 
 async function refreshSheetPermitNosCache() {
@@ -2683,6 +2706,13 @@ async function writePermitToSheet(item, locationName, source) {
   const permitNoKey = normalizePermitNo(item['Permit No']);
   if (sentPermitNos.has(permitNoKey) || sheetPermitNosCache.has(permitNoKey)) {
     console.info(`[permit-sync] duplicate skipped: source=${source}, permitNo=${permitNoKey}`);
+    return false;
+  }
+
+  if (!(await claimPermitForSheetWrite(permitNoKey))) {
+    sentPermitNos.add(permitNoKey);
+    sheetPermitNosCache.add(permitNoKey);
+    console.info(`[permit-sync] durable duplicate claim skipped: source=${source}, permitNo=${permitNoKey}`);
     return false;
   }
 
@@ -2812,9 +2842,9 @@ refreshSheetPermitNosCache().then(() => {
 setInterval(refreshSheetPermitNosCache, 30000);
 if (ENABLE_PERMIT_SYNC) {
   setInterval(syncPermitsToSheet, 10000);
-  console.info('[permit-sync] background Gmail-to-sheet worker enabled');
+  console.info(`[permit-sync] background Gmail-to-sheet worker enabled; pid=${process.pid}`);
 } else {
-  console.info('[permit-sync] background Gmail-to-sheet worker disabled');
+  console.info(`[permit-sync] background Gmail-to-sheet worker disabled; pid=${process.pid}`);
 }
 
 const PORT = Number(process.env.PORT) || 5000;
