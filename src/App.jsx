@@ -38,100 +38,6 @@ function App() {
     locationCode,
   } = useSelector((state) => state.myApp);
 
-  const permitListRef = useRef(PermitList);
-  // Tracks Permit Nos already POSTed this session, since the sheet read-back (every 5s)
-  // can lag behind the write poll (every 10s), otherwise causing the same permit to be
-  // re-sent before it shows up in the sheet-derived PermitList.
-  const sentPermitNosRef = useRef(new Set());
-
-  // Permit No is prefixed with the 4-digit location code (e.g. "1349C2600079" -> "1349"),
-  // which is the authoritative source of the issuing terminal. Deriving it from the
-  // officer's own registered LOCATION_CODE is unreliable, since an officer/Emp_ID may be
-  // registered against more than one terminal, causing the wrong terminal to be resolved.
-  const findLocationName = (permitNo) => {
-    const locCode = String(permitNo || "").match(/^\d{4}/)?.[0];
-    if (!locCode) {
-      return null;
-    }
-    return (
-      locationList.find((location) => location["LOCATION_CODE"] == locCode)?.[
-        "LOCATION_NAME"
-      ] ?? null
-    );
-  };
-
-  const handleReadMail = async () => {
-    try {
-      const response = await fetch(apiUrl("/api/permits"));
-      const result = await response.json();
-      if (!result.success || !Array.isArray(result.data)) {
-        return;
-      }
-      const currentPermitList = permitListRef.current;
-      const zlist = result.data
-        .map((item) => item["json"])
-        .filter(Boolean)
-        .filter((ele) => {
-          const clearanceTill = ele["Clearance Till"];
-          return clearanceTill > new Date().toLocaleTimeString("en-GB");
-        });
-      const unique_zlist = [
-        ...new Map(zlist.map((item) => [item["Permit No"], item])).values(),
-      ];
-      const ylist = unique_zlist.filter((ele) => {
-        const permitNo = ele["Permit No"];
-        return (
-          !sentPermitNosRef.current.has(permitNo) &&
-          currentPermitList.every(
-            (existingEle) => existingEle["Permit No"] != permitNo,
-          )
-        );
-      });
-      if (ylist.length > 0) {
-        const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
-        for (const item of ylist) {
-          const permitLocationName = findLocationName(item["Permit No"]);
-          console.log("Processing item:", item, 'locationName:', permitLocationName);
-          // /api/permits returns permits for every terminal, so only write permits
-          // belonging to THIS session's own terminal, otherwise every open terminal
-          // session re-writes every other terminal's permits on each poll.
-          if (
-            permitLocationName != null &&
-            permitLocationName.toLowerCase() === String(locationName || "").toLowerCase()
-          ) {
-            sentPermitNosRef.current.add(item["Permit No"]);
-            try {
-              await fetch(sheet_url, {
-                method: "POST",
-                mode: "no-cors",
-                body: new URLSearchParams({
-                  data: JSON.stringify({
-                    "Permit Type": item["Permit Type"],
-                    "Work Description": item["Work Description"],
-                    "Work Location": item["Work Location"],
-                    "Receiver Name": item["Receiver Name"],
-                    "Clearance From": item["Clearance From"],
-                    "Clearance Till": item["Clearance Till"],
-                    "Contractor Name": item["Contractor Name"],
-                    "Permit No": item["Permit No"],
-                    "Location Name": permitLocationName,
-                  }),
-                }),
-              });
-            } catch (error) {
-              console.log(
-                "error form...",
-                `${error} and also check internet connection`,
-              );
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load permits:", error);
-    }
-  };
-
   const locationName = selectedTerminal[selectedTerminal.length - 1];
 
   const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
@@ -254,19 +160,6 @@ function App() {
 
   useEffect(() => {
     let intervalId;
-    if (selectedTerminal !== "") {
-      handleReadMail();
-      intervalId = setInterval(handleReadMail, 10000);
-    }
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [selectedTerminal]);
-
-  useEffect(() => {
-    let intervalId;
     const fetchSheetData = async () => {
       try {
         const response = await fetch(
@@ -353,10 +246,6 @@ function App() {
       }
     };
   }, [selectedTerminal]);
-
-  useEffect(() => {
-    permitListRef.current = PermitList;
-  }, [PermitList]);
 
   useEffect(() => {
     if (navBarComponent == "") {

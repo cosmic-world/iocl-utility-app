@@ -2583,6 +2583,128 @@ app.get('/api/permits', async (req, res) => {
   }
 });
 
+// Forwards permit mail to the shared permit-tracking Google Sheet. This runs centrally
+// here (PM2-managed, single process) instead of in the React frontend, since relying on
+// whichever browser tabs happen to be open led to uncoordinated duplicate/mislabeled writes.
+const PERMIT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec';
+const PERMIT_SHEET_ID = '1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc';
+let utilityLocationsCache = [];
+// sentPermitNos is only this process's own memory of what it already POSTed; it resets on
+// every restart. sheetPermitNosCache is read back from the sheet itself, so a restart can
+// still tell a permit was already recorded there and won't repost it.
+const sentPermitNos = new Set();
+let sheetPermitNosCache = new Set();
+
+async function refreshSheetPermitNosCache() {
+  try {
+    const response = await fetch(
+      `https://docs.google.com/spreadsheets/d/${PERMIT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details`,
+    );
+    const text = await response.text();
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const cols = json.table.cols.map((col) => col.label);
+    const permitNoIndex = cols.indexOf('Permit No');
+    if (permitNoIndex === -1) {
+      return;
+    }
+    const permitNos = json.table.rows
+      .map((row) => row.c?.[permitNoIndex]?.v)
+      .filter(Boolean);
+    sheetPermitNosCache = new Set(permitNos);
+  } catch (error) {
+    console.error('Failed to refresh sheet permit-no cache:', error);
+  }
+}
+
+async function refreshUtilityLocationsCache() {
+  try {
+    await sql.connect(sqlConfig);
+    const result = await sql.query("SELECT LOCATION_CODE, LOCATION_NAME FROM IOCLUtilityCredentials WHERE ACTIVE='Y'");
+    utilityLocationsCache = result.recordset || [];
+  } catch (error) {
+    console.error('Failed to refresh utility locations cache:', error);
+  }
+}
+
+// Permit No is prefixed with the 4-digit location code (e.g. "1349C2600079" -> "1349"),
+// which is the authoritative source of the issuing terminal.
+function resolvePermitLocationName(permitNo) {
+  const locCode = String(permitNo || '').match(/^\d{4}/)?.[0];
+  if (!locCode) {
+    return null;
+  }
+  return utilityLocationsCache.find((location) => String(location.LOCATION_CODE) === locCode)?.LOCATION_NAME ?? null;
+}
+
+// Guards against a new cycle starting while a previous one (IMAP fetch + sequential
+// sheet POSTs) is still running past the 10s interval, which would let both cycles see
+// the same permit as pending before either marks it sent, causing a double-post.
+let isSyncingPermits = false;
+
+async function syncPermitsToSheet() {
+  if (isSyncingPermits) {
+    return;
+  }
+  isSyncingPermits = true;
+  try {
+    await fetchTodayPermitEmails();
+    const zlist = permitEmails
+      .map((item) => item.json)
+      .filter(Boolean)
+      .filter((ele) => ele['Permit No'])
+      .filter((ele) => {
+        const clearanceTill = ele['Clearance Till'];
+        return clearanceTill > new Date().toLocaleTimeString('en-GB');
+      });
+    const uniqueByPermitNo = [...new Map(zlist.map((item) => [item['Permit No'], item])).values()];
+    const pending = uniqueByPermitNo.filter(
+      (item) => !sentPermitNos.has(item['Permit No']) && !sheetPermitNosCache.has(item['Permit No']),
+    );
+
+    for (const item of pending) {
+      const locationName = resolvePermitLocationName(item['Permit No']);
+      if (locationName == null) {
+        continue;
+      }
+      sentPermitNos.add(item['Permit No']);
+      try {
+        await fetch(PERMIT_SHEET_URL, {
+          method: 'POST',
+          body: new URLSearchParams({
+            data: JSON.stringify({
+              'Permit Type': item['Permit Type'],
+              'Work Description': item['Work Description'],
+              'Work Location': item['Work Location'],
+              'Receiver Name': item['Receiver Name'],
+              'Clearance From': item['Clearance From'],
+              'Clearance Till': item['Clearance Till'],
+              'Contractor Name': item['Contractor Name'],
+              'Permit No': item['Permit No'],
+              'Location Name': locationName,
+            }),
+          }),
+        });
+        sheetPermitNosCache.add(item['Permit No']);
+      } catch (error) {
+        sentPermitNos.delete(item['Permit No']);
+        console.error('Failed to post permit to sheet:', item['Permit No'], error);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to sync permits to sheet:', error);
+  } finally {
+    isSyncingPermits = false;
+  }
+}
+
+refreshUtilityLocationsCache();
+setInterval(refreshUtilityLocationsCache, 5 * 60 * 1000);
+refreshSheetPermitNosCache().then(() => {
+  syncPermitsToSheet();
+});
+setInterval(refreshSheetPermitNosCache, 30000);
+setInterval(syncPermitsToSheet, 10000);
+
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Upload server running on http://localhost:${PORT}`);
