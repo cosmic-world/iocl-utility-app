@@ -40,8 +40,6 @@ function App() {
 
   const locationName = selectedTerminal[selectedTerminal.length - 1];
 
-  const SHEET_ID = "1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc";
-
   const permit_type_array =
     PermitList.length > 0 ? PermitList.map((val) => val["Permit Type"]) : [];
   const permit_labels = [
@@ -162,27 +160,12 @@ function App() {
     let intervalId;
     const fetchSheetData = async () => {
       try {
-        const response = await fetch(
-          `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details`,
-        );
-        const text = await response.text();
-        // Remove unwanted characters from response
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.map((row) =>
-          row.c.map((ele) => ele?.v ?? ""),
-        );
-        const cols = json.table.cols.map((col) => col.label);
-        // Convert rows into simple array
-        const formattedData1 = rows.map((row) => {
-          const obj = {};
-          row.forEach((cell, index) => {
-            obj[cols[index]] = cell;
-          });
-          return obj;
-        });
-        const formattedData = formattedData1.filter(
-          (obj) => !(Object.keys(obj).length === 1 && obj[""] === ""),
-        );
+        const response = await fetch(apiUrl("/api/permit-sheet"));
+        if (!response.ok) {
+          throw new Error("Failed to load permit records");
+        }
+        const result = await response.json();
+        const formattedData = Array.isArray(result.data) ? result.data : [];
         const filteredData1 =
           formattedData.length > 0
             ? formattedData

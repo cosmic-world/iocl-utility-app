@@ -2574,13 +2574,7 @@ function fetchTodayPermitEmails() {
 }
 
 app.get('/api/permits', async (req, res) => {
-  try {
-    await fetchTodayPermitEmails();
-    res.json({ success: true, count: permitEmails.length, data: permitEmails });
-  } catch (error) {
-    console.error('Failed to read permit emails:', error);
-    res.status(500).json({ success: false, message: error.message || 'Unable to read permit mail.' });
-  }
+  res.json({ success: true, count: permitEmails.length, data: permitEmails });
 });
 
 // Forwards permit mail to the shared permit-tracking Google Sheet. This runs centrally
@@ -2595,6 +2589,7 @@ let utilityLocationsCache = [];
 const sentPermitNos = new Set();
 let sheetPermitNosCache = new Set();
 let sheetPermitNosCacheReady = false;
+let permitSheetRowsCache = [];
 
 function normalizePermitNo(permitNo) {
   return String(permitNo || '').trim().toUpperCase();
@@ -2615,16 +2610,30 @@ async function refreshSheetPermitNosCache() {
     if (permitNoIndex === -1) {
       throw new Error('Permit No column is missing from the sheet');
     }
-    const permitNos = json.table.rows
-      .map((row) => row.c?.[permitNoIndex]?.v)
+    const rows = json.table.rows.map((row) => {
+      const cells = row.c || [];
+      return Object.fromEntries(
+        cols.map((col, index) => [col, cells[index]?.v ?? '']),
+      );
+    });
+    const permitNos = rows
+      .map((row) => row['Permit No'])
       .map(normalizePermitNo)
       .filter(Boolean);
     sheetPermitNosCache = new Set([...sheetPermitNosCache, ...permitNos]);
+    permitSheetRowsCache = rows;
     sheetPermitNosCacheReady = true;
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
 }
+
+app.get('/api/permit-sheet', (req, res) => {
+  if (!sheetPermitNosCacheReady) {
+    return res.status(503).json({ success: false, message: 'Permit data is not ready yet.' });
+  }
+  return res.json({ success: true, data: permitSheetRowsCache });
+});
 
 async function refreshUtilityLocationsCache() {
   try {
@@ -2659,6 +2668,73 @@ function resolvePermitLocationName(permitNo) {
   );
   return matches.length === 1 ? matches[0].LOCATION_NAME ?? null : null;
 }
+
+async function writePermitToSheet(item, locationName) {
+  if (!sheetPermitNosCacheReady) {
+    await refreshSheetPermitNosCache();
+  }
+  if (!sheetPermitNosCacheReady) {
+    const error = new Error('Unable to verify existing permits in the sheet.');
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const permitNoKey = normalizePermitNo(item['Permit No']);
+  if (sentPermitNos.has(permitNoKey) || sheetPermitNosCache.has(permitNoKey)) {
+    return false;
+  }
+
+  sentPermitNos.add(permitNoKey);
+  const payload = Object.fromEntries(
+    Object.entries(item).filter(([key]) => key !== 'locationCode'),
+  );
+  payload['Location Name'] = locationName;
+  const response = await fetch(PERMIT_SHEET_URL, {
+    method: 'POST',
+    body: new URLSearchParams({ data: JSON.stringify(payload) }),
+  });
+  if (!response.ok) {
+    throw new Error(`Sheet write returned HTTP ${response.status}`);
+  }
+
+  sheetPermitNosCache.add(permitNoKey);
+  return true;
+}
+
+app.post('/api/permits/manual', async (req, res) => {
+  try {
+    const item = req.body || {};
+    const permitNo = String(item['Permit No'] || '').trim();
+    const locationCode = String(item.locationCode || '').trim();
+    const requiredFields = [
+      'Permit Type', 'Work Description', 'Work Location', 'Receiver Name',
+      'Clearance From', 'Clearance Till', 'Contractor Name',
+    ];
+    if (!permitNo || requiredFields.some((field) => !String(item[field] || '').trim())) {
+      return res.status(400).json({ success: false, message: 'All permit fields are required.' });
+    }
+    if (!locationCode || !permitNo.startsWith(locationCode)) {
+      return res.status(400).json({ success: false, message: 'Permit No does not match the selected terminal.' });
+    }
+
+    if (!utilityLocationsCache.length) {
+      await refreshUtilityLocationsCache();
+    }
+    const locationName = resolvePermitLocationName(permitNo);
+    if (!locationName) {
+      return res.status(400).json({ success: false, message: 'Unable to uniquely resolve the permit terminal.' });
+    }
+
+    const written = await writePermitToSheet({ ...item, 'Permit No': permitNo }, locationName);
+    if (!written) {
+      return res.status(409).json({ success: false, message: 'This Permit No is already in the sheet.' });
+    }
+    return res.json({ success: true, message: 'Permit submitted successfully.' });
+  } catch (error) {
+    console.error('Manual permit sheet write failed:', error);
+    return res.status(error.statusCode || 502).json({ success: false, message: error.message || 'Unable to submit permit.' });
+  }
+});
 
 // Guards against a new cycle starting while a previous one (IMAP fetch + sequential
 // sheet POSTs) is still running past the 10s interval, which would let both cycles see
@@ -2697,26 +2773,8 @@ async function syncPermitsToSheet() {
       if (locationName == null) {
         continue;
       }
-      const permitNoKey = normalizePermitNo(item['Permit No']);
-      sentPermitNos.add(permitNoKey);
       try {
-        await fetch(PERMIT_SHEET_URL, {
-          method: 'POST',
-          body: new URLSearchParams({
-            data: JSON.stringify({
-              'Permit Type': item['Permit Type'],
-              'Work Description': item['Work Description'],
-              'Work Location': item['Work Location'],
-              'Receiver Name': item['Receiver Name'],
-              'Clearance From': item['Clearance From'],
-              'Clearance Till': item['Clearance Till'],
-              'Contractor Name': item['Contractor Name'],
-              'Permit No': item['Permit No'],
-              'Location Name': locationName,
-            }),
-          }),
-        });
-        sheetPermitNosCache.add(permitNoKey);
+        await writePermitToSheet(item, locationName);
       } catch (error) {
         // The sheet may have accepted the POST before the connection failed; don't retry
         // an uncertain delivery during this process lifetime and risk creating a duplicate.

@@ -15,6 +15,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
+import { apiUrl } from "../api";
 
 class DraggableModalDialog extends React.Component {
   render() {
@@ -78,8 +79,6 @@ export default function formControlPage({ show, setShow }) {
     setShow(false);
   };
 
-  const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
-
   const handlePostData = async () => {
     if (
       permitType == "" ||
@@ -118,26 +117,23 @@ export default function formControlPage({ show, setShow }) {
         "Clearance Till": clrEnd,
         "Contractor Name": contractorName,
         "Permit No": permitNo,
-        "Location Name": permitLocationName,
+        locationCode: String(locationCode),
       };
 
-      const response = await fetch(sheet_url, {
+      const response = await fetch(apiUrl("/api/permits/manual"), {
         method: "POST",
-        mode: "no-cors",
-        credentials: "omit",
-        body: new URLSearchParams({
-          data: JSON.stringify(payload),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      setSaveLoader(false);
-      alert("Data submitted successfully");
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to submit permit.");
+      }
+      alert(result.message || "Data submitted successfully");
       handleResetForm();
     } catch (error) {
       setSaveLoader(false);
-      console.log(
-        "error form...",
-        `${error} and also check internet connection`,
-      );
+      alert(error.message || "Unable to submit permit. Check your connection.");
     }
   };
 
