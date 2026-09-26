@@ -203,7 +203,7 @@ function App() {
         );
       }
     };
-    if (selectedTerminal !== "") {
+    if (selectedTerminal !== "" && locationCode) {
       fetchSheetData(); // optional: run immediately
       intervalId = setInterval(fetchSheetData, 5000);
     }
@@ -212,7 +212,7 @@ function App() {
         clearInterval(intervalId);
       }
     };
-  }, [selectedTerminal]);
+  }, [selectedTerminal, locationCode]);
 
   useEffect(() => {
     if (navBarComponent == "") {
