@@ -242,6 +242,26 @@ function App() {
     handleSyncContractor();
   }, [selectedTerminal, locationCode]);
 
+    useEffect(() => {
+    const channel = new BroadcastChannel("iocl_utility_app");
+
+    // Send a message that this tab is active
+    channel.postMessage("tab_opened");
+
+    // Handle incoming messages
+    channel.onmessage = (event) => {
+      if (event.data === "tab_opened") {
+        alert("A duplicate tab is detected. Click OK to close this session");
+        window.location.href = "about:blank"; // Redirect the duplicate tab
+      }
+    };
+
+    // Cleanup
+    return () => {
+      channel.close();
+    };
+  }, []);
+  
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
       <Header />

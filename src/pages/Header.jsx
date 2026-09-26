@@ -22,6 +22,23 @@ import {
 import persistSessionStorage from "redux-persist/lib/storage/session";
 import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
+const SESSION_EXPIRY_KEY = "ioclSessionExpiresAt";
+// const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
+const SESSION_DURATION_MS = 10 * 1000;
+
+function signOut(dispatch, showExpiryAlert = false) {
+  dispatch(ResetAppState());
+  dispatch(NavBarComponent("sign-in"));
+  dispatch(SetSelectedApplication("Sign In"));
+  window.sessionStorage.clear();
+  persistSessionStorage.removeItem("persist:root");
+  if (showExpiryAlert) {
+    window.setTimeout(() => {
+      window.alert("Your session has expired. Please sign in again.");
+    }, 0);
+  }
+}
+
 export default function Header({}) {
   const dispatch = useDispatch();
   const {
@@ -59,6 +76,26 @@ export default function Header({}) {
     }, 1000); // update every 1 second
     return () => clearInterval(interval); // cleanup
   }, []);
+
+  useEffect(() => {
+    if (!authorized) {
+      window.sessionStorage.removeItem(SESSION_EXPIRY_KEY);
+      return undefined;
+    }
+
+    let expiresAt = Number(window.sessionStorage.getItem(SESSION_EXPIRY_KEY));
+    if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
+      expiresAt = Date.now() + SESSION_DURATION_MS;
+      window.sessionStorage.setItem(SESSION_EXPIRY_KEY, String(expiresAt));
+    }
+
+    const timeout = window.setTimeout(
+      () => signOut(dispatch, true),
+      Math.max(0, expiresAt - Date.now()),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [authorized, dispatch]);
+
   return (
     <div
       className="d-flex align-items-center"
@@ -210,11 +247,7 @@ export default function Header({}) {
                 selected={navBarComponent == "sign-out"}
                 className="d-flex justify-content-center p-3"
                 onClick={() => {
-                  dispatch(ResetAppState());
-                  dispatch(NavBarComponent("sign-in"));
-                  dispatch(SetSelectedApplication("Sign In"));
-                  window.sessionStorage.clear();
-                  persistSessionStorage.removeItem("persist:root");
+                  signOut(dispatch);
                   setAnchorE1(null);
                 }}
               >
