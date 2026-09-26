@@ -83,8 +83,15 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
-          console.log("Processing item:", item, 'locationName:', findLocationName(item["Permit No"]));
-          if (findLocationName(item["Permit No"]) != null) {
+          const permitLocationName = findLocationName(item["Permit No"]);
+          console.log("Processing item:", item, 'locationName:', permitLocationName);
+          // /api/permits returns permits for every terminal, so only write permits
+          // belonging to THIS session's own terminal, otherwise every open terminal
+          // session re-writes every other terminal's permits on each poll.
+          if (
+            permitLocationName != null &&
+            permitLocationName.toLowerCase() === String(locationName || "").toLowerCase()
+          ) {
             try {
               await fetch(sheet_url, {
                 method: "POST",
@@ -99,7 +106,7 @@ function App() {
                     "Clearance Till": item["Clearance Till"],
                     "Contractor Name": item["Contractor Name"],
                     "Permit No": item["Permit No"],
-                    "Location Name": findLocationName(item["Permit No"]),
+                    "Location Name": permitLocationName,
                   }),
                 }),
               });

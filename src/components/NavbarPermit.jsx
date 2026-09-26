@@ -42,7 +42,7 @@ export default function NavbarPermit() {
             Permit Request Form
           </Button>
         </RoleRestrictedTooltip>
-        <Button
+        {/* <Button
           variant={"contained"}
           color="secondary"
           startIcon={<Sync />}
@@ -55,7 +55,7 @@ export default function NavbarPermit() {
           }}
         >
           Extract Data from Mail
-        </Button>
+        </Button> */}
         <Button
           variant={
             navBarComponent === "permitDisplay" ? "contained" : "outlined"
