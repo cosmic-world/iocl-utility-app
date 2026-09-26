@@ -2553,11 +2553,28 @@ async function fetchTodayPermitEmailsFromImap() {
       }
     }
 
+    const permitNoCounts = new Map();
+    for (const email of parsedEmails) {
+      const permitNo = normalizePermitNo(email.json?.['Permit No']);
+      if (permitNo) {
+        permitNoCounts.set(permitNo, (permitNoCounts.get(permitNo) || 0) + 1);
+      }
+    }
+    const missingPermitNo = parsedEmails.filter(
+      (email) => !normalizePermitNo(email.json?.['Permit No']),
+    ).length;
+    const duplicatePermitNos = [...permitNoCounts]
+      .filter(([, count]) => count > 1)
+      .map(([permitNo, count]) => `${permitNo}x${count}`);
+    const messageDetails = parsedEmails
+      .map((email) => `${email.id}:${normalizePermitNo(email.json?.['Permit No']) || 'MISSING'}`)
+      .join(',');
+
     permitEmails = dedupePermitRecords(
       parsedEmails,
       (email) => email.json?.['Permit No'],
     );
-    console.info(`[permit-sync] Gmail permits: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${parsedEmails.length}, unique=${permitEmails.length}`);
+    console.info(`[permit-sync] Gmail permits: instance=${PERMIT_SYNC_INSTANCE_ID}, matchingMessages=${parsedEmails.length}, withPermitNo=${[...permitNoCounts.values()].reduce((sum, count) => sum + count, 0)}, unique=${permitEmails.length}, missingPermitNo=${missingPermitNo}, duplicatePermitNos=${duplicatePermitNos.join(',') || 'none'}, messages=[${messageDetails}]`);
   } catch (error) {
     console.error('Error fetching permit emails:', error);
     permitEmails = [];
