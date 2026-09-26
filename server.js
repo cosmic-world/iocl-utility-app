@@ -2727,14 +2727,27 @@ async function refreshSheetPermitNosCache() {
         cols.map((col, index) => [col, cells[index]?.v ?? '']),
       );
     });
+    const sheetPermitCounts = new Map();
+    for (const row of rows) {
+      const permitNo = normalizePermitNo(row['Permit No']);
+      if (permitNo) {
+        sheetPermitCounts.set(permitNo, (sheetPermitCounts.get(permitNo) || 0) + 1);
+      }
+    }
     const uniqueRows = dedupePermitRecords(rows, (row) => row['Permit No']);
     const permitNos = uniqueRows.map((row) => normalizePermitNo(row['Permit No']));
+    const duplicatePermitNos = [...sheetPermitCounts]
+      .filter(([, count]) => count > 1)
+      .map(([permitNo, count]) => `${permitNo}x${count}`);
+    const missingPermitNoRows = rows.filter(
+      (row) => !normalizePermitNo(row['Permit No']),
+    ).length;
     const refreshedPermitNos = new Set(permitNos);
     await reconcilePermitClaims(refreshedPermitNos);
     sheetPermitNosCache = refreshedPermitNos;
     permitSheetRowsCache = uniqueRows;
     sheetPermitNosCacheReady = true;
-    console.info(`[permit-sync] sheet rows: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${rows.length}, uniquePermits=${uniqueRows.length}, duplicateRows=${rows.length - uniqueRows.length}`);
+    console.info(`[permit-sync] sheet rows: instance=${PERMIT_SYNC_INSTANCE_ID}, raw=${rows.length}, uniquePermits=${uniqueRows.length}, duplicateRows=${[...sheetPermitCounts.values()].reduce((sum, count) => sum + Math.max(0, count - 1), 0)}, missingPermitNoRows=${missingPermitNoRows}, duplicatePermitNos=${duplicatePermitNos.join(',') || 'none'}`);
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
@@ -2812,14 +2825,15 @@ async function writePermitToSheet(item, locationName, source, cycleId = 'manual'
     Object.entries(item).filter(([key]) => key !== 'locationCode'),
   );
   payload['Location Name'] = locationName;
-  console.info(`[permit-sync] writing: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
+  const requestId = crypto.randomUUID();
+  console.info(`[permit-sync] writing: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
   const response = await fetch(PERMIT_SHEET_URL, {
     method: 'POST',
     body: new URLSearchParams({ data: JSON.stringify(payload) }),
   });
+  const responseBody = (await response.text()).slice(0, 500);
   if (!response.ok) {
-    const responseBody = (await response.text()).slice(0, 500);
-    console.error(`[permit-sync] write rejected: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
+    console.error(`[permit-sync] write rejected: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
     throw new Error(`Sheet write returned HTTP ${response.status}`);
   }
 
@@ -2829,7 +2843,7 @@ async function writePermitToSheet(item, locationName, source, cycleId = 'manual'
   } catch (error) {
     console.warn(`[permit-sync] could not mark successful write claim for ${permitNoKey}:`, error.message);
   }
-  console.info(`[permit-sync] write accepted: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}`);
+  console.info(`[permit-sync] write accepted: instance=${PERMIT_SYNC_INSTANCE_ID}, cycle=${cycleId}, request=${requestId}, source=${source}, permitNo=${permitNoKey}, httpStatus=${response.status}, url=${response.url}, body=${responseBody}`);
   return true;
 }
 
