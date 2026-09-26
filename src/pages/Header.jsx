@@ -61,7 +61,7 @@ export default function Header({}) {
   }, []);
   return (
     <div
-      className="d-flex justify-content-between align-items-center"
+      className="d-flex align-items-center"
       style={{
         fontFamily: "Lucida Sans",
         fontSize: "1.4rem",
@@ -70,6 +70,7 @@ export default function Header({}) {
         border: "1px solid #1976d2",
         borderLeft: "none",
         borderRight: "none",
+        justifyContent: "center",
       }}
     >
       {userType != "" ? (
@@ -224,25 +225,27 @@ export default function Header({}) {
         </>
       ) : null}
 
-      {userType ? (
+      {userType!="User" ? (
 <div
-          className="d-xxl-none d-flex justify-content-center align-items-center h-100 mx-1"
+          className="d-xxl-none d-flex justify-content-center align-items-center h-100 mx-1 ms-2"
           title={userName}
           style={{
             color: "#1976d2",
             fontWeight: "bold",
             borderRight: userType != "" ? "1px solid #1976d2" : null,
             overflow: "hidden",
+            position: "absolute",
+            left: 0,
           }}
         >
-          <label style={{fontSize:'1rem', paddingTop:6, flexShrink: 0}}>{`Welcome!`}&nbsp;</label>
+          <label style={{fontSize:'1rem', flexShrink: 0}}>{`Welcome!`}&nbsp;</label>
           <label
             style={{
               color: "orange",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              fontSize:'1rem', paddingTop:6,
+              fontSize:'1rem', 
             }}
           >{`${userName
             .trim()
@@ -252,7 +255,7 @@ export default function Header({}) {
             .replace(/\b\w/g, (char) => char.toUpperCase())
             .replace(/_/g, " ")}`}</label>
                       <AccountCircleIcon
-              style={{ color: "#1976d2", fontSize: "1.8rem" }}
+              style={{ color: "#1976d2", fontSize: "1.8rem", paddingTop: 1 }}
             />
         </div>
 ) : null}
@@ -271,15 +274,17 @@ export default function Header({}) {
       />
       {userType ? (
       <div
-          className="d-flex d-xxl-none justify-content-center align-items-center h-100 mx-1"
+          className="d-flex d-xxl-none justify-content-center align-items-center h-100 mx-1 me-2"
           style={{
             color: "#1976d2",
             fontWeight: "bold",
+            position: "absolute",
+            right: 0,
           }}
         >
-          <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
-          <label style={{fontSize:'1rem', paddingTop:6}}>{`Role:`}&nbsp;</label>
-          <label style={{ fontSize:'1rem', paddingTop:6, color: "orange" }}>{`${
+          <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem", paddingBottom: 1 }} />
+          <label style={{fontSize:'1rem', paddingTop:4}}>{`Role:`}&nbsp;</label>
+          <label style={{ fontSize:'1rem', paddingTop:4, color: "orange" }}>{`${
             userType == "User"
               ? "Viewer"
               : userType
