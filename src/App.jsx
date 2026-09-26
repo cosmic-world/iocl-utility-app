@@ -44,8 +44,12 @@ function App() {
     const filteredOfficerName = officerList.find(
       (officer) => officer["Emp_ID"] == item,
     );
+    console.log('item', item, 'filteredOfficerName', filteredOfficerName);
+    
     if (filteredOfficerName) {
       const loc_code = filteredOfficerName["LOCATION_CODE"];
+      console.log('loc_code',loc_code);
+      
       const locationName = locationList.find(
         (location) => location["LOCATION_CODE"] == loc_code,
       )?.["LOCATION_NAME"];
