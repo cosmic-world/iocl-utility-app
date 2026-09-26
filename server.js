@@ -2583,6 +2583,7 @@ app.get('/api/permits', async (req, res) => {
 const PERMIT_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec';
 const PERMIT_SHEET_ID = '1Jj8ub1mBS0RylJmadtYn2MenjBHWfX7c4vM_Oci6ydc';
 const PERMIT_CLAIM_DIR = path.join(UPLOAD_DIR, 'permit-sync-claims');
+const PERMIT_CLAIM_RECONCILE_GRACE_MS = 2 * 60 * 1000;
 fs.mkdirSync(PERMIT_CLAIM_DIR, { recursive: true });
 let utilityLocationsCache = [];
 // sentPermitNos is only this process's own memory of what it already POSTed; it resets on
@@ -2597,24 +2598,78 @@ function normalizePermitNo(permitNo) {
   return String(permitNo || '').trim().toUpperCase();
 }
 
+function getPermitClaimPath(permitNo) {
+  const permitKey = normalizePermitNo(permitNo);
+  const filename = `${crypto.createHash('sha256').update(permitKey).digest('hex')}.claim`;
+  return path.join(PERMIT_CLAIM_DIR, filename);
+}
+
 async function claimPermitForSheetWrite(permitNo) {
   const permitKey = normalizePermitNo(permitNo);
-  const claimPath = path.join(
-    PERMIT_CLAIM_DIR,
-    `${crypto.createHash('sha256').update(permitKey).digest('hex')}.claim`,
-  );
+  const claimPath = getPermitClaimPath(permitKey);
+  const createdAt = new Date().toISOString();
   let claimFile;
   try {
     claimFile = await fs.promises.open(claimPath, 'wx');
-    await claimFile.writeFile(`${permitKey}\n${new Date().toISOString()}\nPID=${process.pid}\n`);
-    return true;
+    await claimFile.writeFile(`${permitKey}\n${createdAt}\nPID=${process.pid}\nstatus=pending\n`);
+    return { claimPath, createdAt };
   } catch (error) {
     if (error.code === 'EEXIST') {
-      return false;
+      return null;
     }
     throw error;
   } finally {
     await claimFile?.close();
+  }
+}
+
+async function markPermitClaimWritten(claimPath, permitNo, createdAt) {
+  await fs.promises.writeFile(
+    claimPath,
+    `${normalizePermitNo(permitNo)}\n${createdAt}\nPID=${process.pid}\nstatus=written\nwrittenAt=${new Date().toISOString()}\n`,
+  );
+}
+
+async function reconcilePermitClaims(sheetPermitNos) {
+  const claimFiles = await fs.promises.readdir(PERMIT_CLAIM_DIR);
+  let clearedClaims = 0;
+
+  for (const filename of claimFiles.filter((name) => name.endsWith('.claim'))) {
+    const claimPath = path.join(PERMIT_CLAIM_DIR, filename);
+    try {
+      const contents = await fs.promises.readFile(claimPath, 'utf8');
+      const [permitKeyLine, createdAtLine, , statusLine, writtenAtLine] = contents.split(/\r?\n/);
+      const permitKey = normalizePermitNo(permitKeyLine);
+      if (!permitKey) continue;
+
+      const isInSheet = sheetPermitNos.has(permitKey);
+      const isWritten = statusLine === 'status=written' || !statusLine;
+      const recordedAt = Date.parse(
+        statusLine === 'status=written'
+          ? writtenAtLine?.replace('writtenAt=', '')
+          : createdAtLine,
+      );
+
+      if (isInSheet) {
+        if (!isWritten) {
+          await markPermitClaimWritten(claimPath, permitKey, createdAtLine);
+        }
+        continue;
+      }
+
+      if (isWritten && Number.isFinite(recordedAt)
+        && Date.now() - recordedAt >= PERMIT_CLAIM_RECONCILE_GRACE_MS) {
+        await fs.promises.unlink(claimPath);
+        sentPermitNos.delete(permitKey);
+        clearedClaims += 1;
+      }
+    } catch (error) {
+      console.warn(`[permit-sync] unable to reconcile claim ${filename}:`, error.message);
+    }
+  }
+
+  if (clearedClaims) {
+    console.info(`[permit-sync] cleared ${clearedClaims} old claim(s) for permits absent from the sheet`);
   }
 }
 
@@ -2643,7 +2698,9 @@ async function refreshSheetPermitNosCache() {
       .map((row) => row['Permit No'])
       .map(normalizePermitNo)
       .filter(Boolean);
-    sheetPermitNosCache = new Set([...sheetPermitNosCache, ...permitNos]);
+    const refreshedPermitNos = new Set(permitNos);
+    await reconcilePermitClaims(refreshedPermitNos);
+    sheetPermitNosCache = refreshedPermitNos;
     permitSheetRowsCache = rows;
     sheetPermitNosCacheReady = true;
     console.info(`[permit-sync] sheet cache refreshed: rows=${rows.length}, uniquePermits=${sheetPermitNosCache.size}`);
@@ -2709,7 +2766,8 @@ async function writePermitToSheet(item, locationName, source) {
     return false;
   }
 
-  if (!(await claimPermitForSheetWrite(permitNoKey))) {
+  const claim = await claimPermitForSheetWrite(permitNoKey);
+  if (!claim) {
     sentPermitNos.add(permitNoKey);
     sheetPermitNosCache.add(permitNoKey);
     console.info(`[permit-sync] durable duplicate claim skipped: source=${source}, permitNo=${permitNoKey}`);
@@ -2717,6 +2775,8 @@ async function writePermitToSheet(item, locationName, source) {
   }
 
   sentPermitNos.add(permitNoKey);
+  console.log('sentPermitNos',sentPermitNos);
+  
   const payload = Object.fromEntries(
     Object.entries(item).filter(([key]) => key !== 'locationCode'),
   );
@@ -2732,6 +2792,11 @@ async function writePermitToSheet(item, locationName, source) {
   }
 
   sheetPermitNosCache.add(permitNoKey);
+  try {
+    await markPermitClaimWritten(claim.claimPath, permitNoKey, claim.createdAt);
+  } catch (error) {
+    console.warn(`[permit-sync] could not mark successful write claim for ${permitNoKey}:`, error.message);
+  }
   console.info(`[permit-sync] write accepted: permitNo=${permitNoKey}, httpStatus=${response.status}`);
   return true;
 }
