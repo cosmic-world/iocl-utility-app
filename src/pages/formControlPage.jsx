@@ -28,9 +28,8 @@ class DraggableModalDialog extends React.Component {
 
 export default function formControlPage({ show, setShow }) {
   const dispatch = useDispatch();
-  const { selectedTerminal, officerList, contractorList, locationCode } = useSelector(
-    (state) => state.myApp,
-  );
+  const { selectedTerminal, officerList, contractorList, locationCode, locationList } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   // const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
@@ -45,6 +44,21 @@ export default function formControlPage({ show, setShow }) {
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const officerListForLocation = officerList;
   const contractorListForLocation = contractorList;
+
+  // Permit No is prefixed with the 4-digit location code, which is the authoritative
+  // source of the issuing terminal — must match App.jsx's automated write path,
+  // otherwise a manual entry can be tagged with whichever terminal is currently selected.
+  const findLocationName = (permitNo) => {
+    const locCode = String(permitNo || "").match(/^\d{4}/)?.[0];
+    if (!locCode) {
+      return null;
+    }
+    return (
+      locationList.find((location) => location["LOCATION_CODE"] == locCode)?.[
+        "LOCATION_NAME"
+      ] ?? null
+    );
+  };
 
   const handleResetForm = () => {
     setSaveLoader(false);
@@ -80,12 +94,17 @@ export default function formControlPage({ show, setShow }) {
       alert("All fields must be filled");
       return;
     }
-    if(!permitNo.startsWith(locationCode)) {
-      alert(`Permit No must start with the location code: ${locationCode}`);
+    if (!locationCode || !permitNo.startsWith(locationCode)) {
+      alert(`Permit No must start with the location code: ${locationCode || "N/A"}`);
       return;
     }
     if (!/[HCWE]/.test(permitNo)) {
       alert("Invalid Permit No!");
+      return;
+    }
+    const permitLocationName = findLocationName(permitNo);
+    if (permitLocationName == null) {
+      alert("Unable to resolve a location for this Permit No.");
       return;
     }
     setSaveLoader(true);
@@ -99,7 +118,7 @@ export default function formControlPage({ show, setShow }) {
         "Clearance Till": clrEnd,
         "Contractor Name": contractorName,
         "Permit No": permitNo,
-        "Location Name": locationName,
+        "Location Name": permitLocationName,
       };
 
       const response = await fetch(sheet_url, {
