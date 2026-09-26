@@ -51,7 +51,7 @@ function App() {
       )?.["LOCATION_NAME"];
       return locationName;
     } else {
-      return "";
+      return null;
     }
   };
 
@@ -82,8 +82,8 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
-          console.log("Processing item:", item, findLocationName(item["Receiver Name"]));
-          if (findLocationName(item["Receiver Name"]) != "") {
+          console.log("Processing item:", item, 'locationName:', findLocationName(item["Receiver Name"]));
+          if (findLocationName(item["Receiver Name"]) != null) {
             try {
               await fetch(sheet_url, {
                 method: "POST",
