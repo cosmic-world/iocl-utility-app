@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import NavbarPermit from "../components/NavbarPermit";
 
-export default function LayoutDisplay({ state, handleReadMail }) {
+export default function LayoutDisplay({ state}) {
   const { PermitList, selectedTerminal, officerList } = useSelector(
     (state) => state.myApp,
   );

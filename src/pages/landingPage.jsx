@@ -19,7 +19,6 @@ import SignIn from "./SignIn";
 
 export default function LandingPage({
   state,
-  handleReadMail,
   handleSyncContractor,
   handleSync,
   handleSyncOfficer,
@@ -56,13 +55,13 @@ export default function LandingPage({
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}
       {navBarComponent === "permitDisplay" ? (
-        <PermitDisplay handleReadMail={handleReadMail} />
+        <PermitDisplay />
       ) : null}
       {navBarComponent === "layoutDisplay" ? (
-        <LayoutDisplay state={state} handleReadMail={handleReadMail} />
+        <LayoutDisplay state={state} />
       ) : null}
       {navBarComponent === "modifyRecords" ? (
-        <ModifyRecords handleReadMail={handleReadMail} />
+        <ModifyRecords />
       ) : null}
       {navBarComponent === "sign-in" ? <SignIn /> : null}
     </div>

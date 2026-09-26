@@ -42,20 +42,6 @@ export default function NavbarPermit() {
             Permit Request Form
           </Button>
         </RoleRestrictedTooltip>
-        {/* <Button
-          variant={"contained"}
-          color="secondary"
-          startIcon={<Sync />}
-          sx={{
-            my: 1,
-            mx: 5,
-          }}
-          onClick={() => {
-            handleReadMail();
-          }}
-        >
-          Extract Data from Mail
-        </Button> */}
         <Button
           variant={
             navBarComponent === "permitDisplay" ? "contained" : "outlined"

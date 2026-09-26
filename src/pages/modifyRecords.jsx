@@ -47,7 +47,7 @@ function formatTime(dateStr) {
   return `${hour}:${minute}`;
 }
 
-const ModifyRecords = ({ handleReadMail }) => {
+const ModifyRecords = () => {
   const dispatch = useDispatch();
   const { selectedTerminal, userType, navBarComponent } = useSelector(
     (state) => state.myApp,

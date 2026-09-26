@@ -39,6 +39,10 @@ function App() {
   } = useSelector((state) => state.myApp);
 
   const permitListRef = useRef(PermitList);
+  // Tracks Permit Nos already POSTed this session, since the sheet read-back (every 5s)
+  // can lag behind the write poll (every 10s), otherwise causing the same permit to be
+  // re-sent before it shows up in the sheet-derived PermitList.
+  const sentPermitNosRef = useRef(new Set());
 
   // Permit No is prefixed with the 4-digit location code (e.g. "1349C2600079" -> "1349"),
   // which is the authoritative source of the issuing terminal. Deriving it from the
@@ -76,8 +80,11 @@ function App() {
       ];
       const ylist = unique_zlist.filter((ele) => {
         const permitNo = ele["Permit No"];
-        return currentPermitList.every(
-          (existingEle) => existingEle["Permit No"] != permitNo,
+        return (
+          !sentPermitNosRef.current.has(permitNo) &&
+          currentPermitList.every(
+            (existingEle) => existingEle["Permit No"] != permitNo,
+          )
         );
       });
       if (ylist.length > 0) {
@@ -92,6 +99,7 @@ function App() {
             permitLocationName != null &&
             permitLocationName.toLowerCase() === String(locationName || "").toLowerCase()
           ) {
+            sentPermitNosRef.current.add(item["Permit No"]);
             try {
               await fetch(sheet_url, {
                 method: "POST",
@@ -373,7 +381,6 @@ function App() {
             element={
               <LandingPage
                 state={state}
-                handleReadMail={handleReadMail}
                 handleSyncContractor={handleSyncContractor}
                 handleSync={handleSync}
                 handleSyncOfficer={handleSyncOfficer}
