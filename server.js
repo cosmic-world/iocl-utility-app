@@ -2594,23 +2594,33 @@ let utilityLocationsCache = [];
 // still tell a permit was already recorded there and won't repost it.
 const sentPermitNos = new Set();
 let sheetPermitNosCache = new Set();
+let sheetPermitNosCacheReady = false;
+
+function normalizePermitNo(permitNo) {
+  return String(permitNo || '').trim().toUpperCase();
+}
 
 async function refreshSheetPermitNosCache() {
   try {
     const response = await fetch(
-      `https://docs.google.com/spreadsheets/d/${PERMIT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details`,
+      `https://docs.google.com/spreadsheets/d/${PERMIT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=permit_details&_=${Date.now()}`,
     );
+    if (!response.ok) {
+      throw new Error(`Sheet read returned HTTP ${response.status}`);
+    }
     const text = await response.text();
     const json = JSON.parse(text.substring(47).slice(0, -2));
     const cols = json.table.cols.map((col) => col.label);
     const permitNoIndex = cols.indexOf('Permit No');
     if (permitNoIndex === -1) {
-      return;
+      throw new Error('Permit No column is missing from the sheet');
     }
     const permitNos = json.table.rows
       .map((row) => row.c?.[permitNoIndex]?.v)
+      .map(normalizePermitNo)
       .filter(Boolean);
-    sheetPermitNosCache = new Set(permitNos);
+    sheetPermitNosCache = new Set([...sheetPermitNosCache, ...permitNos]);
+    sheetPermitNosCacheReady = true;
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
@@ -2661,6 +2671,12 @@ async function syncPermitsToSheet() {
   }
   isSyncingPermits = true;
   try {
+    if (!sheetPermitNosCacheReady) {
+      await refreshSheetPermitNosCache();
+      if (!sheetPermitNosCacheReady) {
+        return;
+      }
+    }
     await fetchTodayPermitEmails();
     const zlist = permitEmails
       .map((item) => item.json)
@@ -2670,9 +2686,10 @@ async function syncPermitsToSheet() {
         const clearanceTill = ele['Clearance Till'];
         return clearanceTill > new Date().toLocaleTimeString('en-GB');
       });
-    const uniqueByPermitNo = [...new Map(zlist.map((item) => [item['Permit No'], item])).values()];
+    const uniqueByPermitNo = [...new Map(zlist.map((item) => [normalizePermitNo(item['Permit No']), item])).values()];
     const pending = uniqueByPermitNo.filter(
-      (item) => !sentPermitNos.has(item['Permit No']) && !sheetPermitNosCache.has(item['Permit No']),
+      (item) => !sentPermitNos.has(normalizePermitNo(item['Permit No']))
+        && !sheetPermitNosCache.has(normalizePermitNo(item['Permit No'])),
     );
 
     for (const item of pending) {
@@ -2680,7 +2697,8 @@ async function syncPermitsToSheet() {
       if (locationName == null) {
         continue;
       }
-      sentPermitNos.add(item['Permit No']);
+      const permitNoKey = normalizePermitNo(item['Permit No']);
+      sentPermitNos.add(permitNoKey);
       try {
         await fetch(PERMIT_SHEET_URL, {
           method: 'POST',
@@ -2698,7 +2716,7 @@ async function syncPermitsToSheet() {
             }),
           }),
         });
-        sheetPermitNosCache.add(item['Permit No']);
+        sheetPermitNosCache.add(permitNoKey);
       } catch (error) {
         // The sheet may have accepted the POST before the connection failed; don't retry
         // an uncertain delivery during this process lifetime and risk creating a duplicate.
