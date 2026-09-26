@@ -23,8 +23,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
-import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import NavbarTemporaryPass from "../components/NavbarTemporaryPass";
 
 const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
   border: 0,
@@ -97,12 +96,10 @@ function EditToolbar({ requestFrom, requestTill }) {
 }
 
 export default function ExportCustomToolbar({}) {
-  const dispatch = useDispatch();
-  const { navBarComponent, userType, locationCode, selectedTerminal } =
+  const { locationCode, selectedTerminal } =
     useSelector((state) => state.myApp);
   const [seaching, setSearching] = useState(false);
   const [saveLoader, setSaveLoader] = useState(false);
-  const [searchLocationCode, setSearchLocationCode] = useState("");
   const [searchTT, setSearchTT] = useState("");
   const [searchVendor, setSearchVendor] = useState("");
   const { masterList } = useSelector((state) => state.myApp);
@@ -565,82 +562,7 @@ export default function ExportCustomToolbar({}) {
 
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          borderBottom: "1px solid black",
-          width: "100%",
-          marginBottom: "10px",
-        }}
-      >
-        <Button
-          variant={
-            navBarComponent === "tempPassDashboard" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "tempPassDashboard" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
-            dispatch(NavBarComponent("tempPassDashboard"));
-          }}
-        >
-          Temporary Pass Request
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "tempPassHistory" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "tempPassHistory" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(
-              SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
-            );
-            dispatch(NavBarComponent("tempPassHistory"));
-          }}
-        >
-          Temporary Pass Dashboard
-        </Button>
-        <RoleRestrictedTooltip
-          show={userType == "User" || userType == "Contractor"}
-        >
-          <Button
-            variant={
-              navBarComponent === "masterData" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "masterData" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("TT Crew Master Data"));
-              dispatch(NavBarComponent("masterData"));
-            }}
-            disabled={userType == "User" || userType == "Contractor"}
-          >
-            TT Crew Master Data (Admin Only)
-          </Button>
-        </RoleRestrictedTooltip>
-      </div>
-
+<NavbarTemporaryPass />
       {saveLoader && showRecords ? (
         <CircularProgress
           color="success"
@@ -909,7 +831,6 @@ export default function ExportCustomToolbar({}) {
           style={{ width: 200, backgroundColor: "white" }}
           onClick={(e) => {
             setRecords([]);
-            setSearchLocationCode("");
             setSearchTT("");
             setSearchVendor("");
             setShowRecords(false);

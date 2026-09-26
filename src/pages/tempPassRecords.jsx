@@ -17,25 +17,20 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
+import NavbarTemporaryPass from "../components/NavbarTemporaryPass";
 import {
   Visibility,
   UploadFile,
   History,
   PhotoCamera,
 } from "@mui/icons-material";
-import {
-  SetMasterList,
-  NavBarComponent,
-  SetSelectedApplication,
-} from "../action/userSlice";
+import {SetMasterList} from "../action/userSlice";
 import CameraModal from "./CameraModal";
 
 export default function tempPassDashboard() {
   const dispatch = useDispatch();
   const {
     masterList,
-    navBarComponent,
     userType,
     locationCode,
     selectedTerminal,
@@ -460,80 +455,7 @@ export default function tempPassDashboard() {
         overflow: "auto",
       }}
     >
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          border: "1px solid black",
-          width: "100%",
-          borderBottom: "none",
-        }}
-      >
-        <Button
-          variant={
-            navBarComponent === "tempPassDashboard" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "tempPassDashboard" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Temporary Pass Request"));
-            dispatch(NavBarComponent("tempPassDashboard"));
-          }}
-        >
-          Temporary Pass Request
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "tempPassHistory" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "tempPassHistory" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(
-              SetSelectedApplication("TT Crew Temporary Pass Dashboard"),
-            );
-            dispatch(NavBarComponent("tempPassHistory"));
-          }}
-        >
-          Temporary Pass Dashboard
-        </Button>
-        <RoleRestrictedTooltip
-          show={userType == "User" || userType == "Contractor"}
-        >
-          <Button
-            variant={navBarComponent === "masterData" ? "contained" : "outlined"}
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "masterData" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("TT Crew Master Data"));
-              dispatch(NavBarComponent("masterData"));
-            }}
-            disabled={userType == "User" || userType == "Contractor"}
-          >
-            TT Crew Master Data (Admin Only)
-          </Button>
-        </RoleRestrictedTooltip>
-      </div>
-
+      <NavbarTemporaryPass />
       <div
         className="d-flex flex-column justify-content-start align-items-center"
         style={{

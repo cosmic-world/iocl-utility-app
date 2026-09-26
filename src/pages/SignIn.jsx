@@ -270,7 +270,7 @@ function SignIn() {
       dispatch(SetUserType(data.role));
       dispatch(SetUserName(data.userName || ""));
       dispatch(SetAuthorized(true));
-      dispatch(SetSelectedApplication("Role Selection"));
+      dispatch(SetSelectedApplication("Application Dashboard"));
       dispatch(NavBarComponent("home2"));
     } catch (error) {
       setMessage({ type: "error", text: error.message });

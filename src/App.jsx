@@ -82,7 +82,7 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
-          if (findLocationName(item["Receiver Name"])) {
+          if (findLocationName(item["Receiver Name"]) != "") {
             try {
               await fetch(sheet_url, {
                 method: "POST",

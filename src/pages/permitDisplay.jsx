@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import Table from "react-bootstrap/Table";
 import "../css/page_layout.css";
-import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
-import { Button } from "@mui/material";
-import { Sync } from "@mui/icons-material";
-import FormControlPage from "./formControlPage";
-import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
+import NavbarPermit from "../components/NavbarPermit";
 
 export default function PermitDisplay({ handleReadMail }) {
-  const dispatch = useDispatch();
-  const { PermitList, navBarComponent, userType, officerList, locationCode } =
+  const { PermitList, officerList } =
     useSelector((state) => state.myApp);
   const [startIndex, setstartIndex] = useState(0);
   const $table = document.querySelector(".ttes_table_view");
@@ -32,10 +27,6 @@ export default function PermitDisplay({ handleReadMail }) {
       }
     }, 5000);
   }, []);
-
-  // useEffect(() => {
-  //   window.location.reload()
-  // }, []);
 
   useEffect(() => {
     setstartIndex((prevState) =>
@@ -67,121 +58,7 @@ export default function PermitDisplay({ handleReadMail }) {
         backgroundColor: "#dee4ea",
       }}
     >
-      <FormControlPage show={show} setShow={setShow} />
-
-      <div
-        className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
-        style={{
-          border: "1px solid black",
-          width: "100%",
-          borderTop: "none",
-        }}
-      >
-        <RoleRestrictedTooltip show={userType == "User"}>
-          <Button
-            variant={
-              navBarComponent === "formControl" ? "contained" : "outlined"
-            }
-            color="warning"
-            disabled={userType == "User"}
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "formControl" ? "null" : "white",
-            }}
-            onClick={() => {
-              setShow(true);
-            }}
-          >
-            Permit Request Form
-          </Button>
-        </RoleRestrictedTooltip>
-        <Button
-          variant={"contained"}
-          color="secondary"
-          startIcon={<Sync />}
-          sx={{
-            my: 1,
-            mx: 5,
-          }}
-          onClick={() => {
-            handleReadMail();
-          }}
-        >
-          Extract Data from Mail
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "permitDisplay" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "permitDisplay" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Permit Display Table View"));
-            dispatch(NavBarComponent("permitDisplay"));
-          }}
-        >
-          Permit Table View
-        </Button>
-        <Button
-          variant={
-            navBarComponent === "layoutDisplay" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "layoutDisplay" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Permit Display Layout View"));
-            dispatch(NavBarComponent("layoutDisplay"));
-          }}
-          disabled={window.innerWidth < 768}
-        >
-          Permit Layout View (Desktop Only)
-        </Button>
-        <RoleRestrictedTooltip
-          show={userType == "User" || userType == "Contractor"}
-        >
-          <Button
-            variant={
-              navBarComponent === "modifyRecords" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "modifyRecords" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("Modify Permit Records"));
-              dispatch(NavBarComponent("modifyRecords"));
-            }}
-            disabled={userType == "User" || userType == "Contractor"}
-          >
-            Modify Records (Admin Only)
-          </Button>
-        </RoleRestrictedTooltip>
-      </div>
+      <NavbarPermit />
 
       <div className="ttes_table_view h-100 m-0">
         <Table bordered hover className="ttes_table">
