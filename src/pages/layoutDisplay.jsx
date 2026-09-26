@@ -15,6 +15,7 @@ import {
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 import { Sync } from "@mui/icons-material";
 import FormControlPage from "./formControlPage";
+import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
 export default function PermitDisplay({ state, handleReadMail }) {
   const dispatch = useDispatch();
@@ -274,24 +275,26 @@ export default function PermitDisplay({ state, handleReadMail }) {
             borderTop: "none",
           }}
         >
-          <Button
-            variant={
-              navBarComponent === "formControl" ? "contained" : "outlined"
-            }
-            color="warning"
-            disabled={userType == "User"}
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "formControl" ? "null" : "white",
-            }}
-            onClick={() => {
-              setShow(true);
-            }}
-          >
-            Permit Request Form
-          </Button>
+          <RoleRestrictedTooltip show={userType == "User"}>
+            <Button
+              variant={
+                navBarComponent === "formControl" ? "contained" : "outlined"
+              }
+              color="warning"
+              disabled={userType == "User"}
+              sx={{
+                my: 1,
+                mx: 5,
+                backgroundColor:
+                  navBarComponent === "formControl" ? "null" : "white",
+              }}
+              onClick={() => {
+                setShow(true);
+              }}
+            >
+              Permit Request Form
+            </Button>
+          </RoleRestrictedTooltip>
           <Button
             variant={"contained"}
             color="secondary"
@@ -348,30 +351,34 @@ export default function PermitDisplay({ state, handleReadMail }) {
           >
             Permit Layout View (Desktop Only)
           </Button>
-          <Button
-            variant={
-              navBarComponent === "modifyRecords" ? "contained" : "outlined"
-            }
-            color="warning"
-            sx={{
-              my: 1,
-              mx: 5,
-              backgroundColor:
-                navBarComponent === "modifyRecords" ? "null" : "white",
-              "&:disabled": {
-                cursor: "not-allowed",
-                backgroundColor: "white",
-                pointerEvents: "all !important",
-              },
-            }}
-            onClick={() => {
-              dispatch(SetSelectedApplication("Modify Permit Records"));
-              dispatch(NavBarComponent("modifyRecords"));
-            }}
-            disabled={userType == "User" || userType == "Contractor"}
+          <RoleRestrictedTooltip
+            show={userType == "User" || userType == "Contractor"}
           >
-            Modify Records (Admin Only)
-          </Button>
+            <Button
+              variant={
+                navBarComponent === "modifyRecords" ? "contained" : "outlined"
+              }
+              color="warning"
+              sx={{
+                my: 1,
+                mx: 5,
+                backgroundColor:
+                  navBarComponent === "modifyRecords" ? "null" : "white",
+                "&:disabled": {
+                  cursor: "not-allowed",
+                  backgroundColor: "white",
+                  pointerEvents: "all !important",
+                },
+              }}
+              onClick={() => {
+                dispatch(SetSelectedApplication("Modify Permit Records"));
+                dispatch(NavBarComponent("modifyRecords"));
+              }}
+              disabled={userType == "User" || userType == "Contractor"}
+            >
+              Modify Records (Admin Only)
+            </Button>
+          </RoleRestrictedTooltip>
         </div>
 
         <div

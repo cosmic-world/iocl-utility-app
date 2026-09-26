@@ -22,6 +22,7 @@ import {
   SetSelectedApplication,
   SetContractorMasterList,
 } from "../action/userSlice";
+import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
 export default function LabourPassDashboard() {
   const dispatch = useDispatch();
@@ -383,25 +384,29 @@ export default function LabourPassDashboard() {
           width: "100%",
         }}
       >
-        <Button
-          variant={
-            navBarComponent === "labourPassDashboard" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "labourPassDashboard" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Worker Entry Request"));
-            dispatch(NavBarComponent("labourPassDashboard"));
-          }}
-          disabled={userType == "User"}
-        >
-          Worker Entry Request
-        </Button>
+        <RoleRestrictedTooltip show={userType == "User"}>
+          <Button
+            variant={
+              navBarComponent === "labourPassDashboard"
+                ? "contained"
+                : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "labourPassDashboard" ? "null" : "white",
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Worker Entry Request"));
+              dispatch(NavBarComponent("labourPassDashboard"));
+            }}
+            disabled={userType == "User"}
+          >
+            Worker Entry Request
+          </Button>
+        </RoleRestrictedTooltip>
         <Button
           variant={
             navBarComponent === "labourPassApproval" ? "contained" : "outlined"
@@ -432,33 +437,37 @@ export default function LabourPassDashboard() {
               navBarComponent === "labourPassHistory" ? "null" : "white",
           }}
           onClick={() => {
-            dispatch(SetSelectedApplication("Worker Pass Approval History"));
+            dispatch(SetSelectedApplication("Worker Pass History"));
             dispatch(NavBarComponent("labourPassHistory"));
           }}
         >
           APPROVAL HISTORY
         </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_masterData"
-              ? "contained"
-              : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_masterData" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Worker Master Data"));
-            dispatch(NavBarComponent("contractor_masterData"));
-          }}
-          disabled={userType == "User"}
-        >
-          Worker Master Data
-        </Button>
+        <RoleRestrictedTooltip show={userType == "User"}>
+          <Button
+            variant={
+              navBarComponent === "contractor_masterData"
+                ? "contained"
+                : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "contractor_masterData"
+                  ? "null"
+                  : "white",
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("Worker Master Data"));
+              dispatch(NavBarComponent("contractor_masterData"));
+            }}
+            disabled={userType == "User"}
+          >
+            Worker Master Data
+          </Button>
+        </RoleRestrictedTooltip>
         <Button
           variant={
             navBarComponent === "contractor_cred" ? "contained" : "outlined"
@@ -479,7 +488,7 @@ export default function LabourPassDashboard() {
             dispatch(SetSelectedApplication("Contractor Master Data"));
             dispatch(NavBarComponent("contractor_cred"));
           }}
-          disabled={userType == "User"}
+          // disabled={userType == "User"}
         >
           Contractor Master Data
         </Button>

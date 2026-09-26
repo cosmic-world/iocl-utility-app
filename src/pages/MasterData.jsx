@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { Download } from "@mui/icons-material";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
+import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
 export default function MasterData() {
   const dispatch = useDispatch();
@@ -211,28 +212,34 @@ export default function MasterData() {
         >
           Temporary Pass Dashboard
         </Button>
-        <Button
-          variant={navBarComponent === "masterData" ? "contained" : "outlined"}
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "masterData" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Master Data"));
-            dispatch(NavBarComponent("masterData"));
-          }}
-          disabled={userType == "User" || userType == "Contractor"}
+        <RoleRestrictedTooltip
+          show={userType == "User" || userType == "Contractor"}
         >
-          TT Crew Master Data (Admin Only)
-        </Button>
+          <Button
+            variant={
+              navBarComponent === "masterData" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "masterData" ? "null" : "white",
+              "&:disabled": {
+                cursor: "not-allowed",
+                backgroundColor: "white",
+                pointerEvents: "all !important",
+              },
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("TT Crew Master Data"));
+              dispatch(NavBarComponent("masterData"));
+            }}
+            disabled={userType == "User" || userType == "Contractor"}
+          >
+            TT Crew Master Data (Admin Only)
+          </Button>
+        </RoleRestrictedTooltip>
       </div>
 
       {saveLoader ? (

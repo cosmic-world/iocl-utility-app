@@ -23,6 +23,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 import { NavBarComponent, SetSelectedApplication } from "../action/userSlice";
 
 const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
@@ -610,28 +611,34 @@ export default function ExportCustomToolbar({}) {
         >
           Temporary Pass Dashboard
         </Button>
-        <Button
-          variant={navBarComponent === "masterData" ? "contained" : "outlined"}
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "masterData" ? "null" : "white",
-            "&:disabled": {
-              cursor: "not-allowed",
-              backgroundColor: "white",
-              pointerEvents: "all !important",
-            },
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("TT Crew Master Data"));
-            dispatch(NavBarComponent("masterData"));
-          }}
-          disabled={userType == "User" || userType == "Contractor"}
+        <RoleRestrictedTooltip
+          show={userType == "User" || userType == "Contractor"}
         >
-          TT Crew Master Data (Admin Only)
-        </Button>
+          <Button
+            variant={
+              navBarComponent === "masterData" ? "contained" : "outlined"
+            }
+            color="warning"
+            sx={{
+              my: 1,
+              mx: 5,
+              backgroundColor:
+                navBarComponent === "masterData" ? "null" : "white",
+              "&:disabled": {
+                cursor: "not-allowed",
+                backgroundColor: "white",
+                pointerEvents: "all !important",
+              },
+            }}
+            onClick={() => {
+              dispatch(SetSelectedApplication("TT Crew Master Data"));
+              dispatch(NavBarComponent("masterData"));
+            }}
+            disabled={userType == "User" || userType == "Contractor"}
+          >
+            TT Crew Master Data (Admin Only)
+          </Button>
+        </RoleRestrictedTooltip>
       </div>
 
       {saveLoader && showRecords ? (

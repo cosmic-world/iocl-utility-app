@@ -21,6 +21,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import persistSessionStorage from "redux-persist/lib/storage/session";
+import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
 export default function Header({}) {
   const dispatch = useDispatch();
@@ -95,31 +96,37 @@ export default function Header({}) {
               },
             }}
           >
-            <MenuItem
-              selected={navBarComponent == "home2"}
-              onClick={() => {
-                dispatch(NavBarComponent("home2"));
-                dispatch(SetSelectedApplication("Application Dashboard"));
-                setAnchorE1(null);
-              }}
-              disabled={userType == "" ? true : false}
-              className="d-flex justify-content-center p-3"
-            >
-              Application Dashboard
-            </MenuItem>
+            <RoleRestrictedTooltip show={userType == ""}>
+              <MenuItem
+                selected={navBarComponent == "home2"}
+                onClick={() => {
+                  dispatch(NavBarComponent("home2"));
+                  dispatch(SetSelectedApplication("Application Dashboard"));
+                  setAnchorE1(null);
+                }}
+                disabled={userType == "" ? true : false}
+                className="d-flex justify-content-center p-3"
+              >
+                Application Dashboard
+              </MenuItem>
+            </RoleRestrictedTooltip>
             <Divider className="bg-dark m-0" />
-            <MenuItem
-              selected={navBarComponent == "officer_cred"}
-              className="d-flex justify-content-center p-3"
-              disabled={userType == "User" || userType == "Contractor"}
-              onClick={() => {
-                dispatch(NavBarComponent("officer_cred"));
-                dispatch(SetSelectedApplication("Admin Control"));
-                setAnchorE1(null);
-              }}
+            <RoleRestrictedTooltip
+              show={userType == "User" || userType == "Contractor"}
             >
-              Admin Control
-            </MenuItem>
+              <MenuItem
+                selected={navBarComponent == "officer_cred"}
+                className="d-flex justify-content-center p-3"
+                disabled={userType == "User" || userType == "Contractor"}
+                onClick={() => {
+                  dispatch(NavBarComponent("officer_cred"));
+                  dispatch(SetSelectedApplication("Admin Control"));
+                  setAnchorE1(null);
+                }}
+              >
+                Admin Control
+              </MenuItem>
+            </RoleRestrictedTooltip>
             <Divider className="bg-dark m-0" />
             <MenuItem
               selected={navBarComponent == "contacts"}
@@ -246,7 +253,7 @@ export default function Header({}) {
             title={
               <>
                 <label>{`Role:`}&nbsp;</label>
-                <label style={{ color: "orange" }}>{`${userType
+                <label style={{ color: "orange" }}>{`${(userType=='User'?'Viewer':userType)
                   .trim()
                   .replace(/_/g, " ")
                   .replace(/\s+/g, " ")
@@ -323,7 +330,7 @@ export default function Header({}) {
           }}
         >
           <label>{`Role:`}&nbsp;</label>
-          <label style={{ color: "orange" }}>{`${userType
+          <label style={{ color: "orange" }}>{`${userType=='User'?'Viewer':userType
             .trim()
             .replace(/_/g, " ")
             .replace(/\s+/g, " ")
