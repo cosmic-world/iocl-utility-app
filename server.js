@@ -2552,7 +2552,11 @@ async function fetchTodayPermitEmailsFromImap() {
       }
     }
 
-    permitEmails = parsedEmails;
+    permitEmails = dedupePermitRecords(
+      parsedEmails,
+      (email) => email.json?.['Permit No'],
+    );
+    console.info(`[permit-sync] Gmail permits: raw=${parsedEmails.length}, unique=${permitEmails.length}`);
   } catch (error) {
     console.error('Error fetching permit emails:', error);
     permitEmails = [];
@@ -2596,6 +2600,17 @@ let permitSheetRowsCache = [];
 
 function normalizePermitNo(permitNo) {
   return String(permitNo || '').trim().toUpperCase();
+}
+
+function dedupePermitRecords(records, getPermitNo) {
+  const byPermitNo = new Map();
+  for (const record of records) {
+    const permitNo = normalizePermitNo(getPermitNo(record));
+    if (permitNo) {
+      byPermitNo.set(permitNo, record);
+    }
+  }
+  return [...byPermitNo.values()];
 }
 
 function getPermitClaimPath(permitNo) {
@@ -2694,16 +2709,14 @@ async function refreshSheetPermitNosCache() {
         cols.map((col, index) => [col, cells[index]?.v ?? '']),
       );
     });
-    const permitNos = rows
-      .map((row) => row['Permit No'])
-      .map(normalizePermitNo)
-      .filter(Boolean);
+    const uniqueRows = dedupePermitRecords(rows, (row) => row['Permit No']);
+    const permitNos = uniqueRows.map((row) => normalizePermitNo(row['Permit No']));
     const refreshedPermitNos = new Set(permitNos);
     await reconcilePermitClaims(refreshedPermitNos);
     sheetPermitNosCache = refreshedPermitNos;
-    permitSheetRowsCache = rows;
+    permitSheetRowsCache = uniqueRows;
     sheetPermitNosCacheReady = true;
-    console.info(`[permit-sync] sheet cache refreshed: rows=${rows.length}, uniquePermits=${sheetPermitNosCache.size}`);
+    console.info(`[permit-sync] sheet rows: raw=${rows.length}, uniquePermits=${uniqueRows.length}`);
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
@@ -2864,7 +2877,7 @@ async function syncPermitsToSheet() {
         const clearanceTill = ele['Clearance Till'];
         return clearanceTill > new Date().toLocaleTimeString('en-GB');
       });
-    const uniqueByPermitNo = [...new Map(zlist.map((item) => [normalizePermitNo(item['Permit No']), item])).values()];
+    const uniqueByPermitNo = dedupePermitRecords(zlist, (item) => item['Permit No']);
     const pending = uniqueByPermitNo.filter(
       (item) => !sentPermitNos.has(normalizePermitNo(item['Permit No']))
         && !sheetPermitNosCache.has(normalizePermitNo(item['Permit No'])),
