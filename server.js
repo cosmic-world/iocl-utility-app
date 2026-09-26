@@ -2623,6 +2623,7 @@ async function refreshSheetPermitNosCache() {
     sheetPermitNosCache = new Set([...sheetPermitNosCache, ...permitNos]);
     permitSheetRowsCache = rows;
     sheetPermitNosCacheReady = true;
+    console.info(`[permit-sync] sheet cache refreshed: rows=${rows.length}, uniquePermits=${sheetPermitNosCache.size}`);
   } catch (error) {
     console.error('Failed to refresh sheet permit-no cache:', error);
   }
@@ -2669,7 +2670,7 @@ function resolvePermitLocationName(permitNo) {
   return matches.length === 1 ? matches[0].LOCATION_NAME ?? null : null;
 }
 
-async function writePermitToSheet(item, locationName) {
+async function writePermitToSheet(item, locationName, source) {
   if (!sheetPermitNosCacheReady) {
     await refreshSheetPermitNosCache();
   }
@@ -2681,6 +2682,7 @@ async function writePermitToSheet(item, locationName) {
 
   const permitNoKey = normalizePermitNo(item['Permit No']);
   if (sentPermitNos.has(permitNoKey) || sheetPermitNosCache.has(permitNoKey)) {
+    console.info(`[permit-sync] duplicate skipped: source=${source}, permitNo=${permitNoKey}`);
     return false;
   }
 
@@ -2689,15 +2691,18 @@ async function writePermitToSheet(item, locationName) {
     Object.entries(item).filter(([key]) => key !== 'locationCode'),
   );
   payload['Location Name'] = locationName;
+  console.info(`[permit-sync] writing: source=${source}, permitNo=${permitNoKey}, location=${locationName}`);
   const response = await fetch(PERMIT_SHEET_URL, {
     method: 'POST',
     body: new URLSearchParams({ data: JSON.stringify(payload) }),
   });
   if (!response.ok) {
+    console.error(`[permit-sync] write rejected: permitNo=${permitNoKey}, httpStatus=${response.status}`);
     throw new Error(`Sheet write returned HTTP ${response.status}`);
   }
 
   sheetPermitNosCache.add(permitNoKey);
+  console.info(`[permit-sync] write accepted: permitNo=${permitNoKey}, httpStatus=${response.status}`);
   return true;
 }
 
@@ -2725,7 +2730,7 @@ app.post('/api/permits/manual', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Unable to uniquely resolve the permit terminal.' });
     }
 
-    const written = await writePermitToSheet({ ...item, 'Permit No': permitNo }, locationName);
+    const written = await writePermitToSheet({ ...item, 'Permit No': permitNo }, locationName, 'manual');
     if (!written) {
       return res.status(409).json({ success: false, message: 'This Permit No is already in the sheet.' });
     }
@@ -2740,9 +2745,11 @@ app.post('/api/permits/manual', async (req, res) => {
 // sheet POSTs) is still running past the 10s interval, which would let both cycles see
 // the same permit as pending before either marks it sent, causing a double-post.
 let isSyncingPermits = false;
+let lastPermitSyncSummaryAt = 0;
 
 async function syncPermitsToSheet() {
   if (isSyncingPermits) {
+    console.warn('[permit-sync] skipped overlapping sync cycle');
     return;
   }
   isSyncingPermits = true;
@@ -2767,14 +2774,19 @@ async function syncPermitsToSheet() {
       (item) => !sentPermitNos.has(normalizePermitNo(item['Permit No']))
         && !sheetPermitNosCache.has(normalizePermitNo(item['Permit No'])),
     );
+    if (pending.length || Date.now() - lastPermitSyncSummaryAt >= 60000) {
+      console.info(`[permit-sync] cycle: mailbox=${permitEmails.length}, active=${zlist.length}, unique=${uniqueByPermitNo.length}, pending=${pending.length}, sentThisProcess=${sentPermitNos.size}, sheetCache=${sheetPermitNosCache.size}`);
+      lastPermitSyncSummaryAt = Date.now();
+    }
 
     for (const item of pending) {
       const locationName = resolvePermitLocationName(item['Permit No']);
       if (locationName == null) {
+        console.warn(`[permit-sync] unresolved terminal; not writing permitNo=${normalizePermitNo(item['Permit No'])}`);
         continue;
       }
       try {
-        await writePermitToSheet(item, locationName);
+        await writePermitToSheet(item, locationName, 'email');
       } catch (error) {
         // The sheet may have accepted the POST before the connection failed; don't retry
         // an uncertain delivery during this process lifetime and risk creating a duplicate.
