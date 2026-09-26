@@ -23,8 +23,8 @@ import persistSessionStorage from "redux-persist/lib/storage/session";
 import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
 
 const SESSION_EXPIRY_KEY = "ioclSessionExpiresAt";
-// const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
-const SESSION_DURATION_MS = 10 * 1000;
+const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
+// const SESSION_DURATION_MS = 10 * 1000;
 
 function signOut(dispatch, showExpiryAlert = false) {
   dispatch(ResetAppState());

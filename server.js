@@ -2802,11 +2802,20 @@ async function syncPermitsToSheet() {
 
 refreshUtilityLocationsCache();
 setInterval(refreshUtilityLocationsCache, 5 * 60 * 1000);
+const ENABLE_PERMIT_SYNC = true;
+
 refreshSheetPermitNosCache().then(() => {
-  syncPermitsToSheet();
+  if (ENABLE_PERMIT_SYNC) {
+    syncPermitsToSheet();
+  }
 });
 setInterval(refreshSheetPermitNosCache, 30000);
-setInterval(syncPermitsToSheet, 10000);
+if (ENABLE_PERMIT_SYNC) {
+  setInterval(syncPermitsToSheet, 10000);
+  console.info('[permit-sync] background Gmail-to-sheet worker enabled');
+} else {
+  console.info('[permit-sync] background Gmail-to-sheet worker disabled');
+}
 
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, "0.0.0.0", () => {
