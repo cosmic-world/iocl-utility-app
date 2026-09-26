@@ -5,8 +5,7 @@ import "../css/page_layout.css";
 import NavbarPermit from "../components/NavbarPermit";
 
 export default function PermitDisplay({ handleReadMail }) {
-  const { PermitList, officerList } =
-    useSelector((state) => state.myApp);
+  const { PermitList, officerList } = useSelector((state) => state.myApp);
   const [startIndex, setstartIndex] = useState(0);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;

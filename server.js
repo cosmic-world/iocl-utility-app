@@ -445,8 +445,6 @@ app.post("/api/upload-temp-pass",
         SYSUTCDATETIME());`;
       await request.query(insertSql)
       
-      await sql.close();
-
       return res.status(200).json({ success: true });
     } catch (error) {
       console.error("Upload error:", error);
@@ -492,8 +490,6 @@ app.post("/api/records/:id/approve", async (req, res) => {
     await updateRequest.query(
       "UPDATE dbo.temp_pass_records SET approval_history = @approval_history WHERE id = @id"
     );
-    await sql.close();
-
     return res.status(200).json({ success: true, approval_history: updatedHistory });
   } catch (error) {
     console.error("Approval update error:", error);
@@ -553,7 +549,6 @@ app.get("/api/temp_pass_records", (req, res) => {
       await sql.connect(sqlConfig);
       const result = await sql.query(query);
       
-      await sql.close();
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -665,8 +660,6 @@ app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (re
   }
     }
     
-    await pool.close();
-
     res.status(200).json({ 
       success: true, 
       message: `${count!=sheetData.length?`Successfully imported ${sheetData.length - count} records into Azure SQL!`:""}\n${count>0?`Upload failed for ${count} records due to ${responseText}`:""}`
@@ -683,7 +676,6 @@ app.get("/api/ttcrew-master-data", (req, res) => {
     try {
       await sql.connect(sqlConfig);
       const result = await sql.query("SELECT * FROM VendorMasterRecord");
-      await sql.close();
       res.json(result.recordset);
     } catch (error) {
       console.error("Query error:", error);
@@ -724,8 +716,6 @@ app.post("/api/upload-master",
         @mobile_no, @govt_id, @driving_licence_no)`;
       await request.query(insertSql)
       
-      await sql.close();
-
       return res.json({ success: true});
     } catch (error) {
       console.error("Upload error:", error);
@@ -803,8 +793,6 @@ app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (re
     }
     
 
-    await pool.close();
-
     res.status(200).json({ 
       success: true, 
       message: `${count!=sheetData.length?`Successfully imported ${sheetData.length - count} records into Azure SQL!`:""}\n${count>0?`Upload failed for ${count} records due to ${responseText}`:""}`
@@ -846,8 +834,6 @@ app.post("/api/upload-labour-single",
         @address)`;
       await request.query(insertSql)
       
-      await sql.close();
-
       res.status(200).json({ success: true });
     } catch (error) {
       console.error("Upload error:", error);
@@ -926,7 +912,6 @@ app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async
         throw error;
       }
     }
-    await pool.close();
     return res.json({
       success: true,
       message: `Successfully imported ${sheetData.length - duplicateCount} contractor records${duplicateCount ? `; skipped ${duplicateCount} duplicate records` : ''}.`,
@@ -968,8 +953,6 @@ app.post("/api/upload-contractor-single",
         VALUES (@locationCode, @contractorName, @mailID, @mobileNo)`;
       await request.query(insertSql)
       
-      await sql.close();
-
       return res.status(200).json({ success: true });
     } catch (error) {
       console.error("Upload error:", error);
@@ -1024,7 +1007,6 @@ app.patch("/api/contractor-master-data/:id", async (req, res) => {
       SET CONTRACTOR_NAME = @contractorName, MAIL_ID = @mailID, MOBILE_NO = @mobileNo
       WHERE ID = @id AND LOCATION_CODE = @locationCode
     `);
-    await sql.close();
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Contractor record not found for this location." });
     }
@@ -1054,7 +1036,6 @@ app.delete("/api/contractor-master-data/:id", async (req, res) => {
     const result = await request.query(
       "DELETE FROM dbo.ContractorCredentials WHERE ID = @id AND LOCATION_CODE = @locationCode",
     );
-    await sql.close();
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Contractor record not found for this location." });
     }
@@ -1097,7 +1078,6 @@ app.patch("/api/labour-master-data/:id", async (req, res) => {
           MOBILE_NO = @mobileNo, AADHAAR_NO = @aadhaarNo, ADDRESS = @address
       WHERE ID = @id AND LOCATION_CODE = @locationCode
     `);
-    await sql.close();
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Worker record not found for this location." });
     }
@@ -1127,7 +1107,6 @@ app.delete("/api/labour-master-data/:id", async (req, res) => {
     const result = await request.query(
       "DELETE FROM dbo.LabourMasterRecord WHERE ID = @id AND LOCATION_CODE = @locationCode",
     );
-    await sql.close();
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Worker record not found for this location." });
     }
@@ -1497,8 +1476,6 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
   }
     }
 
-    await pool.close();
-
     res.status(200).json({ 
       success: true, 
       message: `${count!=sheetData.length?`Successfully imported ${sheetData.length - count} records into Azure SQL!`:""}\n${count>0?`Upload failed for ${count} records due to ${responseText}`:""}`
@@ -1550,7 +1527,6 @@ app.post("/api/upload-officer-single",
         VALUES (@locationCode, @name, @empID, @mobileNo, @mailID, @role, 'ACTIVE')`;
       await request.query(insertSql)
       
-      await sql.close();
         res.status(200).json({ success: true });
     } catch (error) {
       console.error("Upload error:", error);
@@ -1603,8 +1579,6 @@ app.delete("/api/officer-master-data/:id", async (req, res) => {
     const result = await request.query(
       "DELETE FROM dbo.OfficerCredentials WHERE ID = @id"
     );
-    await sql.close();
-
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Officer record not found." });
     }
@@ -1638,8 +1612,6 @@ app.patch("/api/officer-master-data/:id/role", async (req, res) => {
     const result = await request.query(
       "UPDATE dbo.OfficerCredentials SET [ROLE] = @role WHERE ID = @id"
     );
-    await sql.close();
-
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Officer record not found." });
     }
@@ -1673,8 +1645,6 @@ app.patch("/api/officer-master-data/:id/verify-email", async (req, res) => {
       SET [STATUS] = 'ACTIVE'
       WHERE ID = @id AND LOCATION_CODE = @locationCode
     `);
-    await sql.close();
-
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ error: "Officer record not found for this location." });
     }
@@ -2094,13 +2064,11 @@ app.get("/api/labour-pass-reports", async (req, res) => {
     const result = await request.query(`SELECT *, COALESCE(NULLIF(LTRIM(RTRIM(APPROVED_BY)), ''), APPROVING_OFFICER) AS APPROVER_NAME FROM dbo.LabourEntryRecord WHERE ${conditions.join(" AND ")} ORDER BY CREATED_AT, ID`);
     const rows = Array.isArray(result.recordset) ? result.recordset : [];
     if (!rows.length) {
-      await sql.close();
       return res.status(404).json({ error: "No approved labour records found for the selected filters." });
     }
     const pdf = format === "permission"
       ? await createLabourPermissionReport(rows)
       : await createLabourRegisterReport(rows);
-    await sql.close();
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="labour-${format}-report.pdf"`);
     return res.send(pdf);
@@ -2252,7 +2220,6 @@ app.post("/api/labour-pass-requests/:id/:gatepass", async (req, res) => {
     if (!updateResult.rowsAffected[0]) {
       return res.status(404).json({ error: "Labour pass request was not found." });
     }
-    await sql.close();
     return res.status(200).json({ success: true, GATE_PASS_NO: gatepass });
   } catch (error) {
     console.error("Gate Pass update error:", error);
@@ -2455,8 +2422,6 @@ app.post("/api/upload-labour-pass",
 
       await request.query(insertSql)
       
-      await sql.close();
-
       return res.status(200).json({ success: true });
     } catch (error) {
       console.error("Upload error:", error);
@@ -2466,6 +2431,7 @@ app.post("/api/upload-labour-pass",
 );
 
 let permitEmails = [];
+let permitEmailFetchPromise = null;
 
 const permitImapConfig = {
   imap: {
@@ -2540,7 +2506,7 @@ function isPermitMail(parsedMail) {
   return subject.includes('clearance no');
 }
 
-async function fetchTodayPermitEmails() {
+async function fetchTodayPermitEmailsFromImap() {
   let connection;
   try {
     if (!permitImapConfig.imap.user || !permitImapConfig.imap.password) {
@@ -2595,6 +2561,16 @@ async function fetchTodayPermitEmails() {
       connection.end();
     }
   }
+}
+
+function fetchTodayPermitEmails() {
+  if (!permitEmailFetchPromise) {
+    permitEmailFetchPromise = fetchTodayPermitEmailsFromImap().finally(() => {
+      permitEmailFetchPromise = null;
+    });
+  }
+
+  return permitEmailFetchPromise;
 }
 
 app.get('/api/permits', async (req, res) => {

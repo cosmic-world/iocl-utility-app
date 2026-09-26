@@ -24,17 +24,14 @@ import {
   History,
   PhotoCamera,
 } from "@mui/icons-material";
-import {SetMasterList} from "../action/userSlice";
+import { SetMasterList } from "../action/userSlice";
 import CameraModal from "./CameraModal";
 
 export default function tempPassDashboard() {
   const dispatch = useDispatch();
-  const {
-    masterList,
-    userType,
-    locationCode,
-    selectedTerminal,
-  } = useSelector((state) => state.myApp);
+  const { masterList, userType, locationCode, selectedTerminal } = useSelector(
+    (state) => state.myApp,
+  );
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);
 
@@ -449,11 +446,8 @@ export default function tempPassDashboard() {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100 p-2"
       }
-      style={{
-        overflow: "auto",
-      }}
     >
       <NavbarTemporaryPass />
       <div
@@ -1230,7 +1224,12 @@ export default function tempPassDashboard() {
         </div>
         <div
           className="d-flex flex-sm-row justify-content-center align-items-center position-relative pt-0"
-          style={{ borderTop: "1px dashed", width: "90%" }}
+          style={{
+            borderTop: "1px dashed",
+            width: "90%",
+            height: "30%",
+            overflow: "auto",
+          }}
         >
           <Button
             color="primary"
@@ -1426,7 +1425,16 @@ export default function tempPassDashboard() {
         </Button>
       </div>
 
-      <div className="ttes_table_view">
+      <div
+        className="ttes_table_view"
+        style={{
+          height: "auto",
+          maxHeight: 480,
+          minHeight: 0,
+          overflowX: "auto",
+          overflowY: "auto",
+        }}
+      >
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>

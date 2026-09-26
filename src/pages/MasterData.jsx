@@ -14,8 +14,9 @@ import { Download } from "@mui/icons-material";
 import NavbarTemporaryPass from "../components/NavbarTemporaryPass";
 
 export default function MasterData() {
-  const { locationCode, selectedTerminal } =
-    useSelector((state) => state.myApp);
+  const { locationCode, selectedTerminal } = useSelector(
+    (state) => state.myApp,
+  );
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

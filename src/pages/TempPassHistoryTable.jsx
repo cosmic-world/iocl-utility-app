@@ -96,8 +96,9 @@ function EditToolbar({ requestFrom, requestTill }) {
 }
 
 export default function ExportCustomToolbar({}) {
-  const { locationCode, selectedTerminal } =
-    useSelector((state) => state.myApp);
+  const { locationCode, selectedTerminal } = useSelector(
+    (state) => state.myApp,
+  );
   const [seaching, setSearching] = useState(false);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchTT, setSearchTT] = useState("");
@@ -562,7 +563,7 @@ export default function ExportCustomToolbar({}) {
 
   return (
     <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
-<NavbarTemporaryPass />
+      <NavbarTemporaryPass />
       {saveLoader && showRecords ? (
         <CircularProgress
           color="success"

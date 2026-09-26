@@ -12,9 +12,7 @@ import {
   Box,
 } from "@mui/material";
 import { Download, Edit, Save, Cancel, Delete } from "@mui/icons-material";
-import {
-  SetLabourMasterList,
-} from "../action/userSlice";
+import { SetLabourMasterList } from "../action/userSlice";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
 
 export default function LabourMasterData({ handleSync }) {

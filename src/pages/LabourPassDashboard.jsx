@@ -368,7 +368,7 @@ export default function LabourPassDashboard() {
         overflow: "auto",
       }}
     >
-<NavbarWorkerEntry />
+      <NavbarWorkerEntry />
       <div
         className="d-flex flex-column justify-content-center align-items-center"
         style={{ border: "1px solid black", width: "100%" }}

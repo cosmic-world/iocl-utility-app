@@ -15,11 +15,9 @@ import {
 import NavbarPermit from "../components/NavbarPermit";
 
 export default function LayoutDisplay({ state, handleReadMail }) {
-  const {
-    PermitList,
-    selectedTerminal,
-    officerList,
-  } = useSelector((state) => state.myApp);
+  const { PermitList, selectedTerminal, officerList } = useSelector(
+    (state) => state.myApp,
+  );
   const [saveLoader, setSaveLoader] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
   const [markerPosition, setMarkerPosition] = useState(null);

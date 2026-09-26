@@ -421,7 +421,7 @@ const ModifyRecords = ({ handleReadMail }) => {
         selectedId={selectedId}
       />
 
-      <NavbarPermit/>
+      <NavbarPermit />
 
       {saveLoader ? (
         <CircularProgress

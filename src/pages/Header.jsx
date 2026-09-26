@@ -18,7 +18,6 @@ import {
   MenuItem,
   Divider,
   Button,
-  Tooltip,
 } from "@mui/material";
 import persistSessionStorage from "redux-persist/lib/storage/session";
 import RoleRestrictedTooltip from "../components/RoleRestrictedTooltip";
@@ -62,7 +61,7 @@ export default function Header({}) {
   }, []);
   return (
     <div
-      className="d-flex justify-content-center align-items-center"
+      className="d-flex justify-content-between align-items-center"
       style={{
         fontFamily: "Lucida Sans",
         fontSize: "1.4rem",
@@ -226,14 +225,37 @@ export default function Header({}) {
       ) : null}
 
       {userType ? (
-        <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
-          <Tooltip title={userName} arrow>
-            <AccountCircleIcon
+<div
+          className="d-xxl-none d-flex justify-content-center align-items-center h-100 mx-1"
+          title={userName}
+          style={{
+            color: "#1976d2",
+            fontWeight: "bold",
+            borderRight: userType != "" ? "1px solid #1976d2" : null,
+            overflow: "hidden",
+          }}
+        >
+          <label style={{fontSize:'1rem', paddingTop:6, flexShrink: 0}}>{`Welcome!`}&nbsp;</label>
+          <label
+            style={{
+              color: "orange",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              fontSize:'1rem', paddingTop:6,
+            }}
+          >{`${userName
+            .trim()
+            .replace(/_/g, " ")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .replace(/\b\w/g, (char) => char.toUpperCase())
+            .replace(/_/g, " ")}`}</label>
+                      <AccountCircleIcon
               style={{ color: "#1976d2", fontSize: "1.8rem" }}
             />
-          </Tooltip>
         </div>
-      ) : null}
+) : null}
 
       <MenuIcon
         style={{
@@ -248,26 +270,28 @@ export default function Header({}) {
         }
       />
       {userType ? (
-        <div className="d-flex d-xxl-none justify-content-center align-items-center h-100 px-2">
-          <Tooltip
-            title={
-              <>
-                <label>{`Role:`}&nbsp;</label>
-                <label style={{ color: "orange" }}>{`${(userType=='User'?'Viewer':userType)
+      <div
+          className="d-flex d-xxl-none justify-content-center align-items-center h-100 mx-1"
+          style={{
+            color: "#1976d2",
+            fontWeight: "bold",
+          }}
+        >
+          <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
+          <label style={{fontSize:'1rem', paddingTop:6}}>{`Role:`}&nbsp;</label>
+          <label style={{ fontSize:'1rem', paddingTop:6, color: "orange" }}>{`${
+            userType == "User"
+              ? "Viewer"
+              : userType
                   .trim()
                   .replace(/_/g, " ")
                   .replace(/\s+/g, " ")
                   .toLowerCase()
                   .replace(/\b\w/g, (char) => char.toUpperCase())
-                  .replace(/_/g, " ")}`}</label>
-              </>
-            }
-            arrow
-          >
-            <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem" }} />
-          </Tooltip>
+                  .replace(/_/g, " ")
+          }`}</label>
         </div>
-      ) : null}
+        ) : null}
       {/* current date-time stamp display */}
       <div
         className="d-none d-xxl-flex justify-content-center align-items-center h-100"
@@ -330,13 +354,17 @@ export default function Header({}) {
           }}
         >
           <label>{`Role:`}&nbsp;</label>
-          <label style={{ color: "orange" }}>{`${userType=='User'?'Viewer':userType
-            .trim()
-            .replace(/_/g, " ")
-            .replace(/\s+/g, " ")
-            .toLowerCase()
-            .replace(/\b\w/g, (char) => char.toUpperCase())
-            .replace(/_/g, " ")}`}</label>
+          <label style={{ color: "orange" }}>{`${
+            userType == "User"
+              ? "Viewer"
+              : userType
+                  .trim()
+                  .replace(/_/g, " ")
+                  .replace(/\s+/g, " ")
+                  .toLowerCase()
+                  .replace(/\b\w/g, (char) => char.toUpperCase())
+                  .replace(/_/g, " ")
+          }`}</label>
         </div>
       ) : null}
 
