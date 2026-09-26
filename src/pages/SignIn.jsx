@@ -298,7 +298,7 @@ function SignIn() {
   useEffect(() => {
     handleRefreshLocations();
     handleGetAllLocations();
-  }, []);
+  }, [dispatch]);
 
   const handleSendRegistrationOtp = async () => {
     if (!registration.adminMailId.trim()) {

@@ -225,7 +225,7 @@ export default function Header({}) {
         </>
       ) : null}
 
-      {userType!="User" ? (
+      {userType!="User" && userType!="" ? (
 <div
           className="d-xxl-none d-flex justify-content-center align-items-center h-100 mx-1 ms-2"
           title={userName}
