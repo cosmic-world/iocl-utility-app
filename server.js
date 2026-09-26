@@ -2621,6 +2621,17 @@ async function refreshUtilityLocationsCache() {
     await sql.connect(sqlConfig);
     const result = await sql.query("SELECT LOCATION_CODE, LOCATION_NAME FROM IOCLUtilityCredentials WHERE ACTIVE='Y'");
     utilityLocationsCache = result.recordset || [];
+    const locationCounts = utilityLocationsCache.reduce((counts, location) => {
+      const code = String(location.LOCATION_CODE || '').trim();
+      counts.set(code, (counts.get(code) || 0) + 1);
+      return counts;
+    }, new Map());
+    const duplicateCodes = [...locationCounts]
+      .filter(([code, count]) => code && count > 1)
+      .map(([code]) => code);
+    if (duplicateCodes.length) {
+      console.error('Permit sync cannot uniquely resolve duplicate active location codes:', duplicateCodes);
+    }
   } catch (error) {
     console.error('Failed to refresh utility locations cache:', error);
   }
@@ -2633,7 +2644,10 @@ function resolvePermitLocationName(permitNo) {
   if (!locCode) {
     return null;
   }
-  return utilityLocationsCache.find((location) => String(location.LOCATION_CODE) === locCode)?.LOCATION_NAME ?? null;
+  const matches = utilityLocationsCache.filter(
+    (location) => String(location.LOCATION_CODE || '').trim() === locCode,
+  );
+  return matches.length === 1 ? matches[0].LOCATION_NAME ?? null : null;
 }
 
 // Guards against a new cycle starting while a previous one (IMAP fetch + sequential
@@ -2686,8 +2700,9 @@ async function syncPermitsToSheet() {
         });
         sheetPermitNosCache.add(item['Permit No']);
       } catch (error) {
-        sentPermitNos.delete(item['Permit No']);
-        console.error('Failed to post permit to sheet:', item['Permit No'], error);
+        // The sheet may have accepted the POST before the connection failed; don't retry
+        // an uncertain delivery during this process lifetime and risk creating a duplicate.
+        console.error('Permit sheet delivery outcome is uncertain; suppressing retry:', item['Permit No'], error);
       }
     }
   } catch (error) {
