@@ -40,19 +40,20 @@ function App() {
 
   const permitListRef = useRef(PermitList);
 
-  const findLocationName = (item) => {
-    const filteredOfficerName = officerList.find(
-      (officer) => officer["Emp_ID"] == item,
-    );
-    if (filteredOfficerName) {
-      const loc_code = filteredOfficerName["LOCATION_CODE"];
-      const locationName = locationList.find(
-        (location) => location["LOCATION_CODE"] == loc_code,
-      )?.["LOCATION_NAME"];
-      return locationName;
-    } else {
+  // Permit No is prefixed with the 4-digit location code (e.g. "1349C2600079" -> "1349"),
+  // which is the authoritative source of the issuing terminal. Deriving it from the
+  // officer's own registered LOCATION_CODE is unreliable, since an officer/Emp_ID may be
+  // registered against more than one terminal, causing the wrong terminal to be resolved.
+  const findLocationName = (permitNo) => {
+    const locCode = String(permitNo || "").match(/^\d{4}/)?.[0];
+    if (!locCode) {
       return null;
     }
+    return (
+      locationList.find((location) => location["LOCATION_CODE"] == locCode)?.[
+        "LOCATION_NAME"
+      ] ?? null
+    );
   };
 
   const handleReadMail = async () => {
@@ -82,8 +83,8 @@ function App() {
       if (ylist.length > 0) {
         const sheet_url = `https://script.google.com/macros/s/AKfycbzFEbaJnXq5bVjQuYQjidG544bGBscOcKQaw5lalrCayipfE8xp7Jas4nlrK_OfElHl/exec`;
         for (const item of ylist) {
-          console.log("Processing item:", item, 'locationName:', findLocationName(item["Receiver Name"]));
-          if (findLocationName(item["Receiver Name"]) != null) {
+          console.log("Processing item:", item, 'locationName:', findLocationName(item["Permit No"]));
+          if (findLocationName(item["Permit No"]) != null) {
             try {
               await fetch(sheet_url, {
                 method: "POST",
@@ -98,7 +99,7 @@ function App() {
                     "Clearance Till": item["Clearance Till"],
                     "Contractor Name": item["Contractor Name"],
                     "Permit No": item["Permit No"],
-                    "Location Name": findLocationName(item["Receiver Name"]),
+                    "Location Name": findLocationName(item["Permit No"]),
                   }),
                 }),
               });
