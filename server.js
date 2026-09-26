@@ -2949,7 +2949,7 @@ async function syncPermitsToSheet() {
 
 refreshUtilityLocationsCache();
 setInterval(refreshUtilityLocationsCache, 5 * 60 * 1000);
-const ENABLE_PERMIT_SYNC = true;
+const ENABLE_PERMIT_SYNC = false;
 
 refreshSheetPermitNosCache().then(() => {
   if (ENABLE_PERMIT_SYNC) {
