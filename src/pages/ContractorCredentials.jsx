@@ -54,7 +54,6 @@ export default function ContractorCredentials({ handleSyncContractor }) {
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const fileInputRef = useRef(null);
   const isSuperUser = userType === "SUPER_ADMIN";
-  const contractorsForLocation = contractorList;
 
   const handleExcelChange = (e) => {
     setFile(e.target.files[0]);
@@ -419,7 +418,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
       }
       style={{
         overflow: "none",
@@ -671,6 +670,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
       <Typography variant="h6" sx={{ mt: 2 }}>
         Existing Contractors for Location
       </Typography>
+      <div className="ttes_table_view ttes_table_view_1">
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>
@@ -682,13 +682,21 @@ export default function ContractorCredentials({ handleSyncContractor }) {
           </tr>
         </thead>
         <tbody>
-          {contractorsForLocation.map((record) => {
+          {Array.from(
+              {
+                length:
+                  contractorList.length > 0
+                    ? contractorList.length
+                    : 7,
+              },
+              (_, i) => {
+                const record = contractorList[i];
             const isEditing = editingContractorId === record.ID;
             return (
-              <tr key={record.ID}>
-                <td>{record.LOCATION_CODE}</td>
+              <tr key={record?record.ID:i}>
+                <td>{record?record.LOCATION_CODE:""}</td>
                 <td>
-                  {isEditing ? (
+                  {isEditing && record ? (
                     <TextField
                       size="small"
                       value={editingContractor.contractorName}
@@ -706,11 +714,11 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                       }
                     />
                   ) : (
-                    record.CONTRACTOR_NAME
+                    record?record.CONTRACTOR_NAME:""
                   )}
                 </td>
                 <td>
-                  {isEditing ? (
+                  {isEditing && record ? (
                     <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
                       <TextField
                         size="small"
@@ -786,11 +794,11 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                       ) : null}
                     </div>
                   ) : (
-                    record.MAIL_ID
+                    record ? record.MAIL_ID : ""
                   )}
                 </td>
                 <td>
-                  {isEditing ? (
+                  {isEditing && record ? (
                     <TextField
                       size="small"
                       value={editingContractor.mobileNo}
@@ -813,10 +821,10 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                       }
                     />
                   ) : (
-                    record.MOBILE_NO
+                    record ? record.MOBILE_NO : ""
                   )}
                 </td>
-                {isSuperUser ? (
+                {isSuperUser && record ? (
                   <td>
                     {isEditing ? (
                       <>
@@ -856,12 +864,13 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                       </>
                     )}
                   </td>
-                ) : null}
+                ) : <td></td>}
               </tr>
             );
           })}
         </tbody>
       </Table>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,6 @@ export default function NavbarTemporaryPass() {
       style={{
         borderBottom: "1px solid black",
         width: "100%",
-        marginBottom: "10px",
       }}
     >
       <Button

@@ -113,7 +113,7 @@ export default function LabourApprovalDashboard() {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
       }
       style={{
         overflow: "auto",
@@ -128,7 +128,7 @@ export default function LabourApprovalDashboard() {
           sx={{ mb: 1 }}
         >
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#12324a" }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#12324a", textAlign: "center" }}>
               Review pending requests and monitor approval status
             </Typography>
           </Box>

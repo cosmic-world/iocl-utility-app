@@ -562,7 +562,7 @@ export default function ExportCustomToolbar({}) {
   );
 
   return (
-    <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2">
+    <div className="d-flex flex-column justify-content-start align-items-center w-100 h-100">
       <NavbarTemporaryPass />
       {saveLoader && showRecords ? (
         <CircularProgress
@@ -844,7 +844,7 @@ export default function ExportCustomToolbar({}) {
       <div
         style={{
           width: "100%",
-          minHeight: `calc(100% - 50px)`,
+          minHeight: `calc(100% - 160px)`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

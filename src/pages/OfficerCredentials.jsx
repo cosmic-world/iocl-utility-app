@@ -792,6 +792,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
       <Typography variant="h6" sx={{ mt: 2 }}>
         Existing Users at {locationName}
       </Typography>
+      <div className="ttes_table_view" style={{ minHeight: "60%" }}>
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>
@@ -936,6 +937,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
           ))}
         </tbody>
       </Table>
+      </div>
     </div>
   );
 }

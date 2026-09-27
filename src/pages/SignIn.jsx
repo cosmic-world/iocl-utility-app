@@ -874,14 +874,14 @@ function SignIn() {
   }
 
   return (
-    <Box className="d-flex justify-content-center align-items-center w-100 h-100">
-      <Card variant="outlined" sx={{ width: "100%", maxWidth: 500 }}>
+    <Box className="d-flex justify-content-center align-items-start align-items-md-center w-100 h-100 py-1" style={{ overflow: "auto" }}>
+      <Card variant="outlined" sx={{ width: "100%", maxWidth: 500, m: 1 }}>
         <CardContent
           component="form"
           onSubmit={handleSubmit}
           className="d-flex flex-column align-items-center"
         >
-          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 2 }}>
             <Button
               type="button"
               variant="outlined"
@@ -926,7 +926,7 @@ function SignIn() {
               ),
             }}
           />
-          <FormControl sx={{ mb: 1 }} disabled={locationName == ""}>
+          <FormControl sx={{ mb: 1}} disabled={locationName == ""}>
             <RadioGroup
               row
               value={role}

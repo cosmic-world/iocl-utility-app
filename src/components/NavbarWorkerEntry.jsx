@@ -11,7 +11,7 @@ export default function NavbarWorkerEntry() {
     <div
       className="d-flex flex-column flex-xxl-row justify-content-center align-items-center"
       style={{
-        border: "1px solid black",
+        borderBottom: "1px solid black",
         width: "100%",
       }}
     >

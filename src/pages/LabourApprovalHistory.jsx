@@ -96,7 +96,7 @@ export default function LabourApprovalHistory() {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
       }
       style={{
         overflow: "auto",

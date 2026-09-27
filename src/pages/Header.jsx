@@ -265,10 +265,10 @@ export default function Header({}) {
           style={{
             color: "#1976d2",
             fontWeight: "bold",
-            borderRight: userType != "" ? "1px solid #1976d2" : null,
             overflow: "hidden",
             position: "absolute",
             left: 0,
+            maxWidth: '150px',
           }}
         >
           <label style={{fontSize:'1rem', flexShrink: 0}}>{`Welcome!`}&nbsp;</label>
@@ -278,7 +278,7 @@ export default function Header({}) {
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              fontSize:'1rem', 
+              fontSize:'1rem'
             }}
           >{`${userName
             .trim()
@@ -287,9 +287,7 @@ export default function Header({}) {
             .toLowerCase()
             .replace(/\b\w/g, (char) => char.toUpperCase())
             .replace(/_/g, " ")}`}</label>
-                      <AccountCircleIcon
-              style={{ color: "#1976d2", fontSize: "1.8rem", paddingTop: 1 }}
-            />
+          <AccountCircleIcon style={{ color: "#1976d2", fontSize: "1.8rem", paddingTop: 1 }}/>
         </div>
 ) : null}
 
@@ -312,12 +310,18 @@ export default function Header({}) {
             color: "#1976d2",
             fontWeight: "bold",
             position: "absolute",
+            overflow: "hidden",
             right: 0,
+            maxWidth: '150px',
           }}
         >
           <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem", paddingBottom: 1 }} />
           <label style={{fontSize:'1rem', paddingTop:4}}>{`Role:`}&nbsp;</label>
-          <label style={{ fontSize:'1rem', paddingTop:4, color: "orange" }}>{`${
+          <label style={{ fontSize:'1rem', paddingTop:4, color: "orange",
+                          whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+           }}>{`${
             userType == "User"
               ? "Viewer"
               : userType

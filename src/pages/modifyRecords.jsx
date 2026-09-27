@@ -377,7 +377,7 @@ const ModifyRecords = () => {
       ) : null}
       <Box
         sx={{
-          height: `calc(100%)`,
+          height: `calc(100% - 60px)`,
           width: "100%",
           padding: "1rem",
           borderColor: "primary.light",

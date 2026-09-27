@@ -265,7 +265,7 @@ export default function LabourMasterData({ handleSync }) {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
       }
       style={{
         overflow: "none",
@@ -519,6 +519,7 @@ export default function LabourMasterData({ handleSync }) {
       <Typography variant="h6" sx={{ mt: 2 }}>
         Workers for Selected Contractor
       </Typography>
+      <div className="ttes_table_view ttes_table_view_1">
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>
@@ -532,13 +533,21 @@ export default function LabourMasterData({ handleSync }) {
           </tr>
         </thead>
         <tbody>
-          {labour_masterList.map((record) => {
-            const isEditing = editingLabourId === record.ID;
+          {Array.from(
+              {
+                length:
+                  labour_masterList.length > 0
+                    ? labour_masterList.length
+                    : 7,
+              },
+              (_, i) => {
+            const record = labour_masterList[i];
+            const isEditing = editingLabourId === (record ? record.ID : i);
             return (
-              <tr key={record.ID}>
-                <td>{record.LOCATION_CODE}</td>
+              <tr key={record ? record.ID : i}>
+                <td>{record ? record.LOCATION_CODE : ""}</td>
                 <td>
-                  {isEditing ? (
+                  {isEditing && record ? (
                     <TextField
                       select
                       size="small"
@@ -568,7 +577,7 @@ export default function LabourMasterData({ handleSync }) {
                       ))}
                     </TextField>
                   ) : (
-                    record.CONTRACTOR
+                    record ? record.CONTRACTOR : ""
                   )}
                 </td>
                 <td>
@@ -590,7 +599,7 @@ export default function LabourMasterData({ handleSync }) {
                       }
                     />
                   ) : (
-                    record.LABOUR_NAME
+                    record ? record.LABOUR_NAME : ""
                   )}
                 </td>
                 <td>
@@ -613,7 +622,7 @@ export default function LabourMasterData({ handleSync }) {
                       }
                     />
                   ) : (
-                    record.MOBILE_NO
+                    record ? record.MOBILE_NO : ""
                   )}
                 </td>
                 <td>
@@ -635,7 +644,7 @@ export default function LabourMasterData({ handleSync }) {
                       }
                     />
                   ) : (
-                    record.AADHAAR_NO
+                    record ? record.AADHAAR_NO : ""
                   )}
                 </td>
                 <td>
@@ -657,10 +666,10 @@ export default function LabourMasterData({ handleSync }) {
                       }
                     />
                   ) : (
-                    record.ADDRESS
+                    record ? record.ADDRESS : ""
                   )}
                 </td>
-                {isSuperUser ? (
+                {isSuperUser && record ? (
                   <td>
                     {isEditing ? (
                       <>
@@ -700,12 +709,13 @@ export default function LabourMasterData({ handleSync }) {
                       </>
                     )}
                   </td>
-                ) : null}
+                ) : <td></td>}
               </tr>
             );
           })}
         </tbody>
       </Table>
+      </div>
     </div>
   );
 }

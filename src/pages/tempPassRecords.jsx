@@ -446,14 +446,14 @@ export default function tempPassDashboard() {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100 p-2"
+        "d-flex flex-column justify-content-start align-items-center w-100"
       }
     >
       <NavbarTemporaryPass />
       <div
         className="d-flex flex-column justify-content-start align-items-center"
         style={{
-          border: "1px solid black",
+          borderBottom: "1px solid black",
           width: "100%",
           height: "fit-content",
         }}
@@ -1248,7 +1248,7 @@ export default function tempPassDashboard() {
 
       <Typography
         variant="h4"
-        className="w-75 d-flex justify-content-center align-items-start m-3"
+        className="w-75 d-flex justify-content-center align-items-start"
         style={{ borderBottom: "1px dashed black" }}
       >
         Existing Request
