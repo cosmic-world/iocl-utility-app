@@ -687,6 +687,7 @@ function SignIn() {
                 </Button>
                 {registrationOtpSent ? (
                   <>
+                  <label style={{ display: "block", color: "gray", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
                     <TextField
                       required
                       label="Registration OTP"
@@ -790,6 +791,7 @@ function SignIn() {
                 </Button>
                 {changeOtpSent ? (
                   <>
+                  <label style={{ display: "block", color: "gray", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
                     <TextField
                       required
                       label="OTP"
@@ -1005,6 +1007,7 @@ function SignIn() {
               </Button>
               {otpSent ? (
                 <>
+                  <label style={{ display: "block", color: "brown", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
                   <TextField
                     label="OTP"
                     value={otp}
