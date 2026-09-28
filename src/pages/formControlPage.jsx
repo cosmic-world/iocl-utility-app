@@ -29,8 +29,13 @@ class DraggableModalDialog extends React.Component {
 
 export default function formControlPage({ show, setShow }) {
   const dispatch = useDispatch();
-  const { selectedTerminal, officerList, contractorList, locationCode, locationList } =
-    useSelector((state) => state.myApp);
+  const {
+    selectedTerminal,
+    officerList,
+    contractorList,
+    locationCode,
+    locationList,
+  } = useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   // const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
@@ -94,7 +99,9 @@ export default function formControlPage({ show, setShow }) {
       return;
     }
     if (!locationCode || !permitNo.startsWith(locationCode)) {
-      alert(`Permit No must start with the location code: ${locationCode || "N/A"}`);
+      alert(
+        `Permit No must start with the location code: ${locationCode || "N/A"}`,
+      );
       return;
     }
     if (!/[HCWE]/.test(permitNo)) {

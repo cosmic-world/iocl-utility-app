@@ -15,10 +15,9 @@ import {
 import NavbarPermit from "../components/NavbarPermit";
 import { apiUrl } from "../api";
 
-export default function LayoutDisplay({ state}) {
-  const { PermitList, selectedTerminal, officerList, locationCode } = useSelector(
-    (state) => state.myApp,
-  );
+export default function LayoutDisplay({ state }) {
+  const { PermitList, selectedTerminal, officerList, locationCode } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
   const [markerPosition, setMarkerPosition] = useState(null);
@@ -102,12 +101,20 @@ export default function LayoutDisplay({ state}) {
       if (!response.ok) throw new Error("Unable to save permit marker");
 
       if (mark === "existing") {
-        const clearResponse = await fetch(apiUrl(`/api/permit-records/${oldrowNumber}`), {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ locationCode, page_top: null, page_left: null }),
-        });
-        if (!clearResponse.ok) throw new Error("Unable to clear the previous permit marker");
+        const clearResponse = await fetch(
+          apiUrl(`/api/permit-records/${oldrowNumber}`),
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              locationCode,
+              page_top: null,
+              page_left: null,
+            }),
+          },
+        );
+        if (!clearResponse.ok)
+          throw new Error("Unable to clear the previous permit marker");
       }
       handleMenuClose();
     } catch (error) {

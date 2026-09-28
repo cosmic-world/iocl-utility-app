@@ -54,15 +54,11 @@ export default function LandingPage({
       ) : null}
       {navBarComponent === "contacts" ? <Contacts /> : null}
       {navBarComponent === "formControl" ? <FormControlPage /> : null}
-      {navBarComponent === "permitDisplay" ? (
-        <PermitDisplay />
-      ) : null}
+      {navBarComponent === "permitDisplay" ? <PermitDisplay /> : null}
       {navBarComponent === "layoutDisplay" ? (
         <LayoutDisplay state={state} />
       ) : null}
-      {navBarComponent === "modifyRecords" ? (
-        <ModifyRecords />
-      ) : null}
+      {navBarComponent === "modifyRecords" ? <ModifyRecords /> : null}
       {navBarComponent === "sign-in" ? <SignIn /> : null}
     </div>
   );

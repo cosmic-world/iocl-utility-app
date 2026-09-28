@@ -628,6 +628,19 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                   },
                 }}
               />
+              {otpSent ? (
+                <label
+                  style={{
+                    display: "block",
+                    color: "brown",
+                    fontWeight: "bold",
+                    fontSize: "0.9rem",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {"If OTP is not received, check Junk/Spam folder for the OTP"}
+                </label>
+              ) : null}
               <Button
                 variant="outlined"
                 onClick={handleSendOtp}
@@ -671,203 +684,214 @@ export default function ContractorCredentials({ handleSyncContractor }) {
         Existing Contractors for Location
       </Typography>
       <div className="ttes_table_view ttes_table_view_1">
-      <Table bordered hover striped className="ttes_table">
-        <thead className="table-head">
-          <tr>
-            <th>CONTRACTOR NAME</th>
-            <th>MAIL ID</th>
-            <th>MOBILE NO (10-digit)</th>
-            {isSuperUser ? <th>ACTION</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from(
+        <Table bordered hover striped className="ttes_table">
+          <thead className="table-head">
+            <tr>
+              <th>CONTRACTOR NAME</th>
+              <th>MAIL ID</th>
+              <th>MOBILE NO (10-digit)</th>
+              {isSuperUser ? <th>ACTION</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(
               {
-                length:
-                  contractorList.length > 0
-                    ? contractorList.length
-                    : 7,
+                length: contractorList.length > 0 ? contractorList.length : 7,
               },
               (_, i) => {
                 const record = contractorList[i];
-            const isEditing = editingContractorId === record.ID;
-            return (
-              <tr key={record?record.ID:i}>
-                <td>
-                  {isEditing && record ? (
-                    <TextField
-                      size="small"
-                      value={editingContractor.contractorName}
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      onChange={(e) =>
-                        setEditingContractor({
-                          ...editingContractor,
-                          contractorName: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    record?record.CONTRACTOR_NAME:""
-                  )}
-                </td>
-                <td>
-                  {isEditing && record ? (
-                    <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
-                      <TextField
-                        size="small"
-                        type="email"
-                        value={editingContractor.mailID}
-                        error={
-                          Boolean(editingContractor.mailID) &&
-                          !isValidEmail(editingContractor.mailID)
-                        }
-                        sx={{
-                          "& .MuiInputBase-input": {
-                            textAlign: "center",
-                            backgroundColor: "#f5f5f5",
-                            textTransform: "lowercase",
-                          },
-                        }}
-                        onChange={(e) => {
-                          setEditingContractor({
-                            ...editingContractor,
-                            mailID: e.target.value,
-                          });
-                          setEditOtpSent(false);
-                          setEditOtpVerified(false);
-                          setEditOtp("");
-                          editOtpCooldown.resetCooldown();
-                        }}
-                      />
-                      <div className="d-flex gap-1">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={handleSendEditOtp}
-                          disabled={
-                            editOtpLoading ||
-                            editOtpVerified ||
-                            !editOtpCooldown.canResend
-                          }
-                        >
-                          {!editOtpCooldown.canResend
-                            ? `Resend ${editOtpCooldown.timeLabel}`
-                            : editOtpSent
-                              ? "Resend OTP"
-                              : "Send OTP"}
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="success"
-                          onClick={handleVerifyEditOtp}
-                          disabled={
-                            editOtpLoading || !editOtpSent || editOtpVerified
-                          }
-                        >
-                          {editOtpVerified ? "Verified" : "Verify OTP"}
-                        </Button>
-                      </div>
-                      {editOtpSent && !editOtpVerified ? (
+                const isEditing = editingContractorId === record.ID;
+                return (
+                  <tr key={record ? record.ID : i}>
+                    <td>
+                      {isEditing && record ? (
                         <TextField
                           size="small"
-                          label="Email OTP"
-                          value={editOtp}
-                          inputProps={{ maxLength: 6, inputMode: "numeric" }}
-                          onChange={(e) =>
-                            setEditOtp(e.target.value.replace(/\D/g, ""))
-                          }
+                          value={editingContractor.contractorName}
                           sx={{
                             "& .MuiInputBase-input": {
                               textAlign: "center",
                               backgroundColor: "#f5f5f5",
                             },
                           }}
+                          onChange={(e) =>
+                            setEditingContractor({
+                              ...editingContractor,
+                              contractorName: e.target.value,
+                            })
+                          }
                         />
-                      ) : null}
-                    </div>
-                  ) : (
-                    record ? record.MAIL_ID : ""
-                  )}
-                </td>
-                <td>
-                  {isEditing && record ? (
-                    <TextField
-                      size="small"
-                      value={editingContractor.mobileNo}
-                      error={
-                        editingContractor.mobileNo &&
-                        editingContractor.mobileNo.length !== 10
-                      }
-                      inputProps={{ maxLength: 10, inputMode: "numeric" }}
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      onChange={(e) =>
-                        setEditingContractor({
-                          ...editingContractor,
-                          mobileNo: e.target.value.replace(/\D/g, ""),
-                        })
-                      }
-                    />
-                  ) : (
-                    record ? record.MOBILE_NO : ""
-                  )}
-                </td>
-                {isSuperUser && record ? (
-                  <td>
-                    {isEditing ? (
-                      <>
-                        <Button
-                          startIcon={<Save />}
-                          onClick={() => handleSaveContractor(record)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          startIcon={<Cancel />}
-                          onClick={() => {
-                            setEditingContractorId(null);
-                            setEditingContractor(null);
+                      ) : record ? (
+                        record.CONTRACTOR_NAME
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing && record ? (
+                        <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
+                          <TextField
+                            size="small"
+                            type="email"
+                            value={editingContractor.mailID}
+                            error={
+                              Boolean(editingContractor.mailID) &&
+                              !isValidEmail(editingContractor.mailID)
+                            }
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                                textTransform: "lowercase",
+                              },
+                            }}
+                            onChange={(e) => {
+                              setEditingContractor({
+                                ...editingContractor,
+                                mailID: e.target.value,
+                              });
+                              setEditOtpSent(false);
+                              setEditOtpVerified(false);
+                              setEditOtp("");
+                              editOtpCooldown.resetCooldown();
+                            }}
+                          />
+                          <div className="d-flex gap-1">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={handleSendEditOtp}
+                              disabled={
+                                editOtpLoading ||
+                                editOtpVerified ||
+                                !editOtpCooldown.canResend
+                              }
+                            >
+                              {!editOtpCooldown.canResend
+                                ? `Resend ${editOtpCooldown.timeLabel}`
+                                : editOtpSent
+                                  ? "Resend OTP"
+                                  : "Send OTP"}
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              onClick={handleVerifyEditOtp}
+                              disabled={
+                                editOtpLoading ||
+                                !editOtpSent ||
+                                editOtpVerified
+                              }
+                            >
+                              {editOtpVerified ? "Verified" : "Verify OTP"}
+                            </Button>
+                          </div>
+                          {editOtpSent && !editOtpVerified ? (
+                            <TextField
+                              size="small"
+                              label="Email OTP"
+                              value={editOtp}
+                              inputProps={{
+                                maxLength: 6,
+                                inputMode: "numeric",
+                              }}
+                              onChange={(e) =>
+                                setEditOtp(e.target.value.replace(/\D/g, ""))
+                              }
+                              sx={{
+                                "& .MuiInputBase-input": {
+                                  textAlign: "center",
+                                  backgroundColor: "#f5f5f5",
+                                },
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                      ) : record ? (
+                        record.MAIL_ID
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing && record ? (
+                        <TextField
+                          size="small"
+                          value={editingContractor.mobileNo}
+                          error={
+                            editingContractor.mobileNo &&
+                            editingContractor.mobileNo.length !== 10
+                          }
+                          inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
                           }}
-                        >
-                          Cancel
-                        </Button>
-                      </>
+                          onChange={(e) =>
+                            setEditingContractor({
+                              ...editingContractor,
+                              mobileNo: e.target.value.replace(/\D/g, ""),
+                            })
+                          }
+                        />
+                      ) : record ? (
+                        record.MOBILE_NO
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    {isSuperUser && record ? (
+                      <td>
+                        {isEditing ? (
+                          <>
+                            <Button
+                              startIcon={<Save />}
+                              onClick={() => handleSaveContractor(record)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              startIcon={<Cancel />}
+                              onClick={() => {
+                                setEditingContractorId(null);
+                                setEditingContractor(null);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              startIcon={<Edit />}
+                              onClick={() => handleEditContractor(record)}
+                              disabled={saveLoader}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              color="error"
+                              startIcon={<Delete />}
+                              onClick={() => handleDeleteContractor(record)}
+                              disabled={saveLoader}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </td>
                     ) : (
-                      <>
-                        <Button
-                          startIcon={<Edit />}
-                          onClick={() => handleEditContractor(record)}
-                          disabled={saveLoader}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          color="error"
-                          startIcon={<Delete />}
-                          onClick={() => handleDeleteContractor(record)}
-                          disabled={saveLoader}
-                        >
-                          Delete
-                        </Button>
-                      </>
+                      <td></td>
                     )}
-                  </td>
-                ) : <td></td>}
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+                  </tr>
+                );
+              },
+            )}
+          </tbody>
+        </Table>
       </div>
     </div>
   );

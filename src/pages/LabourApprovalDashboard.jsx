@@ -128,7 +128,10 @@ export default function LabourApprovalDashboard() {
           sx={{ mb: 1 }}
         >
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#12324a", textAlign: "center" }}>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 700, color: "#12324a", textAlign: "center" }}
+            >
               Review pending requests and monitor approval status
             </Typography>
           </Box>

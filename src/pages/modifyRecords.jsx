@@ -39,9 +39,8 @@ const EditToolbar = () => {
 
 const ModifyRecords = () => {
   const dispatch = useDispatch();
-  const { selectedTerminal, userType, navBarComponent, locationCode } = useSelector(
-    (state) => state.myApp,
-  );
+  const { selectedTerminal, userType, navBarComponent, locationCode } =
+    useSelector((state) => state.myApp);
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [localID, setlocalID] = React.useState(0);
@@ -57,13 +56,22 @@ const ModifyRecords = () => {
   const fetchSheetData = async () => {
     try {
       const response = await fetch(
-        apiUrl(`/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`),
+        apiUrl(
+          `/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`,
+        ),
       );
       if (!response.ok) throw new Error("Failed to load permit records");
       const result = await response.json();
       const records = Array.isArray(result.data) ? result.data : [];
-      setRows(records.map((record) => ({ id: record["Unique ID"], ...record })));
-      setlocalID(Math.max(0, ...records.map((record) => Number(record["Unique ID"]) || 0)) + 1);
+      setRows(
+        records.map((record) => ({ id: record["Unique ID"], ...record })),
+      );
+      setlocalID(
+        Math.max(
+          0,
+          ...records.map((record) => Number(record["Unique ID"]) || 0),
+        ) + 1,
+      );
     } catch (error) {
       console.log(
         "error admin...",
@@ -98,7 +106,9 @@ const ModifyRecords = () => {
     setSaveLoader(true);
     try {
       const response = await fetch(
-        apiUrl(`/api/permit-records/${id}?locationCode=${encodeURIComponent(locationCode)}`),
+        apiUrl(
+          `/api/permit-records/${id}?locationCode=${encodeURIComponent(locationCode)}`,
+        ),
         { method: "DELETE" },
       );
       if (!response.ok) throw new Error("Unable to delete permit record");
@@ -135,21 +145,24 @@ const ModifyRecords = () => {
     setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
     setSaveLoader(true);
     try {
-      const response = await fetch(apiUrl(`/api/permit-records/${newRow["Unique ID"]}`), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          locationCode,
-          "Permit Type": newRow["Permit Type"],
-          "Work Description": newRow["Work Description"],
-          "Work Location": newRow["Work Location"],
-          "Receiver Name": newRow["Receiver Name"],
-          "Clearance From": newRow["Clearance From"],
-          "Clearance Till": newRow["Clearance Till"],
-          "Contractor Name": newRow["Contractor Name"],
-          "Permit No": newRow["Permit No"],
-        }),
-      });
+      const response = await fetch(
+        apiUrl(`/api/permit-records/${newRow["Unique ID"]}`),
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locationCode,
+            "Permit Type": newRow["Permit Type"],
+            "Work Description": newRow["Work Description"],
+            "Work Location": newRow["Work Location"],
+            "Receiver Name": newRow["Receiver Name"],
+            "Clearance From": newRow["Clearance From"],
+            "Clearance Till": newRow["Clearance Till"],
+            "Contractor Name": newRow["Contractor Name"],
+            "Permit No": newRow["Permit No"],
+          }),
+        },
+      );
       if (!response.ok) {
         const result = await response.json();
         throw new Error(result.message || "Unable to update permit record");

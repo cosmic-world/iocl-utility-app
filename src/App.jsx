@@ -158,7 +158,9 @@ function App() {
     const fetchSheetData = async () => {
       try {
         const response = await fetch(
-          apiUrl(`/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`),
+          apiUrl(
+            `/api/permit-records?locationCode=${encodeURIComponent(locationCode || "")}`,
+          ),
         );
         if (!response.ok) {
           throw new Error("Failed to load permit records");
@@ -226,7 +228,7 @@ function App() {
     handleSyncContractor();
   }, [selectedTerminal, locationCode]);
 
-    useEffect(() => {
+  useEffect(() => {
     const channel = new BroadcastChannel("iocl_utility_app");
 
     // Send a message that this tab is active
@@ -245,7 +247,7 @@ function App() {
       channel.close();
     };
   }, []);
-  
+
   return (
     <div className="App d-flex flex-column vh-100 vw-100">
       <Header />

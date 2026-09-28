@@ -687,7 +687,19 @@ function SignIn() {
                 </Button>
                 {registrationOtpSent ? (
                   <>
-                  <label style={{ display: "block", color: "gray", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "brown",
+                        fontWeight: "bold",
+                        fontSize: "0.9rem",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {
+                        "If OTP is not received, check Junk/Spam folder for the OTP"
+                      }
+                    </label>
                     <TextField
                       required
                       label="Registration OTP"
@@ -791,7 +803,19 @@ function SignIn() {
                 </Button>
                 {changeOtpSent ? (
                   <>
-                  <label style={{ display: "block", color: "gray", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "brown",
+                        fontWeight: "bold",
+                        fontSize: "0.9rem",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {
+                        "If OTP is not received, check Junk/Spam folder for the OTP"
+                      }
+                    </label>
                     <TextField
                       required
                       label="OTP"
@@ -874,14 +898,21 @@ function SignIn() {
   }
 
   return (
-    <Box className="d-flex justify-content-center align-items-start align-items-md-center w-100 h-100 py-1" style={{ overflow: "auto" }}>
+    <Box
+      className="d-flex justify-content-center align-items-start align-items-md-center w-100 h-100 py-1"
+      style={{ overflow: "auto" }}
+    >
       <Card variant="outlined" sx={{ width: "100%", maxWidth: 500, m: 1 }}>
         <CardContent
           component="form"
           onSubmit={handleSubmit}
           className="d-flex flex-column align-items-center"
         >
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mb: 2 }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+          >
             <Button
               type="button"
               variant="outlined"
@@ -926,7 +957,7 @@ function SignIn() {
               ),
             }}
           />
-          <FormControl sx={{ mb: 1}} disabled={locationName == ""}>
+          <FormControl sx={{ mb: 1 }} disabled={locationName == ""}>
             <RadioGroup
               row
               value={role}
@@ -1007,7 +1038,19 @@ function SignIn() {
               </Button>
               {otpSent ? (
                 <>
-                  <label style={{ display: "block", color: "brown", fontWeight: "bold" }}>{'If OTP is not received, check Junk/Spam folder for the OTP'}</label>
+                  <label
+                    style={{
+                      display: "block",
+                      color: "brown",
+                      fontWeight: "bold",
+                      fontSize: "0.9rem",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {
+                      "If OTP is not received, check Junk/Spam folder for the OTP"
+                    }
+                  </label>
                   <TextField
                     label="OTP"
                     value={otp}

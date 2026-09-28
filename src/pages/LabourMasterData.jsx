@@ -366,7 +366,13 @@ export default function LabourMasterData({ handleSync }) {
               clearOnBlur
               handleHomeEndKeys
               freeSolo
-              options={contractorList.length > 0 ? contractorList.map((contractor) => contractor['CONTRACTOR_NAME']) : []}
+              options={
+                contractorList.length > 0
+                  ? contractorList.map(
+                      (contractor) => contractor["CONTRACTOR_NAME"],
+                    )
+                  : []
+              }
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -518,199 +524,210 @@ export default function LabourMasterData({ handleSync }) {
         Workers for Selected Contractor
       </Typography>
       <div className="ttes_table_view ttes_table_view_1">
-      <Table bordered hover striped className="ttes_table">
-        <thead className="table-head">
-          <tr>
-            <th>CONTRACTOR</th>
-            <th>WORKER NAME</th>
-            <th>MOBILE NO</th>
-            <th>AADHAAR / ID PROOF</th>
-            <th>ADDRESS</th>
-            {isSuperUser ? <th>ACTION</th> : null}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from(
+        <Table bordered hover striped className="ttes_table">
+          <thead className="table-head">
+            <tr>
+              <th>CONTRACTOR</th>
+              <th>WORKER NAME</th>
+              <th>MOBILE NO</th>
+              <th>AADHAAR / ID PROOF</th>
+              <th>ADDRESS</th>
+              {isSuperUser ? <th>ACTION</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from(
               {
                 length:
-                  labour_masterList.length > 0
-                    ? labour_masterList.length
-                    : 7,
+                  labour_masterList.length > 0 ? labour_masterList.length : 7,
               },
               (_, i) => {
-            const record = labour_masterList[i];
-            const isEditing = editingLabourId === (record ? record.ID : i);
-            return (
-              <tr key={record ? record.ID : i}>
-                <td>
-                  {isEditing && record ? (
-                    <TextField
-                      select
-                      size="small"
-                      value={editingLabour.contractor}
-                      SelectProps={{ native: true }}
-                      sx={{
-                        minWidth: 180,
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      onChange={(e) =>
-                        setEditingLabour({
-                          ...editingLabour,
-                          contractor: e.target.value,
-                        })
-                      }
-                    >
-                      {contractorList.map((contractorRecord) => (
-                        <option
-                          key={contractorRecord.ID}
-                          value={contractorRecord.CONTRACTOR_NAME}
-                        >
-                          {contractorRecord.CONTRACTOR_NAME}
-                        </option>
-                      ))}
-                    </TextField>
-                  ) : (
-                    record ? record.CONTRACTOR : ""
-                  )}
-                </td>
-                <td>
-                  {isEditing ? (
-                    <TextField
-                      size="small"
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      value={editingLabour.labourName}
-                      onChange={(e) =>
-                        setEditingLabour({
-                          ...editingLabour,
-                          labourName: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    record ? record.LABOUR_NAME : ""
-                  )}
-                </td>
-                <td>
-                  {isEditing ? (
-                    <TextField
-                      size="small"
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      value={editingLabour.mobileNo}
-                      inputProps={{ maxLength: 10, inputMode: "numeric" }}
-                      onChange={(e) =>
-                        setEditingLabour({
-                          ...editingLabour,
-                          mobileNo: e.target.value.replace(/\D/g, ""),
-                        })
-                      }
-                    />
-                  ) : (
-                    record ? record.MOBILE_NO : ""
-                  )}
-                </td>
-                <td>
-                  {isEditing ? (
-                    <TextField
-                      size="small"
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      value={editingLabour.aadhaarNo}
-                      onChange={(e) =>
-                        setEditingLabour({
-                          ...editingLabour,
-                          aadhaarNo: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    record ? record.AADHAAR_NO : ""
-                  )}
-                </td>
-                <td>
-                  {isEditing ? (
-                    <TextField
-                      size="small"
-                      sx={{
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          backgroundColor: "#f5f5f5",
-                        },
-                      }}
-                      value={editingLabour.address}
-                      onChange={(e) =>
-                        setEditingLabour({
-                          ...editingLabour,
-                          address: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    record ? record.ADDRESS : ""
-                  )}
-                </td>
-                {isSuperUser && record ? (
-                  <td>
-                    {isEditing ? (
-                      <>
-                        <Button
-                          startIcon={<Save />}
-                          onClick={() => handleSaveLabour(record)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          startIcon={<Cancel />}
-                          onClick={() => {
-                            setEditingLabourId(null);
-                            setEditingLabour(null);
+                const record = labour_masterList[i];
+                const isEditing = editingLabourId === (record ? record.ID : i);
+                return (
+                  <tr key={record ? record.ID : i}>
+                    <td>
+                      {isEditing && record ? (
+                        <TextField
+                          select
+                          size="small"
+                          value={editingLabour.contractor}
+                          SelectProps={{ native: true }}
+                          sx={{
+                            minWidth: 180,
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
                           }}
+                          onChange={(e) =>
+                            setEditingLabour({
+                              ...editingLabour,
+                              contractor: e.target.value,
+                            })
+                          }
                         >
-                          Cancel
-                        </Button>
-                      </>
+                          {contractorList.map((contractorRecord) => (
+                            <option
+                              key={contractorRecord.ID}
+                              value={contractorRecord.CONTRACTOR_NAME}
+                            >
+                              {contractorRecord.CONTRACTOR_NAME}
+                            </option>
+                          ))}
+                        </TextField>
+                      ) : record ? (
+                        record.CONTRACTOR
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <TextField
+                          size="small"
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                          value={editingLabour.labourName}
+                          onChange={(e) =>
+                            setEditingLabour({
+                              ...editingLabour,
+                              labourName: e.target.value,
+                            })
+                          }
+                        />
+                      ) : record ? (
+                        record.LABOUR_NAME
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <TextField
+                          size="small"
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                          value={editingLabour.mobileNo}
+                          inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                          onChange={(e) =>
+                            setEditingLabour({
+                              ...editingLabour,
+                              mobileNo: e.target.value.replace(/\D/g, ""),
+                            })
+                          }
+                        />
+                      ) : record ? (
+                        record.MOBILE_NO
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <TextField
+                          size="small"
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                          value={editingLabour.aadhaarNo}
+                          onChange={(e) =>
+                            setEditingLabour({
+                              ...editingLabour,
+                              aadhaarNo: e.target.value,
+                            })
+                          }
+                        />
+                      ) : record ? (
+                        record.AADHAAR_NO
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <TextField
+                          size="small"
+                          sx={{
+                            "& .MuiInputBase-input": {
+                              textAlign: "center",
+                              backgroundColor: "#f5f5f5",
+                            },
+                          }}
+                          value={editingLabour.address}
+                          onChange={(e) =>
+                            setEditingLabour({
+                              ...editingLabour,
+                              address: e.target.value,
+                            })
+                          }
+                        />
+                      ) : record ? (
+                        record.ADDRESS
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    {isSuperUser && record ? (
+                      <td>
+                        {isEditing ? (
+                          <>
+                            <Button
+                              startIcon={<Save />}
+                              onClick={() => handleSaveLabour(record)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              startIcon={<Cancel />}
+                              onClick={() => {
+                                setEditingLabourId(null);
+                                setEditingLabour(null);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              startIcon={<Edit />}
+                              onClick={() => handleEditLabour(record)}
+                              disabled={saveLoader}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              color="error"
+                              startIcon={<Delete />}
+                              onClick={() => handleDeleteLabour(record)}
+                              disabled={saveLoader}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </td>
                     ) : (
-                      <>
-                        <Button
-                          startIcon={<Edit />}
-                          onClick={() => handleEditLabour(record)}
-                          disabled={saveLoader}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          color="error"
-                          startIcon={<Delete />}
-                          onClick={() => handleDeleteLabour(record)}
-                          disabled={saveLoader}
-                        >
-                          Delete
-                        </Button>
-                      </>
+                      <td></td>
                     )}
-                  </td>
-                ) : <td></td>}
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+                  </tr>
+                );
+              },
+            )}
+          </tbody>
+        </Table>
       </div>
     </div>
   );

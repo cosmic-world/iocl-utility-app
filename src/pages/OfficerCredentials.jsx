@@ -792,150 +792,152 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         Existing Users at {locationName}
       </Typography>
       <div className="ttes_table_view" style={{ minHeight: "60%" }}>
-      <Table bordered hover striped className="ttes_table">
-        <thead className="table-head">
-          <tr>
-            <th>NAME</th>
-            <th style={{ width: 100 }}>EMP ID</th>
-            <th style={{ width: 150 }}>MOBILE NO</th>
-            <th>MAIL ID</th>
-            <th style={{ width: 200 }}>ROLE</th>
-            <th style={{ width: 100 }}>STATUS</th>
-            <th style={{ minWidth: 500 }}>ACTION</th>
-          </tr>
-        </thead>
-        <tbody>
-          {officersForLocation.map((officer) => (
-            <tr key={officer.ID}>
-              <td>{officer.OFFICER_NAME}</td>
-              <td>{officer.Emp_ID}</td>
-              <td>{officer.MOBILE_NO}</td>
-              <td>{officer.MAIL_ID}</td>
-              <td>
-                <TextField
-                  select
-                  size="small"
-                  value={selectedRoles[officer.ID] || officer.ROLE}
-                  onChange={(event) =>
-                    setSelectedRoles((currentRoles) => ({
-                      ...currentRoles,
-                      [officer.ID]: event.target.value,
-                    }))
-                  }
-                  disabled={saveLoader || !isSuperAdmin}
-                  fullWidth
-                  SelectProps={{ native: true }}
-                >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                  <option value="SECURITY">SECURITY</option>
-                </TextField>
-              </td>
-              <td>{String(officer.STATUS || "ACTIVE").toUpperCase()}</td>
-              <td style={{ textAlign: "center" }}>
-                <span
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    width: "100%",
-                  }}
-                  title={
-                    isSuperAdmin
-                      ? null
-                      : "Only a super admin can perform these actions"
-                  }
-                >
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    startIcon={<SwapHoriz />}
-                    onClick={() =>
-                      handleChangeRole(officer, selectedRoles[officer.ID])
+        <Table bordered hover striped className="ttes_table">
+          <thead className="table-head">
+            <tr>
+              <th>NAME</th>
+              <th style={{ width: 100 }}>EMP ID</th>
+              <th style={{ width: 150 }}>MOBILE NO</th>
+              <th>MAIL ID</th>
+              <th style={{ width: 200 }}>ROLE</th>
+              <th style={{ width: 100 }}>STATUS</th>
+              <th style={{ minWidth: 500 }}>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {officersForLocation.map((officer) => (
+              <tr key={officer.ID}>
+                <td>{officer.OFFICER_NAME}</td>
+                <td>{officer.Emp_ID}</td>
+                <td>{officer.MOBILE_NO}</td>
+                <td>{officer.MAIL_ID}</td>
+                <td>
+                  <TextField
+                    select
+                    size="small"
+                    value={selectedRoles[officer.ID] || officer.ROLE}
+                    onChange={(event) =>
+                      setSelectedRoles((currentRoles) => ({
+                        ...currentRoles,
+                        [officer.ID]: event.target.value,
+                      }))
                     }
-                    disabled={
-                      saveLoader || !isSuperAdmin || !selectedRoles[officer.ID]
-                    }
-                    sx={{ width: 200 }}
-                  >
-                    Change Role
-                  </Button>
-                  <Button
-                    color="error"
-                    variant="outlined"
-                    startIcon={<Delete />}
-                    onClick={() => handleDeleteOfficer(officer.ID)}
                     disabled={saveLoader || !isSuperAdmin}
-                    sx={{ width: 150 }}
+                    fullWidth
+                    SelectProps={{ native: true }}
                   >
-                    Delete
-                  </Button>
-                  {String(officer.STATUS || "ACTIVE").toUpperCase() ===
-                    "INACTIVE" &&
-                  ["ADMIN", "SUPER_ADMIN"].includes(userType) ? (
-                    verificationOfficerId === officer.ID ? (
-                      <>
-                        <TextField
-                          size="small"
-                          label="OTP"
-                          value={verificationOtp}
-                          inputProps={{ maxLength: 6, inputMode: "numeric" }}
-                          onChange={(event) =>
-                            setVerificationOtp(
-                              event.target.value.replace(/\D/g, ""),
-                            )
-                          }
-                          sx={{
-                            width: 110,
-                            "& .MuiInputBase-input": { textAlign: "center" },
-                          }}
-                        />
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                    <option value="SECURITY">SECURITY</option>
+                  </TextField>
+                </td>
+                <td>{String(officer.STATUS || "ACTIVE").toUpperCase()}</td>
+                <td style={{ textAlign: "center" }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      width: "100%",
+                    }}
+                    title={
+                      isSuperAdmin
+                        ? null
+                        : "Only a super admin can perform these actions"
+                    }
+                  >
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      startIcon={<SwapHoriz />}
+                      onClick={() =>
+                        handleChangeRole(officer, selectedRoles[officer.ID])
+                      }
+                      disabled={
+                        saveLoader ||
+                        !isSuperAdmin ||
+                        !selectedRoles[officer.ID]
+                      }
+                      sx={{ width: 200 }}
+                    >
+                      Change Role
+                    </Button>
+                    <Button
+                      color="error"
+                      variant="outlined"
+                      startIcon={<Delete />}
+                      onClick={() => handleDeleteOfficer(officer.ID)}
+                      disabled={saveLoader || !isSuperAdmin}
+                      sx={{ width: 150 }}
+                    >
+                      Delete
+                    </Button>
+                    {String(officer.STATUS || "ACTIVE").toUpperCase() ===
+                      "INACTIVE" &&
+                    ["ADMIN", "SUPER_ADMIN"].includes(userType) ? (
+                      verificationOfficerId === officer.ID ? (
+                        <>
+                          <TextField
+                            size="small"
+                            label="OTP"
+                            value={verificationOtp}
+                            inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                            onChange={(event) =>
+                              setVerificationOtp(
+                                event.target.value.replace(/\D/g, ""),
+                              )
+                            }
+                            sx={{
+                              width: 110,
+                              "& .MuiInputBase-input": { textAlign: "center" },
+                            }}
+                          />
+                          <Button
+                            color="success"
+                            variant="outlined"
+                            onClick={() => handleVerifyOfficerEmail(officer)}
+                            disabled={
+                              verificationOtpLoading || !verificationOtpSent
+                            }
+                            sx={{ width: 120 }}
+                          >
+                            Verify OTP
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() =>
+                              handleSendOfficerVerificationOtp(officer)
+                            }
+                            disabled={
+                              verificationOtpLoading ||
+                              !verificationOtpCooldown.canResend
+                            }
+                            sx={{ width: 100 }}
+                          >
+                            {!verificationOtpCooldown.canResend
+                              ? verificationOtpCooldown.timeLabel
+                              : "Resend"}
+                          </Button>
+                        </>
+                      ) : (
                         <Button
                           color="success"
-                          variant="outlined"
-                          onClick={() => handleVerifyOfficerEmail(officer)}
-                          disabled={
-                            verificationOtpLoading || !verificationOtpSent
-                          }
-                          sx={{ width: 120 }}
-                        >
-                          Verify OTP
-                        </Button>
-                        <Button
                           variant="outlined"
                           onClick={() =>
                             handleSendOfficerVerificationOtp(officer)
                           }
-                          disabled={
-                            verificationOtpLoading ||
-                            !verificationOtpCooldown.canResend
-                          }
-                          sx={{ width: 100 }}
+                          disabled={saveLoader || verificationOtpLoading}
+                          sx={{ width: 150 }}
                         >
-                          {!verificationOtpCooldown.canResend
-                            ? verificationOtpCooldown.timeLabel
-                            : "Resend"}
+                          Verify Email
                         </Button>
-                      </>
-                    ) : (
-                      <Button
-                        color="success"
-                        variant="outlined"
-                        onClick={() =>
-                          handleSendOfficerVerificationOtp(officer)
-                        }
-                        disabled={saveLoader || verificationOtpLoading}
-                        sx={{ width: 150 }}
-                      >
-                        Verify Email
-                      </Button>
-                    )
-                  ) : null}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+                      )
+                    ) : null}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
       </div>
     </div>
   );

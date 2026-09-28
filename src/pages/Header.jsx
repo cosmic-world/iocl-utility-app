@@ -258,8 +258,8 @@ export default function Header({}) {
         </>
       ) : null}
 
-      {userType!="User" && userType!="" ? (
-<div
+      {userType != "User" && userType != "" ? (
+        <div
           className="d-xxl-none d-flex justify-content-center align-items-center h-100 mx-1 ms-2"
           title={userName}
           style={{
@@ -268,17 +268,19 @@ export default function Header({}) {
             overflow: "hidden",
             position: "absolute",
             left: 0,
-            maxWidth: '150px',
+            maxWidth: "150px",
           }}
         >
-          <label style={{fontSize:'1rem', flexShrink: 0}}>{`Welcome!`}&nbsp;</label>
+          <label style={{ fontSize: "1rem", flexShrink: 0 }}>
+            {`Welcome!`}&nbsp;
+          </label>
           <label
             style={{
               color: "orange",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              fontSize:'1rem'
+              fontSize: "1rem",
             }}
           >{`${userName
             .trim()
@@ -287,9 +289,11 @@ export default function Header({}) {
             .toLowerCase()
             .replace(/\b\w/g, (char) => char.toUpperCase())
             .replace(/_/g, " ")}`}</label>
-          <AccountCircleIcon style={{ color: "#1976d2", fontSize: "1.8rem", paddingTop: 1 }}/>
+          <AccountCircleIcon
+            style={{ color: "#1976d2", fontSize: "1.8rem", paddingTop: 1 }}
+          />
         </div>
-) : null}
+      ) : null}
 
       <MenuIcon
         style={{
@@ -304,7 +308,7 @@ export default function Header({}) {
         }
       />
       {userType ? (
-      <div
+        <div
           className="d-flex d-xxl-none justify-content-center align-items-center h-100 mx-1 me-2"
           style={{
             color: "#1976d2",
@@ -312,16 +316,25 @@ export default function Header({}) {
             position: "absolute",
             overflow: "hidden",
             right: 0,
-            maxWidth: '150px',
+            maxWidth: "150px",
           }}
         >
-          <BadgeIcon style={{ color: "#1976d2", fontSize: "1.8rem", paddingBottom: 1 }} />
-          <label style={{fontSize:'1rem', paddingTop:4}}>{`Role:`}&nbsp;</label>
-          <label style={{ fontSize:'1rem', paddingTop:4, color: "orange",
-                          whiteSpace: "nowrap",
+          <BadgeIcon
+            style={{ color: "#1976d2", fontSize: "1.8rem", paddingBottom: 1 }}
+          />
+          <label style={{ fontSize: "1rem", paddingTop: 4 }}>
+            {`Role:`}&nbsp;
+          </label>
+          <label
+            style={{
+              fontSize: "1rem",
+              paddingTop: 4,
+              color: "orange",
+              whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-           }}>{`${
+            }}
+          >{`${
             userType == "User"
               ? "Viewer"
               : userType
@@ -333,7 +346,7 @@ export default function Header({}) {
                   .replace(/_/g, " ")
           }`}</label>
         </div>
-        ) : null}
+      ) : null}
       {/* current date-time stamp display */}
       <div
         className="d-none d-xxl-flex justify-content-center align-items-center h-100"
