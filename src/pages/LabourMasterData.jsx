@@ -37,7 +37,6 @@ export default function LabourMasterData({ handleSync }) {
   const [address, setAddress] = useState("");
   const [editingLabourId, setEditingLabourId] = useState(null);
   const [editingLabour, setEditingLabour] = useState(null);
-  const contractorsForLocation = contractorList;
   const fileInputRef = useRef(null);
   const isSuperUser = userType === "SUPER_ADMIN";
 
@@ -354,7 +353,6 @@ export default function LabourMasterData({ handleSync }) {
               }}
             />
           </div>
-
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Typography>Contractor Name</Typography>
             <Autocomplete
@@ -368,7 +366,7 @@ export default function LabourMasterData({ handleSync }) {
               clearOnBlur
               handleHomeEndKeys
               freeSolo
-              options={contractorsForLocation}
+              options={contractorList.length > 0 ? contractorList.map((contractor) => contractor['CONTRACTOR_NAME']) : []}
               sx={{
                 // 1. Increase font size of the placeholder/input text
                 "& .MuiInputBase-input": {
@@ -523,7 +521,6 @@ export default function LabourMasterData({ handleSync }) {
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>
-            <th style={{ minWidth: "100px" }}>LOCATION CODE</th>
             <th>CONTRACTOR</th>
             <th>WORKER NAME</th>
             <th>MOBILE NO</th>
@@ -545,7 +542,6 @@ export default function LabourMasterData({ handleSync }) {
             const isEditing = editingLabourId === (record ? record.ID : i);
             return (
               <tr key={record ? record.ID : i}>
-                <td>{record ? record.LOCATION_CODE : ""}</td>
                 <td>
                   {isEditing && record ? (
                     <TextField
@@ -567,7 +563,7 @@ export default function LabourMasterData({ handleSync }) {
                         })
                       }
                     >
-                      {contractorsForLocation.map((contractorRecord) => (
+                      {contractorList.map((contractorRecord) => (
                         <option
                           key={contractorRecord.ID}
                           value={contractorRecord.CONTRACTOR_NAME}

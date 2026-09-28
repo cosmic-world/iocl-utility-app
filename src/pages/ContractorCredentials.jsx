@@ -674,7 +674,6 @@ export default function ContractorCredentials({ handleSyncContractor }) {
       <Table bordered hover striped className="ttes_table">
         <thead className="table-head">
           <tr>
-            <th style={{ minWidth: "100px" }}>LOCATION CODE</th>
             <th>CONTRACTOR NAME</th>
             <th>MAIL ID</th>
             <th>MOBILE NO (10-digit)</th>
@@ -694,7 +693,6 @@ export default function ContractorCredentials({ handleSyncContractor }) {
             const isEditing = editingContractorId === record.ID;
             return (
               <tr key={record?record.ID:i}>
-                <td>{record?record.LOCATION_CODE:""}</td>
                 <td>
                   {isEditing && record ? (
                     <TextField

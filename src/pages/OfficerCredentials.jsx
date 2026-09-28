@@ -279,7 +279,6 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         setName("");
         setMobileNo("");
         setRole("");
-        handleSync(); // Refresh officer list after submission
       } else {
         alert("Upload failed: " + data.error);
       }
