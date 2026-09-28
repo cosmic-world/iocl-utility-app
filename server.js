@@ -2960,7 +2960,7 @@ if (ENABLE_PERMIT_SYNC) {
       pool = await new sql.ConnectionPool(sqlConfig).connect();
       const result = await pool.request().query('DELETE FROM dbo.PermitRecords');
       console.info(`[permit-db] midnight cleanup complete: deletedRows=${result.rowsAffected[0] || 0}, timezone=Asia/Kolkata`);
-    } catch (error) {
+    } catch (error) {PROCESS
       console.error('[permit-db] midnight cleanup failed:', error);
     } finally {
       if (pool) await pool.close();
