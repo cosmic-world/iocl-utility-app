@@ -575,8 +575,8 @@ function SignIn() {
       else setChangeDetails((current) => ({ ...current, [field]: value }));
     };
     return (
-      <Box className="d-flex justify-content-center align-items-start align-items-md-center w-100 h-100">
-        <Card variant="outlined" sx={{ width: "100%", maxWidth: 500 }}>
+      <Box className="d-flex justify-content-center align-items-start align-items-md-center w-100 h-100 py-1">
+        <Card variant="outlined" sx={{ width: "100%", maxWidth: 500, m: 1 }}>
           <CardContent
             component="form"
             onSubmit={
