@@ -19,7 +19,7 @@ export default function LabourMasterData({ handleSync }) {
   const dispatch = useDispatch();
   const {
     contractorList,
-    navBarComponent,
+    userName,
     locationCode,
     selectedTerminal,
     userType,
@@ -81,7 +81,7 @@ export default function LabourMasterData({ handleSync }) {
 
   const handlePostData = async (e) => {
     e.preventDefault();
-    if (!contractor) {
+    if (userType !== "Contractor" && !contractor) {
       alert("Please enter/select Contractor.");
       return;
     }
@@ -117,7 +117,7 @@ export default function LabourMasterData({ handleSync }) {
     try {
       const payload = {
         locationCode: String(locationCode),
-        contractor,
+        contractor: userType == "Contractor" ? userName : contractor,
         labourName,
         mobileNo,
         aadhaarNo,
@@ -261,6 +261,13 @@ export default function LabourMasterData({ handleSync }) {
     }
   };
 
+  const selected_labour_masterList =
+    userType === "Contractor" && labour_masterList.length > 0
+      ? labour_masterList.filter(
+          (item) => item.CONTRACTOR.toLowerCase() === userName.toLowerCase(),
+        )
+      : labour_masterList;
+
   return (
     <div
       className={
@@ -358,10 +365,17 @@ export default function LabourMasterData({ handleSync }) {
             <Autocomplete
               name="Search Contractor"
               className="w-100"
-              value={contractor !== "" ? contractor : null}
+              value={
+                userType === "Contractor"
+                  ? userName
+                  : contractor !== ""
+                    ? contractor
+                    : null
+              }
               onChange={(event, newValue) => {
                 newValue !== null ? setContractor(newValue) : setContractor("");
               }}
+              disabled={userType === "Contractor"}
               selectOnFocus
               clearOnBlur
               handleHomeEndKeys
@@ -532,17 +546,21 @@ export default function LabourMasterData({ handleSync }) {
               <th>MOBILE NO</th>
               <th>AADHAAR / ID PROOF</th>
               <th>ADDRESS</th>
-              {isSuperUser ? <th>ACTION</th> : null}
+              {userType != "Contractor" && userType != "User" ? (
+                <th>ACTION</th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {Array.from(
               {
                 length:
-                  labour_masterList.length > 0 ? labour_masterList.length : 7,
+                  selected_labour_masterList.length > 0
+                    ? selected_labour_masterList.length
+                    : 7,
               },
               (_, i) => {
-                const record = labour_masterList[i];
+                const record = selected_labour_masterList[i];
                 const isEditing = editingLabourId === (record ? record.ID : i);
                 return (
                   <tr key={record ? record.ID : i}>
@@ -679,7 +697,7 @@ export default function LabourMasterData({ handleSync }) {
                         ""
                       )}
                     </td>
-                    {isSuperUser && record ? (
+                    {userType != "Contractor" && userType != "User" ? (
                       <td>
                         {isEditing ? (
                           <>
@@ -719,9 +737,7 @@ export default function LabourMasterData({ handleSync }) {
                           </>
                         )}
                       </td>
-                    ) : (
-                      <td></td>
-                    )}
+                    ) : null}
                   </tr>
                 );
               },

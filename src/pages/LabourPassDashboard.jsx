@@ -25,6 +25,8 @@ export default function LabourPassDashboard() {
     contractorList,
     locationCode,
     selectedTerminal,
+    userType,
+    userName,
   } = useSelector((state) => state.myApp);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
   const [records, setRecords] = useState([]);
@@ -123,7 +125,7 @@ export default function LabourPassDashboard() {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!contractor) {
+    if (userType !== "Contractor" && !contractor) {
       alert("Please select contractor.");
       return;
     }
@@ -309,7 +311,11 @@ export default function LabourPassDashboard() {
     try {
       const params = new URLSearchParams();
       params.append("location_code", String(locationCode));
-      if (searchContractor) params.append("contractor", searchContractor);
+      if (searchContractor) {
+        params.append("contractor", searchContractor);
+      } else if (userType === "Contractor") {
+        params.append("contractor", userName);
+      }
 
       const url = apiUrl(`/api/labour-master-data?${params.toString()}`);
       const response = await fetch(url);
@@ -334,7 +340,12 @@ export default function LabourPassDashboard() {
     try {
       const params = new URLSearchParams();
       params.append("location_code", String(locationCode));
-      if (searchContractor) params.append("contractor", searchContractor);
+
+      if (searchContractor) {
+        params.append("contractor", searchContractor);
+      } else if (userType === "Contractor") {
+        params.append("contractor", userName);
+      }
       params.append(
         "fetchdate",
         getTodayLabel().split("-").reverse().join("-"),
@@ -358,6 +369,12 @@ export default function LabourPassDashboard() {
       setSearching(false);
     }
   };
+  const selected_labour_masterList =
+    userType === "Contractor" && labour_masterList.length > 0
+      ? labour_masterList.filter(
+          (item) => item.CONTRACTOR.toLowerCase() === userName.toLowerCase(),
+        )
+      : labour_masterList;
 
   return (
     <div
@@ -446,7 +463,14 @@ export default function LabourPassDashboard() {
                   : []
               }
               name="contractor"
-              value={contractor !== "" ? contractor : null}
+              value={
+                userType === "Contractor"
+                  ? userName
+                  : contractor !== ""
+                    ? contractor
+                    : null
+              }
+              disabled={userType === "Contractor"}
               isOptionEqualToValue={(option, value) => option === value}
               onChange={(e, newValue) =>
                 newValue !== null ? setContractor(newValue) : setContractor("")
@@ -503,11 +527,17 @@ export default function LabourPassDashboard() {
               handleHomeEndKeys
               freeSolo
               options={
-                labour_masterList.length > 0
+                selected_labour_masterList.length > 0
                   ? [
                       ...new Set(
-                        labour_masterList
-                          .filter((ele) => ele.CONTRACTOR == contractor)
+                        selected_labour_masterList
+                          .filter(
+                            (ele) =>
+                              ele.CONTRACTOR.toLowerCase() ==
+                              (userType == "Contractor"
+                                ? userName.toLowerCase()
+                                : contractor),
+                          )
                           .map((item) => item["LABOUR_NAME"]),
                       ),
                     ]
@@ -944,7 +974,14 @@ export default function LabourPassDashboard() {
           <Autocomplete
             name="Search Contractor"
             className="w-100"
-            value={searchContractor !== "" ? searchContractor : null}
+            value={
+              userType === "Contractor"
+                ? userName
+                : searchContractor !== ""
+                  ? searchContractor
+                  : null
+            }
+            disabled={userType === "Contractor"}
             onChange={(event, newValue) => {
               newValue !== null
                 ? setSearchContractor(newValue)
@@ -1007,14 +1044,12 @@ export default function LabourPassDashboard() {
           style={{ width: 200 }}
           disabled={seaching}
           onClick={(e) => {
-            searchContractor != "" ? (
-              <>
-                {fetchRecords(e)}
-                {fetchLabourEntryRecords()}
-              </>
-            ) : (
-              alert("No contractor is selected!")
-            );
+            if (searchContractor !== "" || userType === "Contractor") {
+              fetchRecords(e);
+              fetchLabourEntryRecords();
+            } else {
+              alert("No contractor is selected!");
+            }
           }}
         >
           {seaching ? "Searching..." : "SEARCH RECORDS"}
