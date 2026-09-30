@@ -229,6 +229,10 @@ function App() {
   }, [selectedTerminal, locationCode]);
 
   useEffect(() => {
+    if (window.location.pathname.startsWith("/approve-labour/")) {
+      return;
+    }
+
     const channel = new BroadcastChannel("iocl_utility_app");
 
     // Send a message that this tab is active
