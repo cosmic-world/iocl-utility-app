@@ -582,6 +582,32 @@ const bulkValidationResponse = (errors, res) => {
   });
 };
 
+const validateExcelUploadLocation = (req, res, sheetData) => {
+  const requestedLocationCode = sanitizeValue(req.query.locationCode);
+  if (!requestedLocationCode) {
+    res.status(400).json({ success: false, message: "Location code is required for this upload." });
+    return null;
+  }
+
+  const unauthorizedLocationCodes = new Set();
+  sheetData.forEach((row) => {
+    const rowLocationCode = sanitizeValue(row['LOCATION CODE']);
+    if (rowLocationCode !== requestedLocationCode) {
+      unauthorizedLocationCodes.add(rowLocationCode || "(blank)");
+    }
+  });
+  if (unauthorizedLocationCodes.size) {
+    res.status(403).json({
+      success: false,
+      message: [...unauthorizedLocationCodes]
+        .map((locationCode) => `you are not authorized for this location code ${locationCode}`)
+        .join('; '),
+    });
+    return null;
+  }
+  return requestedLocationCode;
+};
+
 // Using a dedicated multer uploadExcel middleware for the incoming Excel file
 app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (req, res) => {
   try {
@@ -602,6 +628,8 @@ app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (re
     if (!Array.isArray(sheetData) || sheetData.length === 0) {
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
+    const authorizedLocationCode = validateExcelUploadLocation(req, res, sheetData);
+    if (!authorizedLocationCode) return;
 
     const validationErrors = [];
     sheetData.forEach((row, index) => {
@@ -616,11 +644,11 @@ app.post('/api/upload-ttcrew-excel', uploadExcel.single('excel_file'), async (re
     let responseText = "";
     for (const row of sheetData) {
         try{
-            const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const crewName     = sanitizeValue(row['CREW NAME']);
-                const vendor       = sanitizeValue(row['VENDOR']);
+            const locationCode = authorizedLocationCode;
+                const crewName     = sanitizeValue(row['CREW NAME'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
+                const vendor       = sanitizeValue(row['VENDOR'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
                 const crewType     = sanitizeValue(row['CREW TYPE']);
-                const ttNo         = sanitizeValue(row['TT NO']);
+                const ttNo         = sanitizeValue(row['TT NO'])?.toUpperCase();
                 const mobile         = sanitizeValue(row['MOBILE NO']);
                 const govtID         = sanitizeValue(row['GOVT ID']);
                 const drivingLicence = sanitizeValue(row['DRIVING LICENCE']);
@@ -736,6 +764,8 @@ app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (re
     if (!Array.isArray(sheetData) || sheetData.length === 0) {
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
+    const authorizedLocationCode = validateExcelUploadLocation(req, res, sheetData);
+    if (!authorizedLocationCode) return;
 
     const validationErrors = [];
     sheetData.forEach((row, index) => {
@@ -748,16 +778,47 @@ app.post('/api/upload-labour-excel', uploadExcel.single('excel_file'), async (re
     if (bulkValidationResponse(validationErrors, res)) return;
 
     const pool = await sql.connect(sqlConfig);
+    const checkedContractors = new Set();
+    const unavailableContractors = new Set();
+    for (const row of sheetData) {
+      const locationCode = authorizedLocationCode;
+      const contractor = sanitizeValue(row['CONTRACTOR'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
+      const contractorKey = `${locationCode}:${contractor.toLowerCase()}`;
+      if (checkedContractors.has(contractorKey)) continue;
+      checkedContractors.add(contractorKey);
+
+      const contractorResult = await pool.request()
+        .input('locationCode', sql.NVarChar, locationCode)
+        .input('contractor', sql.NVarChar, contractor)
+        .query(`
+          SELECT TOP 1 ID
+          FROM dbo.ContractorCredentials
+          WHERE LOCATION_CODE = @locationCode
+            AND UPPER(LTRIM(RTRIM(CONTRACTOR_NAME))) = UPPER(@contractor)
+        `);
+      if (!contractorResult.recordset.length) {
+        unavailableContractors.add(contractor);
+      }
+    }
+    if (unavailableContractors.size) {
+      return res.status(400).json({
+        success: false,
+        message: [...unavailableContractors]
+          .map((contractor) => `Contractor ${contractor} not available in ContractorCredentials database`)
+          .join('; '),
+      });
+    }
+
     let count = 0
     let responseText = "";
     for (const row of sheetData) {
         try{
-            const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const labourName     = sanitizeValue(row['WORKER NAME']);
-                const contractor       = sanitizeValue(row['CONTRACTOR']);
+            const locationCode = authorizedLocationCode;
+                const labourName     = sanitizeValue(row['WORKER NAME'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
+                const contractor       = sanitizeValue(row['CONTRACTOR'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
                 const mobile         = sanitizeValue(row['MOBILE NO']);
                 const aadhaar         = sanitizeValue(row['AADHAAR NO']);
-                const address = sanitizeValue(row['ADDRESS']);
+                const address = sanitizeValue(row['ADDRESS'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
 
                 await pool.request()
                 .input('locationCode', sql.VarChar, locationCode)
@@ -873,6 +934,8 @@ app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async
     if (!Array.isArray(sheetData) || sheetData.length === 0) {
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
+    const authorizedLocationCode = validateExcelUploadLocation(req, res, sheetData);
+    if (!authorizedLocationCode) return;
 
     const validationErrors = [];
     sheetData.forEach((row, index) => {
@@ -889,8 +952,8 @@ app.post('/api/upload-contractor-excel', uploadExcel.single('excel_file'), async
     for (const row of sheetData) {
       try {
         await pool.request()
-          .input('locationCode', sql.NVarChar, sanitizeValue(row['LOCATION CODE']))
-          .input('contractorName', sql.NVarChar, sanitizeValue(row['CONTRACTOR NAME'])?.toUpperCase())
+          .input('locationCode', sql.NVarChar, authorizedLocationCode)
+          .input('contractorName', sql.NVarChar, sanitizeValue(row['CONTRACTOR NAME'])?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "")
           .input('mailID', sql.NVarChar, sanitizeValue(row['MAIL ID'])?.toLowerCase())
           .input('mobileNo', sql.NVarChar, sanitizeValue(row['MOBILE NO']))
           .query(`
@@ -1408,6 +1471,8 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
     if (!Array.isArray(sheetData) || sheetData.length === 0) {
       return res.status(400).json({ success: false, message: "Excel sheet is empty or invalid" });
     }
+    const authorizedLocationCode = validateExcelUploadLocation(req, res, sheetData);
+    if (!authorizedLocationCode) return;
 
     const validationErrors = [];
     sheetData.forEach((row, index) => {
@@ -1426,8 +1491,8 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
     let responseText = "";
     for (const row of sheetData) {
         try{
-            const locationCode = sanitizeValue(row['LOCATION CODE']);
-                const name     = (sanitizeValue(row['NAME']) || '').toLocaleUpperCase();
+            const locationCode = authorizedLocationCode;
+                const name     = (sanitizeValue(row['NAME']) || '')?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
                 const mobile         = sanitizeValue(row['MOBILE NO']);
                 const mailID       = (sanitizeValue(row['MAIL ID']) || '').toLocaleLowerCase();
                 const role = String(sanitizeValue(row['ROLE'])).toUpperCase();

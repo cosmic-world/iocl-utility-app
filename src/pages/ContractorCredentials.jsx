@@ -70,7 +70,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(apiUrl("/api/upload-contractor-excel"), {
+      const response = await fetch(apiUrl(`/api/upload-contractor-excel?locationCode=${encodeURIComponent(locationCode || "")}`), {
         method: "POST",
         body: formData,
       });
@@ -441,6 +441,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
         />
       ) : null}
 
+      {userType !== "Contractor" ?
       <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
           Bulk Upload of via Excel
@@ -482,7 +483,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
             {loading ? "Uploading..." : "Upload"}
           </Button>
         </form>
-      </Box>
+      </Box> : null}
 
       <div
         className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"

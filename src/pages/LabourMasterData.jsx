@@ -55,7 +55,7 @@ export default function LabourMasterData({ handleSync }) {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(apiUrl("/api/upload-labour-excel"), {
+      const response = await fetch(apiUrl(`/api/upload-labour-excel?locationCode=${encodeURIComponent(locationCode || "")}`), {
         method: "POST",
         body: formData,
       });
