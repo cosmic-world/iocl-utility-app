@@ -28,14 +28,14 @@ export default function LabourApprovalHistory() {
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 50);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
-    const getTodayLabel = () =>
+  const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [creation_date, setCreation_date] = useState(getTodayLabel());
 
   const handleFetch = async () => {
     try {
-      if(creation_date == ""){
-        setCreation_date(getTodayLabel())
+      if (creation_date == "") {
+        setCreation_date(getTodayLabel());
       }
       const params = new URLSearchParams();
       params.append("location_code", String(locationCode));
@@ -79,7 +79,8 @@ export default function LabourApprovalHistory() {
       format,
       location_code: String(locationCode),
     });
-    if (format === "permission" && searchContractor) params.append("contractor", searchContractor);
+    if (format === "permission" && searchContractor)
+      params.append("contractor", searchContractor);
     if (creation_date) {
       params.append("fetchdate", creation_date.split("-").reverse().join("-"));
     }
@@ -144,8 +145,8 @@ export default function LabourApprovalHistory() {
                   ? [
                       ...new Set([
                         ...todayListedContractors,
-                        ...contractorList.map(
-                          (item) => item["CONTRACTOR_NAME"],
+                        ...contractorList.map((item) =>
+                          item["CONTRACTOR_NAME"].trim(),
                         ),
                       ]),
                     ]
@@ -202,8 +203,8 @@ export default function LabourApprovalHistory() {
                     format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       if (newValue) {
-                        console.log('newValue',newValue, new Date());
-                        
+                        console.log("newValue", newValue, new Date());
+
                         setCreation_date(newValue.format("DD-MM-YYYY"));
                       } else {
                         setCreation_date("");
@@ -312,7 +313,7 @@ export default function LabourApprovalHistory() {
                   const record = recordsLaborsEntry[i];
                   return (
                     <tr key={i}>
-                                            <td style={{ textAlign: "center" }}>
+                      <td style={{ textAlign: "center" }}>
                         {record ? i + 1 : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>

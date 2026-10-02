@@ -417,14 +417,14 @@ app.post("/api/upload-temp-pass",
 
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('location_code', sql.NVarChar, bodyData['location_code'] || null);
-      request.input('vendor', sql.NVarChar, bodyData['vendor'] || null);
-      request.input('crew_type', sql.NVarChar, bodyData['crew_type'] || null);
-      request.input('crew_name', sql.NVarChar, bodyData['crew_name'] || null);
-      request.input('tt_no', sql.NVarChar, bodyData['tt_no'] || null);
-      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no'] || null);
-      request.input('govt_id', sql.NVarChar, bodyData['govt_id'] || null);
-      request.input('driving_licence_no', sql.NVarChar, bodyData['driving_licence_no'] || null);
+      request.input('location_code', sql.NVarChar, bodyData['location_code']?.trim() || null);
+      request.input('vendor', sql.NVarChar, bodyData['vendor']?.trim() || null);
+      request.input('crew_type', sql.NVarChar, bodyData['crew_type']?.trim() || null);
+      request.input('crew_name', sql.NVarChar, bodyData['crew_name']?.trim() || null);
+      request.input('tt_no', sql.NVarChar, bodyData['tt_no']?.trim() || null);
+      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no']?.trim() || null);
+      request.input('govt_id', sql.NVarChar, bodyData['govt_id']?.trim() || null);
+      request.input('driving_licence_no', sql.NVarChar, bodyData['driving_licence_no']?.trim() || null);
       request.input('request_from', sql.Date, new Date(bodyData['request_from']) || null);
       request.input('request_to', sql.Date, new Date(bodyData['request_to']) || null);
       request.input('request_letter_path', sql.NVarChar, filePaths.request_letter || null);
@@ -730,14 +730,14 @@ app.post("/api/upload-master",
       };
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('location_code', sql.NVarChar, bodyData['location_code'] || null);
-      request.input('vendor', sql.NVarChar, bodyData['vendor'] || null);
-      request.input('crew_type', sql.NVarChar, bodyData['crew_type'] || null);
-      request.input('crew_name', sql.NVarChar, bodyData['crew_name'] || null);
-      request.input('tt_no', sql.NVarChar, bodyData['tt_no'] || null);
-      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no'] || null);
-      request.input('govt_id', sql.NVarChar, bodyData['govt_id'] || null);
-      request.input('driving_licence_no', sql.NVarChar, bodyData['driving_licence_no'] || null);
+      request.input('location_code', sql.NVarChar, bodyData['location_code']?.trim() || null);
+      request.input('vendor', sql.NVarChar, bodyData['vendor']?.trim() || null);
+      request.input('crew_type', sql.NVarChar, bodyData['crew_type']?.trim() || null);
+      request.input('crew_name', sql.NVarChar, bodyData['crew_name']?.trim() || null);
+      request.input('tt_no', sql.NVarChar, bodyData['tt_no']?.trim() || null);
+      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no']?.trim() || null);
+      request.input('govt_id', sql.NVarChar, bodyData['govt_id']?.trim() || null);
+      request.input('driving_licence_no', sql.NVarChar, bodyData['driving_licence_no']?.trim() || null);
       
       const insertSql = `INSERT INTO dbo.VendorMasterRecord (
         LOCATION_CODE, CREW_NAME, VENDOR, CREW_TYPE, TT_NO, MOBILE_NO, GOVT_ID, DRIVING_LICENCE
@@ -883,12 +883,12 @@ app.post("/api/upload-labour-single",
       };
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('contractor', sql.NVarChar, bodyData['contractor'] || null);
-      request.input('labourName', sql.NVarChar, bodyData['labourName'] || null);
-      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
-      request.input('aadhaarNo', sql.NVarChar, bodyData['aadhaarNo'] || null);
-      request.input('address', sql.NVarChar, bodyData['address'] || null);
+      request.input('locationCode', sql.NVarChar, bodyData['locationCode']?.trim() || null);
+      request.input('contractor', sql.NVarChar, bodyData['contractor']?.trim() || null);
+      request.input('labourName', sql.NVarChar, bodyData['labourName']?.trim() || null);
+      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo']?.trim() || null);
+      request.input('aadhaarNo', sql.NVarChar, bodyData['aadhaarNo']?.trim() || null);
+      request.input('address', sql.NVarChar, bodyData['address']?.trim() || null);
       
       const insertSql = `INSERT INTO dbo.LabourMasterRecord (
         LOCATION_CODE, LABOUR_NAME, CONTRACTOR, MOBILE_NO, AADHAAR_NO, ADDRESS
@@ -1007,10 +1007,10 @@ app.post("/api/upload-contractor-single",
       };
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('contractorName', sql.NVarChar, bodyData['contractorName'] || null);
+      request.input('locationCode', sql.NVarChar, bodyData['locationCode']?.trim() || null);
+      request.input('contractorName', sql.NVarChar, bodyData['contractorName']?.trim() || null);
       request.input('mailID', sql.NVarChar, mailID);
-      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
+      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo']?.trim() || null);
       
       const insertSql = `INSERT INTO dbo.ContractorCredentials (
         LOCATION_CODE, CONTRACTOR_NAME, MAIL_ID, MOBILE_NO) 
@@ -1588,10 +1588,10 @@ app.post("/api/upload-officer-single",
       if (!["ADMIN", "SUPER_ADMIN", "SECURITY"].includes(role)) {
         return res.status(400).json({ error: "Invalid officer role." });
       }
-      request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('name', sql.NVarChar, bodyData['name'] || null);
+      request.input('locationCode', sql.NVarChar, bodyData['locationCode']?.trim() || null);
+      request.input('name', sql.NVarChar, bodyData['name']?.trim() || null);
       request.input('empID', sql.NVarChar, normalizeOfficerEmpId(bodyData['empID'], role));
-      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
+      request.input('mobileNo', sql.NVarChar, bodyData['mobileNo']?.trim() || null);
       request.input('mailID', sql.NVarChar, mailID);
       request.input('role', sql.NVarChar, role);
       
@@ -2125,15 +2125,15 @@ app.post("/api/labour-pass-requests", async (req, res) => {
     try {
       for (const labour of labours) {
         const request = new sql.Request(transaction);
-        request.input("locationCode", sql.NVarChar, locationCode);
-        request.input("labourName", sql.NVarChar, labour.labourName || null);
-        request.input("contractor", sql.NVarChar, contractor);
-        request.input("mobileNo", sql.NVarChar, labour.mobileNo || null);
-        request.input("aadhaarNo", sql.NVarChar, labour.aadhaarNo || null);
-        request.input("address", sql.NVarChar, labour.address || null);
-        request.input("purpose", sql.NVarChar, purpose);
-        request.input("timeIn", sql.NVarChar, timeIn);
-        request.input("approvingOfficer", sql.NVarChar, approvingOfficer);
+        request.input("locationCode", sql.NVarChar, String(locationCode).trim());
+        request.input("labourName", sql.NVarChar, labour.labourName?.trim() || null);
+        request.input("contractor", sql.NVarChar, String(contractor).trim());
+        request.input("mobileNo", sql.NVarChar, labour.mobileNo?.trim() || null);
+        request.input("aadhaarNo", sql.NVarChar, labour.aadhaarNo?.trim() || null);
+        request.input("address", sql.NVarChar, labour.address?.trim() || null);
+        request.input("purpose", sql.NVarChar, String(purpose).trim());
+        request.input("timeIn", sql.NVarChar, String(timeIn).trim());
+        request.input("approvingOfficer", sql.NVarChar, String(approvingOfficer).trim());
         request.input("requestToken", sql.NVarChar, requestToken);
         await request.query(`INSERT INTO dbo.LabourEntryRecord (LOCATION_CODE, LABOUR_NAME, CONTRACTOR, MOBILE_NO, AADHAAR_NO, ADDRESS, PURPOSE, TIME_IN, APPROVING_OFFICER, REQUEST_TOKEN, REQUEST_STATUS, CREATED_AT) VALUES (@locationCode, @labourName, @contractor, @mobileNo, @aadhaarNo, @address, @purpose, @timeIn, @approvingOfficer, @requestToken, 'PENDING', SYSUTCDATETIME())`);
       }
@@ -2586,16 +2586,16 @@ app.post("/api/upload-labour-pass",
 
       await sql.connect(sqlConfig);
       const request = new sql.Request();
-      request.input('location_code', sql.NVarChar, bodyData['location_code'] || null);
-      request.input('labourName', sql.NVarChar, bodyData['labourName'] || null);
-      request.input('contractor', sql.NVarChar, bodyData['contractor'] || null);
-      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no'] || null);
-      request.input('aadhaarNo', sql.NVarChar, bodyData['aadhaarNo'] || null);
-      request.input('address', sql.NVarChar, bodyData['address'] || null);
-      request.input('gatePassNo', sql.NVarChar, bodyData['gatePassNo'] || null);
-      request.input('purpose', sql.NVarChar, bodyData['purpose'] || null);
-      request.input('timeIn', sql.NVarChar, bodyData['timeIn'] || null);
-      request.input('approvingOfficer', sql.NVarChar, bodyData['approvingOfficer'] || null);
+      request.input('location_code', sql.NVarChar, bodyData['location_code']?.trim() || null);
+      request.input('labourName', sql.NVarChar, bodyData['labourName']?.trim() || null);
+      request.input('contractor', sql.NVarChar, bodyData['contractor']?.trim() || null);
+      request.input('mobile_no', sql.NVarChar, bodyData['mobile_no']?.trim() || null);
+      request.input('aadhaarNo', sql.NVarChar, bodyData['aadhaarNo']?.trim() || null);
+      request.input('address', sql.NVarChar, bodyData['address']?.trim() || null);
+      request.input('gatePassNo', sql.NVarChar, bodyData['gatePassNo']?.trim() || null);
+      request.input('purpose', sql.NVarChar, bodyData['purpose']?.trim() || null);
+      request.input('timeIn', sql.NVarChar, bodyData['timeIn']?.trim() || null);
+      request.input('approvingOfficer', sql.NVarChar, bodyData['approvingOfficer']?.trim() || null);
       request.input('doc1_path', sql.NVarChar, filePaths.document1 || null);
       request.input('doc2_path', sql.NVarChar, filePaths.document2 || null);
       request.input('doc3_path', sql.NVarChar, filePaths.document3 || null);
