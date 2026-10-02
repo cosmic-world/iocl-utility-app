@@ -100,11 +100,17 @@ app.post("/api/credentials/request-otp", async (req, res) => {
     otpStore[otpKey] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
     await transporter.sendMail({
-      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      from: '"IOCL Utility App" <ioclcbe4149@gmail.com>',
       to: email,
       subject: `${credentialType === "officer" ? "Officer" : "Contractor"} Email Verification OTP`,
-      text: `Your email verification OTP is ${otp}. It is valid for 5 minutes.`,
-      html: `<p>Your email verification OTP is:</p><p style="font-size: 28px; font-weight: bold; letter-spacing: 4px;">${otp}</p><p>This OTP is valid for 5 minutes.</p>`,
+      text: `Your email verification OTP for the IOCL Utility App is ${otp}. It is valid for 5 minutes. If you did not request this code, please ignore this email.`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h3 style="margin-bottom: 12px; color: #1a73e8;">Email Verification OTP</h3>
+          <p>Your verification code for the IOCL Utility App is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
+          <p>This code is valid for 5 minutes.</p>
+          <p style="color: #666; font-size: 12px;">If you did not request this code, please ignore this email.</p>
+        </div>`,
     });
 
     return res.json({ success: true, message: "OTP sent to the email address." });
@@ -199,16 +205,17 @@ app.post("/api/admin/request-otp", async (req, res) => {
     };
 
     const mailOptions = {
-      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      from: '"IOCL Utility App" <ioclcbe4149@gmail.com>',
       to: email,
       subject: "Admin OTP Verification",
-      text: `Your OTP for admin verification is ${otp}. It is valid for 5 minutes.`,
+      text: `Your OTP for admin verification in the IOCL Utility App is ${otp}. It is valid for 5 minutes. If you did not request this code, please ignore this email.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
           <h3 style="margin-bottom: 12px; color: #1a73e8;">Admin Verification OTP</h3>
           <p>Your OTP is:</p>
           <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
           <p>This OTP is valid for 5 minutes.</p>
+          <p style="color: #666; font-size: 12px;">If you did not request this code, please ignore this email.</p>
         </div>
       `,
     };
@@ -281,16 +288,17 @@ app.post("/api/utility-locations/register/request-otp", async (req, res) => {
     };
 
     await transporter.sendMail({
-      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      from: '"IOCL Utility App" <ioclcbe4149@gmail.com>',
       to: email,
       subject: "Location Registration OTP",
-      text: `Your OTP for location registration is ${otp}. It is valid for 5 minutes.`,
+      text: `Your OTP for location registration in the IOCL Utility App is ${otp}. It is valid for 5 minutes. If you did not request this code, please ignore this email.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
           <h3 style="margin-bottom: 12px; color: #1a73e8;">Location Registration OTP</h3>
           <p>Your OTP is:</p>
           <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
           <p>This OTP is valid for 5 minutes.</p>
+          <p style="color: #666; font-size: 12px;">If you did not request this code, please ignore this email.</p>
         </div>
       `,
     });
@@ -1276,10 +1284,17 @@ app.post("/api/utility-locations/change/request-otp", async (req, res) => {
       expiresAt: Date.now() + 5 * 60 * 1000,
     };
     await transporter.sendMail({
-      from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
+      from: '"IOCL Utility App" <ioclcbe4149@gmail.com>',
       to: currentEmail,
       subject: "Location credential change verification",
-      text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
+      text: `Your OTP for the location credential change in the IOCL Utility App is ${otp}. It is valid for 5 minutes. If you did not request this change, please ignore this email.`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h3 style="margin-bottom: 12px; color: #1a73e8;">Credential Change OTP</h3>
+          <p>Your OTP is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
+          <p>This OTP is valid for 5 minutes.</p>
+          <p style="color: #666; font-size: 12px;">If you did not request this change, please ignore this email.</p>
+        </div>`,
     });
     return res.json({ success: true, message: "OTP sent to the current admin email." });
   } catch (error) {
@@ -1718,9 +1733,8 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'ioclcbe4149@gmail.com',
-    pass: 'wfsv hvdb gqqh prqb'
-    // pass: 'levf jhhk ggix zebi'
+    user: process.env.PERMIT_EMAIL_USER,
+    pass: process.env.PERMIT_EMAIL_PASSWORD
   }
 });
 
