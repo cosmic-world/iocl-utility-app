@@ -369,12 +369,11 @@ export default function LabourPassDashboard() {
       setSearching(false);
     }
   };
-  const selected_labour_masterList =
-    userType === "Contractor" && labour_masterList.length > 0
-      ? labour_masterList.filter(
-          (item) => item.CONTRACTOR.toLowerCase() === userName.toLowerCase(),
-        )
-      : labour_masterList;
+  const selected_labour_masterList = labour_masterList.length > 0
+      ? labour_masterList.filter((ele) =>ele.CONTRACTOR.toLowerCase() == (userType == "Contractor"
+                                ? userName.toLowerCase()
+                                : contractor.toLowerCase()))
+      : [];
 
   return (
     <div
@@ -471,7 +470,17 @@ export default function LabourPassDashboard() {
                     : null
               }
               disabled={userType === "Contractor"}
-              isOptionEqualToValue={(option, value) => option === value}
+              freeSolo
+              isOptionEqualToValue={(option, value) =>
+                String(option).toLowerCase() === String(value).toLowerCase()
+              }
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setContractor(newValue?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "")
+                  : setContractor("");
+              }}
               onChange={(e, newValue) =>
                 newValue !== null ? setContractor(newValue) : setContractor("")
               }
@@ -514,9 +523,12 @@ export default function LabourPassDashboard() {
               name="labourName"
               className="w-100"
               value={labourName !== "" ? labourName : null}
+              isOptionEqualToValue={(option, value) => option === value}
               onInputChange={(event, newValue, reason) => {
                 newValue !== null
-                  ? setLabourName(newValue.toLocaleUpperCase())
+                  ? setLabourName(newValue?.replace(/\s+/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "")
                   : setLabourName("");
               }}
               onChange={(event, newValue) => {
@@ -526,19 +538,12 @@ export default function LabourPassDashboard() {
               clearOnBlur
               handleHomeEndKeys
               freeSolo
+              disabled={contractor == ""}
               options={
                 selected_labour_masterList.length > 0
                   ? [
                       ...new Set(
-                        selected_labour_masterList
-                          .filter(
-                            (ele) =>
-                              ele.CONTRACTOR.toLowerCase() ==
-                              (userType == "Contractor"
-                                ? userName.toLowerCase()
-                                : contractor),
-                          )
-                          .map((item) => item["LABOUR_NAME"]),
+                        selected_labour_masterList.map((item) => item["LABOUR_NAME"]),
                       ),
                     ]
                   : []
@@ -558,7 +563,7 @@ export default function LabourPassDashboard() {
                   {...params}
                   placeholder={
                     contractor == ""
-                      ? "Select Contractor First or Type For New..."
+                      ? "Select Contractor First"
                       : "Select From Dropdown or Type For New..."
                   }
                   InputProps={{
@@ -586,6 +591,7 @@ export default function LabourPassDashboard() {
               name="Mobile No"
               className="w-100"
               value={mobileNo !== "" ? mobileNo : null}
+              isOptionEqualToValue={(option, value) => option === value}
               onInputChange={(event, newValue) => {
                 newValue !== null
                   ? setMobileNo(newValue.replace(/\D/g, ""))
@@ -663,6 +669,7 @@ export default function LabourPassDashboard() {
               name="Aadhaar No"
               className="w-100"
               value={aadhaarNo !== "" ? aadhaarNo : null}
+              isOptionEqualToValue={(option, value) => option === value}
               onInputChange={(event, newValue) => {
                 newValue !== null
                   ? setAadhaarNo(newValue.toLocaleUpperCase())
@@ -733,6 +740,7 @@ export default function LabourPassDashboard() {
               name="address"
               className="w-100"
               value={address !== "" ? address : null}
+              isOptionEqualToValue={(option, value) => option === value}
               onInputChange={(event, newValue) => {
                 newValue !== null ? setAddress(newValue) : setAddress("");
               }}

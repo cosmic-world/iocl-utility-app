@@ -322,9 +322,12 @@ export default function ContractorCredentials({ handleSyncContractor }) {
       );
       return;
     }
-    if (!editOtpVerified) {
+    const mailChanged =
+      editingContractor.mailID.trim().toLowerCase() !==
+      String(record.MAIL_ID || "").trim().toLowerCase();
+    if (mailChanged && !editOtpVerified) {
       alert(
-        "Please verify the contractor email address with OTP before saving.",
+        "Please verify the new contractor email address with OTP before saving.",
       );
       return;
     }
@@ -706,7 +709,8 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                   <tr key={record ? record.ID : i}>
                     <td>
                       {isEditing && record ? (
-                        <TextField
+                        <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
+                          <TextField
                           size="small"
                           value={editingContractor.contractorName}
                           sx={{
@@ -714,6 +718,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                               textAlign: "center",
                               backgroundColor: "#f5f5f5",
                             },
+                            flex: 1,
                           }}
                           onChange={(e) =>
                             setEditingContractor({
@@ -722,6 +727,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                             })
                           }
                         />
+                        </div>
                       ) : record ? (
                         record.CONTRACTOR_NAME
                       ) : (
@@ -745,6 +751,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                                 backgroundColor: "#f5f5f5",
                                 textTransform: "lowercase",
                               },
+                              flex: 1,
                             }}
                             onChange={(e) => {
                               setEditingContractor({
@@ -758,37 +765,49 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                             }}
                           />
                           <div className="d-flex gap-1">
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={handleSendEditOtp}
-                              disabled={
-                                editOtpLoading ||
-                                editOtpVerified ||
-                                !editOtpCooldown.canResend
-                              }
-                            >
-                              {!editOtpCooldown.canResend
-                                ? `Resend ${editOtpCooldown.timeLabel}`
-                                : editOtpSent
-                                  ? "Resend OTP"
-                                  : "Send OTP"}
-                            </Button>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="success"
-                              onClick={handleVerifyEditOtp}
-                              disabled={
-                                editOtpLoading ||
-                                !editOtpSent ||
-                                editOtpVerified
-                              }
-                            >
-                              {editOtpVerified ? "Verified" : "Verify OTP"}
-                            </Button>
+                            {editingContractor.mailID.trim().toLowerCase() !==
+                            String(record.MAIL_ID || "")
+                              .trim()
+                              .toLowerCase() ? (
+                              <>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={handleSendEditOtp}
+                                  disabled={
+                                    editOtpLoading ||
+                                    editOtpVerified ||
+                                    !editOtpCooldown.canResend
+                                  }
+                                >
+                                  {!editOtpCooldown.canResend
+                                    ? `Resend ${editOtpCooldown.timeLabel}`
+                                    : editOtpSent
+                                      ? "Resend OTP"
+                                      : "Send OTP"}
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  color="success"
+                                  onClick={handleVerifyEditOtp}
+                                  disabled={
+                                    editOtpLoading ||
+                                    !editOtpSent ||
+                                    editOtpVerified
+                                  }
+                                >
+                                  {editOtpVerified ? "Verified" : "Verify OTP"}
+                                </Button>
+                              </>
+                            ) : null}
                           </div>
-                          {editOtpSent && !editOtpVerified ? (
+                          {editOtpSent &&
+                          !editOtpVerified &&
+                          editingContractor.mailID.trim().toLowerCase() !==
+                            String(record.MAIL_ID || "")
+                              .trim()
+                              .toLowerCase() ? (
                             <TextField
                               size="small"
                               label="Email OTP"
@@ -851,6 +870,16 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                             <Button
                               startIcon={<Save />}
                               onClick={() => handleSaveContractor(record)}
+                              disabled={
+                                saveLoader ||
+                                (editingContractor.mailID
+                                  .trim()
+                                  .toLowerCase() !==
+                                  String(record.MAIL_ID || "")
+                                    .trim()
+                                    .toLowerCase() &&
+                                  !editOtpVerified)
+                              }
                             >
                               Save
                             </Button>

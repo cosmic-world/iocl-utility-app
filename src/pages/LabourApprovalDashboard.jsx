@@ -120,7 +120,7 @@ export default function LabourApprovalDashboard() {
       }}
     >
       <NavbarWorkerEntry />
-      <Box sx={{ width: "100%", height: "100%" }}>
+      <Box sx={{ width: "100%", flex: 1, minHeight: 0 }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="center"
@@ -239,6 +239,7 @@ export default function LabourApprovalDashboard() {
                 <th style={{ width: 200 }}>MOBILE NO</th>
                 <th style={{ width: 200 }}>AADHAAR NO</th>
                 <th>ADDRESS</th>
+                <th style={{ width: 150 }}>TIME IN</th>
                 <th style={{ width: 200 }}>APPROVAL STATUS</th>
                 <th style={{ width: 300 }}>GATE PASS NO</th>
               </tr>
@@ -270,6 +271,9 @@ export default function LabourApprovalDashboard() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["ADDRESS"] : ""}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        {record ? record["TIME_IN"] : ""}
                       </td>
                       <td
                         style={{

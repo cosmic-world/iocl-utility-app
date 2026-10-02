@@ -1008,7 +1008,7 @@ app.post("/api/upload-contractor-single",
       await sql.connect(sqlConfig);
       const request = new sql.Request();
       request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('contractorName', sql.NVarChar, bodyData['contractorName'].toUpperCase() || null);
+      request.input('contractorName', sql.NVarChar, bodyData['contractorName'] || null);
       request.input('mailID', sql.NVarChar, mailID);
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
       
@@ -1052,7 +1052,7 @@ app.patch("/api/contractor-master-data/:id", async (req, res) => {
 
     const id = Number(req.params.id);
     const locationCode = String(req.body?.locationCode || "").trim();
-    const contractorName = String(req.body?.contractorName || "").trim().toUpperCase();
+    const contractorName = String(req.body?.contractorName || "").trim();
     const mailID = String(req.body?.mailID || "").trim().toLowerCase();
     const mobileNo = String(req.body?.mobileNo || "").trim();
     if (!Number.isInteger(id) || id <= 0 || !locationCode || !contractorName || !isValidEmail(mailID) || !/^\d{10}$/.test(mobileNo)) {
@@ -1118,10 +1118,10 @@ app.patch("/api/labour-master-data/:id", async (req, res) => {
 
     const id = Number(req.params.id);
     const locationCode = String(req.body?.locationCode || "").trim();
-    const contractor = String(req.body?.contractor || "").trim().toUpperCase();
-    const labourName = String(req.body?.labourName || "").trim().toUpperCase();
+    const contractor = String(req.body?.contractor || "").trim();
+    const labourName = String(req.body?.labourName || "").trim();
     const mobileNo = String(req.body?.mobileNo || "").trim();
-    const aadhaarNo = String(req.body?.aadhaarNo || "").trim().toUpperCase();
+    const aadhaarNo = String(req.body?.aadhaarNo || "").trim();
     const address = String(req.body?.address || "").trim();
     if (!Number.isInteger(id) || id <= 0 || !locationCode || !contractor || !labourName || !/^\d{10}$/.test(mobileNo) || !aadhaarNo || !address) {
       return res.status(400).json({ error: "Enter valid worker details." });
@@ -1589,7 +1589,7 @@ app.post("/api/upload-officer-single",
         return res.status(400).json({ error: "Invalid officer role." });
       }
       request.input('locationCode', sql.NVarChar, bodyData['locationCode'] || null);
-      request.input('name', sql.NVarChar, bodyData['name'].toUpperCase() || null);
+      request.input('name', sql.NVarChar, bodyData['name'] || null);
       request.input('empID', sql.NVarChar, normalizeOfficerEmpId(bodyData['empID'], role));
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo'] || null);
       request.input('mailID', sql.NVarChar, mailID);
@@ -1663,6 +1663,48 @@ app.delete("/api/officer-master-data/:id", async (req, res) => {
   }
 });
 
+app.patch("/api/officer-master-data/:id", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super admin can update officer records." });
+    }
+
+    const officerId = Number(req.params.id);
+    const name = String(req.body?.name || "").trim();
+    const empID = String(req.body?.empID || "").trim();
+    const mobileNo = String(req.body?.mobileNo || "").trim();
+    const mailID = String(req.body?.mailID || "").trim().toLowerCase();
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, officerId);
+    request.input("name", sql.NVarChar, name);
+    request.input("empID", sql.NVarChar, empID);
+    request.input("mobileNo", sql.NVarChar, mobileNo);
+    request.input("mailID", sql.NVarChar, mailID);
+    const result = await request.query(`
+      UPDATE dbo.OfficerCredentials
+      SET OFFICER_NAME = @name,
+          Emp_ID = @empID,
+          MOBILE_NO = @mobileNo,
+          MAIL_ID = @mailID
+      WHERE ID = @id
+    `);
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Officer record not found." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      id: officerId,
+      officer: { OFFICER_NAME: name, Emp_ID: empID, MOBILE_NO: mobileNo, MAIL_ID: mailID },
+    });
+  } catch (error) {
+    console.error("Officer update error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.patch("/api/officer-master-data/:id/role", async (req, res) => {
   try {
     if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
@@ -1692,6 +1734,39 @@ app.patch("/api/officer-master-data/:id/role", async (req, res) => {
     return res.status(200).json({ success: true, id: officerId, role });
   } catch (error) {
     console.error("Officer role update error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch("/api/officer-master-data/:id/status", async (req, res) => {
+  try {
+    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+      return res.status(403).json({ error: "Only a super admin can change officer status." });
+    }
+
+    const officerId = Number(req.params.id);
+    const status = String(req.body?.status || "").trim().toUpperCase();
+    if (!Number.isInteger(officerId) || officerId <= 0) {
+      return res.status(400).json({ error: "Invalid officer id." });
+    }
+    if (!["ACTIVE", "INACTIVE"].includes(status)) {
+      return res.status(400).json({ error: "Invalid officer status." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("id", sql.Int, officerId);
+    request.input("status", sql.NVarChar, status);
+    const result = await request.query(
+      "UPDATE dbo.OfficerCredentials SET [STATUS] = @status WHERE ID = @id"
+    );
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ error: "Officer record not found." });
+    }
+
+    return res.status(200).json({ success: true, id: officerId, status });
+  } catch (error) {
+    console.error("Officer status update error:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1849,7 +1924,7 @@ function createLabourPermissionReport(rows) {
   ];
 
   const showTimeInPerRow = time_in_multiple.length > 1;
-
+  console.log("showTimeInPerRow:", showTimeInPerRow, 'time_in_multiple:', time_in_multiple);
   const showApproverPerRow = approvers.length > 1;
 
   if (fs.existsSync(logoPath)) {
@@ -1890,7 +1965,7 @@ function createLabourPermissionReport(rows) {
         row
           ? showApproverPerRow
             ? `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
-            : row.LABOUR_NAME || ""
+            : `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}`
           : "",
         x + 38,
         rowY,
@@ -1981,6 +2056,8 @@ const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:300
 async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
   const applicationLink = `${labourWorkflowBaseUrl}/approve-labour/${requestToken}`;
   const first = rows[0] || {};
+  console.log('first',first);
+  
   await transporter.sendMail({
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
     to: officerEmail,
@@ -2020,7 +2097,7 @@ app.post("/api/labour-pass-requests", async (req, res) => {
       await transaction.rollback();
       throw error;
     }
-    await sendLabourWorkflowEmail(mailID, requestToken, labours.map((labour) => ({ ...labour, CONTRACTOR: contractor, PURPOSE: purpose })));
+    await sendLabourWorkflowEmail(mailID, requestToken, labours.map((labour) => ({ ...labour, CONTRACTOR: contractor, PURPOSE: purpose, TIME_IN: timeIn })));
     return res.status(201).json({ success: true, requestToken, count: labours.length });
   } catch (error) {
     console.error("Labour pass request failed:", error);

@@ -10,7 +10,7 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Download, Delete, SwapHoriz } from "@mui/icons-material";
+import { Download, Delete, SwapHoriz, Edit as EditIcon, Save, Close } from "@mui/icons-material";
 import { SetOfficerMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
 
@@ -73,10 +73,18 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState({});
+  const [selectedStatus, setSelectedStatus] = useState({});
   const [verificationOfficerId, setVerificationOfficerId] = useState(null);
   const [verificationOtp, setVerificationOtp] = useState("");
   const [verificationOtpSent, setVerificationOtpSent] = useState(false);
   const [verificationOtpLoading, setVerificationOtpLoading] = useState(false);
+  const [editingOfficerId, setEditingOfficerId] = useState(null);
+  const [editDraft, setEditDraft] = useState({});
+  const [editOtp, setEditOtp] = useState("");
+  const [editOtpSent, setEditOtpSent] = useState(false);
+  const [editOtpVerified, setEditOtpVerified] = useState(false);
+  const [editOtpLoading, setEditOtpLoading] = useState(false);
+  const editOtpCooldown = useOtpCooldown();
   const otpCooldown = useOtpCooldown();
   const verificationOtpCooldown = useOtpCooldown();
 
@@ -384,6 +392,62 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
     }
   };
 
+  const handleChangeStatus = async (officer, newStatus) => {
+    if (!isSuperAdmin) {
+      alert("Only a super admin can change officer status.");
+      return;
+    }
+
+    const currentStatus = String(officer.STATUS || "ACTIVE").toUpperCase();
+    if (!newStatus || newStatus === currentStatus) return;
+    if (!["ACTIVE", "INACTIVE"].includes(newStatus)) {
+      alert("Status must be ACTIVE or INACTIVE.");
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/officer-master-data/${officer.ID}/status`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to change officer status.");
+      }
+
+      setSelectedStatus((current) => {
+        const next = { ...current };
+        delete next[officer.ID];
+        return next;
+      });
+      dispatch(
+        SetOfficerMasterList(
+          officerList.map((item) =>
+            item.ID === officer.ID
+              ? {
+                  ...item,
+                  STATUS: newStatus,
+                }
+              : item,
+          ),
+        ),
+      );
+      alert("Officer status changed successfully.");
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
+
   const handleSendOfficerVerificationOtp = async (officer) => {
     if (!["ADMIN", "SUPER_ADMIN"].includes(userType)) {
       alert("Only an admin or super admin can verify officer emails.");
@@ -489,6 +553,202 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
   };
 
   const isSuperAdmin = userType === "SUPER_ADMIN";
+
+  const handleStartEdit = (officer) => {
+    if (!isSuperAdmin) {
+      alert("Only a super admin can edit officer records.");
+      return;
+    }
+    setEditingOfficerId(officer.ID);
+    setEditDraft({
+      OFFICER_NAME: officer.OFFICER_NAME || "",
+      Emp_ID: officer.Emp_ID || "",
+      MOBILE_NO: officer.MOBILE_NO || "",
+      MAIL_ID: officer.MAIL_ID || "",
+    });
+    setEditOtp("");
+    setEditOtpSent(false);
+    setEditOtpVerified(false);
+    editOtpCooldown.resetCooldown();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingOfficerId(null);
+    setEditDraft({});
+    setEditOtp("");
+    setEditOtpSent(false);
+    setEditOtpVerified(false);
+    editOtpCooldown.resetCooldown();
+  };
+
+  const handleSendEditOtp = async (officer) => {
+    const newEmail = String(editDraft.MAIL_ID || "").trim().toLowerCase();
+    const oldEmail = String(officer.MAIL_ID || "").trim().toLowerCase();
+    if (newEmail === oldEmail) return;
+    if (!isValidEmail(newEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (officer.ROLE === "ADMIN" && !isBusinessEmail(newEmail)) {
+      alert("ADMIN must use a business email address.");
+      return;
+    }
+
+    setEditOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/request-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newEmail,
+          credentialType: "officer",
+          role: officer.ROLE,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to send OTP.");
+      }
+      setEditOtpSent(true);
+      setEditOtpVerified(false);
+      setEditOtp("");
+      editOtpCooldown.startCooldown();
+      alert(`OTP sent to ${newEmail}.`);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setEditOtpLoading(false);
+    }
+  };
+
+  const handleVerifyEditOtp = async (officer) => {
+    const newEmail = String(editDraft.MAIL_ID || "").trim().toLowerCase();
+    if (!/^\d{6}$/.test(editOtp.trim())) {
+      alert("Please enter the six-digit OTP sent to the new email address.");
+      return;
+    }
+
+    setEditOtpLoading(true);
+    try {
+      const response = await fetch(apiUrl("/api/credentials/verify-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newEmail,
+          otp: editOtp.trim(),
+          credentialType: "officer",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to verify OTP.");
+      }
+      setEditOtpVerified(true);
+      alert("New email verified successfully. You can now update.");
+    } catch (error) {
+      setEditOtpVerified(false);
+      alert(error.message);
+    } finally {
+      setEditOtpLoading(false);
+    }
+  };
+
+  const handleUpdateOfficer = async (officer) => {
+    const name = String(editDraft.OFFICER_NAME || "").trim();
+    const empID = String(editDraft.Emp_ID || "").trim();
+    const mobileNo = String(editDraft.MOBILE_NO || "").trim();
+    const mailID = String(editDraft.MAIL_ID || "").trim().toLowerCase();
+
+    if (!name) {
+      alert("Please enter Officer Name.");
+      return;
+    }
+    if (officer.ROLE !== "SECURITY") {
+      if (!empID || !/^[0-9]{8}$/.test(empID)) {
+        alert("Company Emp ID should be exactly 8 digits.");
+        return;
+      }
+    }
+    if (!/^[0-9]{10}$/.test(mobileNo)) {
+      alert("Mobile No should be exactly 10 digits.");
+      return;
+    }
+    if (!isValidEmail(mailID)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    if (officer.ROLE === "ADMIN" && !isBusinessEmail(mailID)) {
+      alert(
+        "ADMIN must use a business email address, not a personal email provider.",
+      );
+      return;
+    }
+
+    const mailChanged =
+      mailID !== String(officer.MAIL_ID || "").trim().toLowerCase();
+
+    if (mailChanged && !editOtpVerified) {
+      alert("Please verify the new email address with OTP before updating.");
+      return;
+    }
+
+    setSaveLoader(true);
+    try {
+      const response = await fetch(
+        apiUrl(`/api/officer-master-data/${officer.ID}`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-role": userType,
+          },
+          body: JSON.stringify({ name, empID, mobileNo, mailID }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update officer record.");
+      }
+
+      if (mailChanged && String(officer.STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
+        await fetch(
+          apiUrl(`/api/officer-master-data/${officer.ID}/verify-email`),
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "x-user-role": userType,
+            },
+            body: JSON.stringify({ locationCode: officer.LOCATION_CODE }),
+          },
+        ).catch(() => {});
+      }
+
+      dispatch(
+        SetOfficerMasterList(
+          officerList.map((item) =>
+            item.ID === officer.ID
+              ? {
+                  ...item,
+                  OFFICER_NAME: name,
+                  Emp_ID: empID,
+                  MOBILE_NO: mobileNo,
+                  MAIL_ID: mailID,
+                  STATUS: mailChanged ? "ACTIVE" : item.STATUS,
+                }
+              : item,
+          ),
+        ),
+      );
+      handleCancelEdit();
+      alert("Officer record updated successfully.");
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setSaveLoader(false);
+    }
+  };
 
   return (
     <div
@@ -801,16 +1061,151 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
               <th>MAIL ID</th>
               <th style={{ width: 200 }}>ROLE</th>
               <th style={{ width: 100 }}>STATUS</th>
-              <th style={{ minWidth: 500 }}>ACTION</th>
+              <th style={{ minWidth: 800 }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {officersForLocation.map((officer) => (
               <tr key={officer.ID}>
-                <td>{officer.OFFICER_NAME}</td>
-                <td>{officer.Emp_ID}</td>
-                <td>{officer.MOBILE_NO}</td>
-                <td>{officer.MAIL_ID}</td>
+                <td>
+                  {editingOfficerId === officer.ID ? (
+                    <TextField
+                      size="small"
+                      value={editDraft.OFFICER_NAME}
+                      onChange={(event) =>
+                        setEditDraft((draft) => ({
+                          ...draft,
+                          OFFICER_NAME: event.target.value,
+                        }))
+                      }
+                      fullWidth
+                    />
+                  ) : (
+                    officer.OFFICER_NAME
+                  )}
+                </td>
+                <td>
+                  {editingOfficerId === officer.ID ? (
+                    <TextField
+                      size="small"
+                      value={editDraft.Emp_ID}
+                      inputProps={{ inputMode: "numeric", maxLength: 8 }}
+                      onChange={(event) =>
+                        setEditDraft((draft) => ({
+                          ...draft,
+                          Emp_ID: event.target.value.replace(/\D/g, ""),
+                        }))
+                      }
+                      fullWidth
+                    />
+                  ) : (
+                    officer.Emp_ID
+                  )}
+                </td>
+                <td>
+                  {editingOfficerId === officer.ID ? (
+                    <TextField
+                      size="small"
+                      value={editDraft.MOBILE_NO}
+                      inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                      onChange={(event) =>
+                        setEditDraft((draft) => ({
+                          ...draft,
+                          MOBILE_NO: event.target.value.replace(/\D/g, ""),
+                        }))
+                      }
+                      fullWidth
+                    />
+                  ) : (
+                    officer.MOBILE_NO
+                  )}
+                </td>
+                <td>
+                  {editingOfficerId === officer.ID ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 4,
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <TextField
+                        size="small"
+                        type="email"
+                        value={editDraft.MAIL_ID}
+                        error={
+                          Boolean(editDraft.MAIL_ID) &&
+                          !isValidEmail(editDraft.MAIL_ID)
+                        }
+                        onChange={(event) => {
+                          const next = event.target.value;
+                          setEditDraft((draft) => ({
+                            ...draft,
+                            MAIL_ID: next,
+                          }));
+                          setEditOtp("");
+                          setEditOtpSent(false);
+                          setEditOtpVerified(false);
+                          editOtpCooldown.resetCooldown();
+                        }}
+                        sx={{ flex: 1, minWidth: 200 }}
+                      />
+                      {String(editDraft.MAIL_ID || "").trim().toLowerCase() !==
+                      String(officer.MAIL_ID || "").trim().toLowerCase() ? (
+                        <>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleSendEditOtp(officer)}
+                            disabled={
+                              editOtpLoading ||
+                              editOtpVerified ||
+                              !editOtpCooldown.canResend
+                            }
+                          >
+                            {editOtpVerified
+                              ? "Verified"
+                              : editOtpSent
+                                ? "Resend"
+                                : "Verify"}
+                          </Button>
+                          {editOtpSent && !editOtpVerified ? (
+                            <TextField
+                              size="small"
+                              value={editOtp}
+                              inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                              onChange={(event) =>
+                                setEditOtp(
+                                  event.target.value.replace(/\D/g, ""),
+                                )
+                              }
+                              sx={{
+                                width: 80,
+                                "& .MuiInputBase-input": {
+                                  textAlign: "center",
+                                },
+                              }}
+                            />
+                          ) : null}
+                          {editOtpSent && !editOtpVerified ? (
+                            <Button
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                              onClick={() => handleVerifyEditOtp(officer)}
+                              disabled={editOtpLoading || editOtp.length !== 6}
+                            >
+                              OK
+                            </Button>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    officer.MAIL_ID
+                  )}
+                </td>
                 <td>
                   <TextField
                     select
@@ -831,7 +1226,28 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                     <option value="SECURITY">SECURITY</option>
                   </TextField>
                 </td>
-                <td>{String(officer.STATUS || "ACTIVE").toUpperCase()}</td>
+                <td>
+                  <TextField
+                    select
+                    size="small"
+                    value={
+                      selectedStatus[officer.ID] ||
+                      String(officer.STATUS || "ACTIVE").toUpperCase()
+                    }
+                    onChange={(event) =>
+                      setSelectedStatus((current) => ({
+                        ...current,
+                        [officer.ID]: event.target.value,
+                      }))
+                    }
+                    disabled={saveLoader || !isSuperAdmin}
+                    fullWidth
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </TextField>
+                </td>
                 <td style={{ textAlign: "center" }}>
                   <span
                     style={{
@@ -845,6 +1261,46 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                         : "Only a super admin can perform these actions"
                     }
                   >
+                    {editingOfficerId === officer.ID ? (
+                      <>
+                        <Button
+                          color="success"
+                          variant="outlined"
+                          startIcon={<Save />}
+                          onClick={() => handleUpdateOfficer(officer)}
+                          disabled={
+                            saveLoader ||
+                            (String(editDraft.MAIL_ID || "").trim().toLowerCase() !==
+                              String(officer.MAIL_ID || "").trim().toLowerCase() &&
+                              !editOtpVerified)
+                          }
+                          sx={{ width: 150 }}
+                        >
+                          Update
+                        </Button>
+                        <Button
+                          color="inherit"
+                          variant="outlined"
+                          startIcon={<Close />}
+                          onClick={handleCancelEdit}
+                          disabled={saveLoader}
+                          sx={{ width: 130 }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        color="secondary"
+                        variant="outlined"
+                        startIcon={<EditIcon />}
+                        onClick={() => handleStartEdit(officer)}
+                        disabled={saveLoader || !isSuperAdmin}
+                        sx={{ width: 130 }}
+                      >
+                        Edit
+                      </Button>
+                    )}
                     <Button
                       color="primary"
                       variant="outlined"
@@ -860,6 +1316,24 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       sx={{ width: 200 }}
                     >
                       Change Role
+                    </Button>
+                    <Button
+                      color="warning"
+                      variant="outlined"
+                      onClick={() =>
+                        handleChangeStatus(
+                          officer,
+                          selectedStatus[officer.ID],
+                        )
+                      }
+                      disabled={
+                        saveLoader ||
+                        !isSuperAdmin ||
+                        !selectedStatus[officer.ID]
+                      }
+                      sx={{ width: 200 }}
+                    >
+                      Change Status
                     </Button>
                     <Button
                       color="error"

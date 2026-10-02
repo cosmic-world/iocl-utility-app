@@ -103,7 +103,7 @@ export default function LabourApprovalHistory() {
       }}
     >
       <NavbarWorkerEntry />
-      <Box sx={{ width: "100%", height: "100%" }}>
+      <Box sx={{ width: "100%", flex: 1, minHeight: 0}}>
         <div className="d-flex flex-wrap gap-2 justify-content-center align-items-center my-2">
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Autocomplete
@@ -263,13 +263,14 @@ export default function LabourApprovalHistory() {
           <Table bordered hover striped className="ttes_table">
             <thead className="table-head">
               <tr>
-                <th style={{ width: 200 }}>DATE</th>
+                <th style={{ width: 150 }}>DATE</th>
                 <th style={{ width: 300 }}>CONTRACTOR NAME</th>
                 <th style={{ width: 250 }}>WORKER NAME</th>
                 <th style={{ width: 200 }}>MOBILE NO</th>
                 <th style={{ width: 200 }}>AADHAAR NO</th>
-                <th>ADDRESS</th>
-                <th style={{ width: 300 }}>GATE PASS NO</th>
+                <th style={{ flex: 1 }}>ADDRESS</th>
+                <th style={{ width: 150 }}>TIME IN</th>
+                <th style={{ width: 200 }}>GATE PASS NO</th>
               </tr>
             </thead>
             <tbody>
@@ -304,6 +305,9 @@ export default function LabourApprovalHistory() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["ADDRESS"] : ""}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        {record ? record["TIME_IN"] : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["GATE_PASS_NO"] : ""}
