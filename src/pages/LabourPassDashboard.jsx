@@ -369,10 +369,15 @@ export default function LabourPassDashboard() {
       setSearching(false);
     }
   };
-  const selected_labour_masterList = labour_masterList.length > 0
-      ? labour_masterList.filter((ele) =>ele.CONTRACTOR.toLowerCase() == (userType == "Contractor"
-                                ? userName.toLowerCase()
-                                : contractor.toLowerCase()))
+  const selected_labour_masterList =
+    labour_masterList.length > 0
+      ? labour_masterList.filter(
+          (ele) =>
+            ele.CONTRACTOR.toLowerCase() ==
+            (userType == "Contractor"
+              ? userName.toLowerCase()
+              : contractor.toLowerCase()),
+        )
       : [];
 
   return (
@@ -473,9 +478,12 @@ export default function LabourPassDashboard() {
               }
               onInputChange={(event, newValue, reason) => {
                 newValue !== null
-                  ? setContractor(newValue?.replace(/\s+/g, " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "")
+                  ? setContractor(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
                   : setContractor("");
               }}
               onChange={(e, newValue) =>
@@ -523,9 +531,12 @@ export default function LabourPassDashboard() {
               isOptionEqualToValue={(option, value) => option === value}
               onInputChange={(event, newValue, reason) => {
                 newValue !== null
-                  ? setLabourName(newValue?.replace(/\s+/g, " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "")
+                  ? setLabourName(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
                   : setLabourName("");
               }}
               onChange={(event, newValue) => {
@@ -540,7 +551,9 @@ export default function LabourPassDashboard() {
                 selected_labour_masterList.length > 0
                   ? [
                       ...new Set(
-                        selected_labour_masterList.map((item) => item["LABOUR_NAME"]),
+                        selected_labour_masterList.map(
+                          (item) => item["LABOUR_NAME"],
+                        ),
                       ),
                     ]
                   : []

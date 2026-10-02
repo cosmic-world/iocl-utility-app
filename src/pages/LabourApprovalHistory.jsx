@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -28,17 +28,23 @@ export default function LabourApprovalHistory() {
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 50);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
-  const [creation_date, setCreation_date] = useState("");
+    const getTodayLabel = () =>
+    new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
+  const [creation_date, setCreation_date] = useState(getTodayLabel());
+
   const handleFetch = async () => {
     try {
+      if(creation_date == ""){
+        setCreation_date(getTodayLabel())
+      }
       const params = new URLSearchParams();
       params.append("location_code", String(locationCode));
       if (searchContractor) params.append("contractor", searchContractor);
-      if (creation_date)
-        params.append(
-          "fetchdate",
-          creation_date.split("-").reverse().join("-"),
-        );
+      const fetchdate =
+        creation_date != ""
+          ? creation_date.split("-").reverse().join("-")
+          : getTodayLabel().split("-").reverse().join("-");
+      params.append("fetchdate", fetchdate);
       const url = apiUrl(`/api/labour-pass-requests?${params.toString()}`);
       const response = await fetch(url);
       if (!response.ok) {
@@ -57,6 +63,10 @@ export default function LabourApprovalHistory() {
     }
   };
 
+  useEffect(() => {
+    handleFetch();
+  }, []);
+
   const handlePrintReport = async (format) => {
     if (format === "permission" && (!searchContractor || !creation_date)) {
       alert(
@@ -69,7 +79,7 @@ export default function LabourApprovalHistory() {
       format,
       location_code: String(locationCode),
     });
-    if (searchContractor) params.append("contractor", searchContractor);
+    if (format === "permission" && searchContractor) params.append("contractor", searchContractor);
     if (creation_date) {
       params.append("fetchdate", creation_date.split("-").reverse().join("-"));
     }
@@ -93,6 +103,10 @@ export default function LabourApprovalHistory() {
     }
   };
 
+  const todayListedContractors = [
+    ...new Set(recordsLaborsEntry.map((item) => item.CONTRACTOR.trim())),
+  ];
+
   return (
     <div
       className={
@@ -100,12 +114,22 @@ export default function LabourApprovalHistory() {
       }
     >
       <NavbarWorkerEntry />
-      <Box sx={{ width: "100%", flex: 1, minHeight: 0}}>
+      <Box sx={{ width: "100%", flex: 1, minHeight: 0 }}>
         <div className="d-flex flex-wrap gap-2 justify-content-center align-items-center my-2">
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Autocomplete
               name="Search Contractor"
               value={searchContractor !== "" ? searchContractor : null}
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setSearchContractor(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
+                  : setSearchContractor("");
+              }}
               onChange={(event, newValue) => {
                 newValue !== null
                   ? setSearchContractor(newValue)
@@ -118,11 +142,17 @@ export default function LabourApprovalHistory() {
               options={
                 contractorList.length > 0
                   ? [
-                      ...new Set(
-                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
-                      ),
+                      ...new Set([
+                        ...todayListedContractors,
+                        ...contractorList.map(
+                          (item) => item["CONTRACTOR_NAME"],
+                        ),
+                      ]),
                     ]
                   : []
+              }
+              isOptionEqualToValue={(option, value) =>
+                String(option).toLowerCase() === String(value).toLowerCase()
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text
@@ -172,6 +202,8 @@ export default function LabourApprovalHistory() {
                     format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       if (newValue) {
+                        console.log('newValue',newValue, new Date());
+                        
                         setCreation_date(newValue.format("DD-MM-YYYY"));
                       } else {
                         setCreation_date("");
@@ -260,14 +292,15 @@ export default function LabourApprovalHistory() {
           <Table bordered hover striped className="ttes_table">
             <thead className="table-head">
               <tr>
+                <th style={{ width: 100 }}>SL NO</th>
                 <th style={{ width: 150 }}>DATE</th>
-                <th style={{ width: 300 }}>CONTRACTOR NAME</th>
+                <th style={{ width: 250 }}>CONTRACTOR NAME</th>
                 <th style={{ width: 250 }}>WORKER NAME</th>
-                <th style={{ width: 200 }}>MOBILE NO</th>
-                <th style={{ width: 200 }}>AADHAAR NO</th>
+                <th style={{ width: 160 }}>MOBILE NO</th>
+                <th style={{ width: 160 }}>AADHAAR NO</th>
                 <th style={{ flex: 1 }}>ADDRESS</th>
-                <th style={{ width: 150 }}>TIME IN</th>
-                <th style={{ width: 200 }}>GATE PASS NO</th>
+                <th style={{ width: 120 }}>TIME IN</th>
+                <th style={{ width: 180 }}>GATE PASS NO</th>
               </tr>
             </thead>
             <tbody>
@@ -279,6 +312,9 @@ export default function LabourApprovalHistory() {
                   const record = recordsLaborsEntry[i];
                   return (
                     <tr key={i}>
+                                            <td style={{ textAlign: "center" }}>
+                        {record ? i + 1 : ""}
+                      </td>
                       <td style={{ textAlign: "center" }}>
                         {record
                           ? record["CREATED_AT"]

@@ -1897,7 +1897,7 @@ function drawReportCell(doc, text, x, y, width, height, options = {}) {
 
 function createLabourPermissionReport(rows) {
   rows = Array.isArray(rows) ? rows : [];
-  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 28 });
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 28, bufferPages: true });
   const buffers = [];
   doc.on("data", (chunk) => buffers.push(chunk));
   const first = rows[0] || {};
@@ -1927,69 +1927,95 @@ function createLabourPermissionReport(rows) {
 
   const showApproverPerRow = approvers.length > 1;
 
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, left, 28, { fit: [78, 58], align: "left", valign: "top" });
-  }
-  doc.font("Helvetica-Bold").fontSize(13).text("INDIAN OIL CORPORATION LIMITED", left, 30, { align: "center", width: pageWidth });
-  doc.fontSize(11).text("COIMBATORE TERMINAL", left, 47, { align: "center", width: pageWidth });
-  doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
-  !showTimeInPerRow
-    ? doc.fontSize(10).text(`Date: ${formatReportDate(first.TIME_IN)}`, right - 180, 38, { width: 180, align: "right" })
-    : null;
-  doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS", left, 82, { align: "center", width: pageWidth });
-  doc.font("Helvetica").fontSize(9).text(`Dear Sir,\n\nWe request permission for entry into the IOCL Coimbatore Terminal for the following persons.`, left, 108);
-
-  let y = 145;
-  drawReportCell(doc, `Name of the Work / Work's Description: ${first.PURPOSE || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
-  y += 26;
-  drawReportCell(doc, `Contractor: ${first.CONTRACTOR || ""}    Address: ${first.ADDRESS || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
-  y += 26;
-
   const groups = 3;
   const groupWidth = pageWidth / groups;
   const rowHeight = 30;
   const headerHeight = 22;
+  const rowsPerPage = groups * 7;
+  const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
 
-  for (let group = 0; group < groups; group += 1) {
-    const x = left + group * groupWidth;
-    drawReportCell(doc, "Sr. No", x, y, 38, headerHeight, { bold: true, align: "center" });
-    drawReportCell(doc, "Name of the Worker", x + 38, y, groupWidth - 88, headerHeight, { bold: true, align: "center" });
-    drawReportCell(doc, "Pass No.", x + groupWidth - 50, y, 50, headerHeight, { bold: true, align: "center" });
-    for (let rowIndex = 0; rowIndex < 7; rowIndex += 1) {
-      const row = rows[group * 7 + rowIndex];
-      const rowY = y + headerHeight + rowIndex * rowHeight;
-      drawReportCell(doc, row ? rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { align: "center" });
-      const approverName = row?.APPROVED_BY || "";
-      drawReportCell(
-        doc,
-        row
-          ? showApproverPerRow
-            ? `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
-            : `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}`
-          : "",
-        x + 38,
-        rowY,
-        groupWidth - 88,
-        rowHeight,
-        { fontSize: 6, padding: 3 },
+  for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+    if (pageIndex > 0) doc.addPage();
+    const pageRows = rows.slice(pageIndex * rowsPerPage, (pageIndex + 1) * rowsPerPage);
+    let y;
+
+    if (pageIndex === 0) {
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, left, 28, { fit: [78, 58], align: "left", valign: "top" });
+      }
+      doc.font("Helvetica-Bold").fontSize(13).text("INDIAN OIL CORPORATION LIMITED", left, 30, { align: "center", width: pageWidth });
+      doc.fontSize(11).text("COIMBATORE TERMINAL", left, 47, { align: "center", width: pageWidth });
+      doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
+      !showTimeInPerRow
+        ? doc.fontSize(10).text(`Time In: ${formatReportDate(first.TIME_IN)}`, right - 180, 58, { width: 180, align: "right" })
+        : null;
+      doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS", left, 82, { align: "center", width: pageWidth });
+      doc.font("Helvetica").fontSize(9).text(`Dear Sir,\n\nWe request permission for entry into the IOCL Coimbatore Terminal for the following persons.`, left, 108);
+
+      y = 145;
+      drawReportCell(doc, `Name of the Work / Work's Description: ${first.PURPOSE || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
+      y += 26;
+      drawReportCell(doc, `Contractor: ${first.CONTRACTOR || ""}    Address: ${first.ADDRESS || ""}`, left, y, pageWidth, 26, { bold: true, fontSize: 9 });
+      y += 26;
+    } else {
+      doc.font("Helvetica-Bold").fontSize(11).text("PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS (contd.)", left, 32, { align: "center", width: pageWidth });
+      doc.font("Helvetica").fontSize(9).text(`Contractor: ${first.CONTRACTOR || ""}    Work: ${first.PURPOSE || ""}`, left, 52, { width: pageWidth });
+      y = 70;
+    }
+
+    for (let group = 0; group < groups; group += 1) {
+      const x = left + group * groupWidth;
+      drawReportCell(doc, "Sr. No", x, y, 38, headerHeight, { bold: true, align: "center" });
+      drawReportCell(doc, "Name of the Worker", x + 38, y, groupWidth - 88, headerHeight, { bold: true, align: "left" });
+      drawReportCell(doc, "Pass No.", x + groupWidth - 50, y, 50, headerHeight, { bold: true, align: "center" });
+      for (let rowIndex = 0; rowIndex < 7; rowIndex += 1) {
+        const row = pageRows[group * 7 + rowIndex];
+        const rowY = y + headerHeight + rowIndex * rowHeight;
+        drawReportCell(doc, row ? pageIndex * rowsPerPage + rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { align: "center" });
+        const approverName = row?.APPROVED_BY || "";
+        drawReportCell(
+          doc,
+          row
+            ? showApproverPerRow
+              ? `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
+              : `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}`
+            : "",
+          x + 38,
+          rowY,
+          groupWidth - 88,
+          rowHeight,
+          { fontSize: 6, padding: 3 },
+        );
+        drawReportCell(doc, row?.GATE_PASS_NO || "", x + groupWidth - 50, rowY, 50, rowHeight, { align: "center" });
+      }
+    }
+
+    if (pageIndex === totalPages - 1) {
+      y += headerHeight + rowHeight * 7 + 20;
+      doc.font("Helvetica").fontSize(8).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
+      doc.font("Helvetica-Bold").fontSize(9).text(
+        `Authorized by: ${approvers.length === 1 ? approvers[0] : "Approved by the authorized officers shown above"}`,
+        left,
+        y + 32,
       );
-      drawReportCell(doc, row?.GATE_PASS_NO || "", x + groupWidth - 50, rowY, 50, rowHeight, { align: "center" });
+      !showApproverPerRow ? doc.font("Helvetica").fontSize(8).text(formatReportDate(first.APPROVED_AT), left, y + 45) : null;
+      doc.font("Helvetica-Bold").fontSize(9).text(
+        `Approved by: `,
+        right-100,
+        y + 32,
+      );
     }
   }
 
-  y += headerHeight + rowHeight * 7 + 20;
-  doc.font("Helvetica").fontSize(8).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
-  doc.font("Helvetica-Bold").fontSize(9).text(
-    `Authorized by: ${approvers.length === 1 ? approvers[0] : "Approved by the authorized officers shown above"}`,
-    left,
-    y + 32,
-  );
-  !showApproverPerRow ? doc.font("Helvetica").fontSize(8).text(formatReportDate(first.APPROVED_AT), left, y + 45) : null;
-  doc.font("Helvetica-Bold").fontSize(9).text(
-    `Approved by: `,
-    right-100,
-    y + 32,
-  );
+  const permissionPageRange = doc.bufferedPageRange();
+  for (let pageIndex = permissionPageRange.start; pageIndex < permissionPageRange.start + permissionPageRange.count; pageIndex += 1) {
+    doc.switchToPage(pageIndex);
+    const bottomMargin = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
+    doc.font("Helvetica").fontSize(8).text(`Page: ${pageIndex + 1}/${permissionPageRange.count}`, left, doc.page.height - bottomMargin + 8, { width: pageWidth, align: "center", lineBreak: false });
+    doc.page.margins.bottom = bottomMargin;
+  }
+
   return new Promise((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.end();
@@ -1998,7 +2024,7 @@ function createLabourPermissionReport(rows) {
 
 function createLabourRegisterReport(rows) {
   rows = Array.isArray(rows) ? rows : [];
-  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 24 });
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 24, bufferPages: true });
   const buffers = [];
   doc.on("data", (chunk) => buffers.push(chunk));
   const left = doc.page.margins.left;
@@ -2025,25 +2051,45 @@ function createLabourRegisterReport(rows) {
   const scale = width / totalColumnWidth;
   let y = 88;
   const headerHeight = 38;
-  let x = left;
-  (Array.isArray(columns) ? columns : []).forEach(([label, columnWidth]) => {
-    const scaledWidth = columnWidth * scale;
-    drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 6, align: "center" });
-    x += scaledWidth;
-  });
+  const drawHeader = () => {
+    let x = left;
+    (Array.isArray(columns) ? columns : []).forEach(([label, columnWidth]) => {
+      const scaledWidth = columnWidth * scale;
+      drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 6, align: "center" });
+      x += scaledWidth;
+    });
+  };
+  drawHeader();
   const rowHeight = 25;
+  const pageBottom = () => doc.page.height - doc.page.margins.bottom;
+  let rowY = y + headerHeight;
   (Array.isArray(rows) ? rows : []).forEach((row, index) => {
-    x = left;
+    if (rowY + rowHeight > pageBottom()) {
+      doc.addPage();
+      y = doc.page.margins.top;
+      drawHeader();
+      rowY = y + headerHeight;
+    }
+    let x = left;
     const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", row.APPROVING_OFFICER,];
     (Array.isArray(columns) ? columns : []).forEach(([, columnWidth], columnIndex) => {
       const scaledWidth = columnWidth * scale;
-      drawReportCell(doc, values[columnIndex], x, y + headerHeight + index * rowHeight, scaledWidth, rowHeight, {
+      drawReportCell(doc, values[columnIndex], x, rowY, scaledWidth, rowHeight, {
         fontSize: 7,
         align: columnIndex === 5 ? "left" : "center",
       });
       x += scaledWidth;
     });
+    rowY += rowHeight;
   });
+  const registerPageRange = doc.bufferedPageRange();
+  for (let pageIndex = registerPageRange.start; pageIndex < registerPageRange.start + registerPageRange.count; pageIndex += 1) {
+    doc.switchToPage(pageIndex);
+    const bottomMargin = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
+    doc.font("Helvetica").fontSize(8).text(`Page: ${pageIndex + 1}/${registerPageRange.count}`, left, doc.page.height - bottomMargin + 6, { width, align: "center", lineBreak: false });
+    doc.page.margins.bottom = bottomMargin;
+  }
   return new Promise((resolve) => {
     doc.on("end", () => resolve(Buffer.concat(buffers)));
     doc.end();

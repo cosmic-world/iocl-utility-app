@@ -570,9 +570,12 @@ export default function tempPassDashboard() {
               value={vendor !== "" ? vendor : null}
               onInputChange={(event, newValue, reason) => {
                 newValue !== null
-                  ? setVendor(newValue?.replace(/\s+/g, " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "")
+                  ? setVendor(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
                   : setVendor("");
                 if (reason === "input") {
                   newValue !== null

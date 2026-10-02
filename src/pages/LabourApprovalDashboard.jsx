@@ -110,6 +110,11 @@ export default function LabourApprovalDashboard() {
   useEffect(() => {
     handleSubmit();
   }, []);
+
+  const todayListedContractors = [
+    ...new Set(recordsLaborsEntry.map((item) => item.CONTRACTOR.trim())),
+  ];
+
   return (
     <div
       className={
@@ -129,7 +134,7 @@ export default function LabourApprovalDashboard() {
               variant="h5"
               sx={{ fontWeight: 700, color: "#12324a", textAlign: "center" }}
             >
-              Review pending requests and monitor approval status
+              Review today's pending requests and monitor approval status
             </Typography>
           </Box>
         </Stack>
@@ -138,6 +143,16 @@ export default function LabourApprovalDashboard() {
             <Autocomplete
               name="Search Contractor"
               value={searchContractor !== "" ? searchContractor : null}
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setSearchContractor(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
+                  : setSearchContractor("");
+              }}
               onChange={(event, newValue) => {
                 newValue !== null
                   ? setSearchContractor(newValue)
@@ -150,11 +165,17 @@ export default function LabourApprovalDashboard() {
               options={
                 contractorList.length > 0
                   ? [
-                      ...new Set(
-                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
-                      ),
+                      ...new Set([
+                        ...todayListedContractors,
+                        ...contractorList.map(
+                          (item) => item["CONTRACTOR_NAME"],
+                        ),
+                      ]),
                     ]
                   : []
+              }
+              isOptionEqualToValue={(option, value) =>
+                String(option).toLowerCase() === String(value).toLowerCase()
               }
               sx={{
                 // 1. Increase font size of the placeholder/input text
@@ -231,12 +252,13 @@ export default function LabourApprovalDashboard() {
           <Table bordered hover striped className="ttes_table">
             <thead className="table-head">
               <tr>
-                <th style={{ width: 300 }}>CONTRACTOR NAME</th>
+                <th style={{ width: 100 }}>SL NO</th>
+                <th style={{ width: 250 }}>CONTRACTOR NAME</th>
                 <th style={{ width: 250 }}>WORKER NAME</th>
-                <th style={{ width: 200 }}>MOBILE NO</th>
-                <th style={{ width: 200 }}>AADHAAR NO</th>
+                <th style={{ width: 160 }}>MOBILE NO</th>
+                <th style={{ width: 160 }}>AADHAAR NO</th>
                 <th>ADDRESS</th>
-                <th style={{ width: 150 }}>TIME IN</th>
+                <th style={{ width: 120 }}>TIME IN</th>
                 <th style={{ width: 200 }}>APPROVAL STATUS</th>
                 <th style={{ width: 300 }}>GATE PASS NO</th>
               </tr>
@@ -254,6 +276,9 @@ export default function LabourApprovalDashboard() {
                   const isEditingGatePass = editingGatePassId === id;
                   return (
                     <tr key={i}>
+                      <td style={{ textAlign: "center" }}>
+                        {record ? i + 1 : ""}
+                      </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["CONTRACTOR"] : ""}
                       </td>

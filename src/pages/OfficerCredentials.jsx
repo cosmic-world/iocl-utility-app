@@ -10,7 +10,14 @@ import {
   Typography,
   Box,
 } from "@mui/material";
-import { Download, Delete, SwapHoriz, Edit as EditIcon, Save, Close } from "@mui/icons-material";
+import {
+  Download,
+  Delete,
+  SwapHoriz,
+  Edit as EditIcon,
+  Save,
+  Close,
+} from "@mui/icons-material";
 import { SetOfficerMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
 
@@ -108,10 +115,15 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(apiUrl(`/api/upload-officer-excel?locationCode=${encodeURIComponent(locationCode || "")}`), {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        apiUrl(
+          `/api/upload-officer-excel?locationCode=${encodeURIComponent(locationCode || "")}`,
+        ),
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -582,8 +594,12 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
   };
 
   const handleSendEditOtp = async (officer) => {
-    const newEmail = String(editDraft.MAIL_ID || "").trim().toLowerCase();
-    const oldEmail = String(officer.MAIL_ID || "").trim().toLowerCase();
+    const newEmail = String(editDraft.MAIL_ID || "")
+      .trim()
+      .toLowerCase();
+    const oldEmail = String(officer.MAIL_ID || "")
+      .trim()
+      .toLowerCase();
     if (newEmail === oldEmail) return;
     if (!isValidEmail(newEmail)) {
       alert("Please enter a valid email address.");
@@ -622,7 +638,9 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
   };
 
   const handleVerifyEditOtp = async (officer) => {
-    const newEmail = String(editDraft.MAIL_ID || "").trim().toLowerCase();
+    const newEmail = String(editDraft.MAIL_ID || "")
+      .trim()
+      .toLowerCase();
     if (!/^\d{6}$/.test(editOtp.trim())) {
       alert("Please enter the six-digit OTP sent to the new email address.");
       return;
@@ -657,7 +675,9 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
     const name = String(editDraft.OFFICER_NAME || "").trim();
     const empID = String(editDraft.Emp_ID || "").trim();
     const mobileNo = String(editDraft.MOBILE_NO || "").trim();
-    const mailID = String(editDraft.MAIL_ID || "").trim().toLowerCase();
+    const mailID = String(editDraft.MAIL_ID || "")
+      .trim()
+      .toLowerCase();
 
     if (!name) {
       alert("Please enter Officer Name.");
@@ -686,7 +706,10 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
     }
 
     const mailChanged =
-      mailID !== String(officer.MAIL_ID || "").trim().toLowerCase();
+      mailID !==
+      String(officer.MAIL_ID || "")
+        .trim()
+        .toLowerCase();
 
     if (mailChanged && !editOtpVerified) {
       alert("Please verify the new email address with OTP before updating.");
@@ -711,7 +734,10 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         throw new Error(data.error || "Failed to update officer record.");
       }
 
-      if (mailChanged && String(officer.STATUS || "ACTIVE").toUpperCase() === "INACTIVE") {
+      if (
+        mailChanged &&
+        String(officer.STATUS || "ACTIVE").toUpperCase() === "INACTIVE"
+      ) {
         await fetch(
           apiUrl(`/api/officer-master-data/${officer.ID}/verify-email`),
           {
@@ -1151,8 +1177,12 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                         }}
                         sx={{ flex: 1, minWidth: 200 }}
                       />
-                      {String(editDraft.MAIL_ID || "").trim().toLowerCase() !==
-                      String(officer.MAIL_ID || "").trim().toLowerCase() ? (
+                      {String(editDraft.MAIL_ID || "")
+                        .trim()
+                        .toLowerCase() !==
+                      String(officer.MAIL_ID || "")
+                        .trim()
+                        .toLowerCase() ? (
                         <>
                           <Button
                             size="small"
@@ -1174,7 +1204,10 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                             <TextField
                               size="small"
                               value={editOtp}
-                              inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                              inputProps={{
+                                maxLength: 6,
+                                inputMode: "numeric",
+                              }}
                               onChange={(event) =>
                                 setEditOtp(
                                   event.target.value.replace(/\D/g, ""),
@@ -1270,8 +1303,12 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                           onClick={() => handleUpdateOfficer(officer)}
                           disabled={
                             saveLoader ||
-                            (String(editDraft.MAIL_ID || "").trim().toLowerCase() !==
-                              String(officer.MAIL_ID || "").trim().toLowerCase() &&
+                            (String(editDraft.MAIL_ID || "")
+                              .trim()
+                              .toLowerCase() !==
+                              String(officer.MAIL_ID || "")
+                                .trim()
+                                .toLowerCase() &&
                               !editOtpVerified)
                           }
                           sx={{ width: 150 }}
@@ -1321,10 +1358,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       color="warning"
                       variant="outlined"
                       onClick={() =>
-                        handleChangeStatus(
-                          officer,
-                          selectedStatus[officer.ID],
-                        )
+                        handleChangeStatus(officer, selectedStatus[officer.ID])
                       }
                       disabled={
                         saveLoader ||

@@ -70,10 +70,15 @@ export default function ContractorCredentials({ handleSyncContractor }) {
     formData.append("excel_file", file); // Must match upload.single('excel_file') on backend
 
     try {
-      const response = await fetch(apiUrl(`/api/upload-contractor-excel?locationCode=${encodeURIComponent(locationCode || "")}`), {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        apiUrl(
+          `/api/upload-contractor-excel?locationCode=${encodeURIComponent(locationCode || "")}`,
+        ),
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -324,7 +329,9 @@ export default function ContractorCredentials({ handleSyncContractor }) {
     }
     const mailChanged =
       editingContractor.mailID.trim().toLowerCase() !==
-      String(record.MAIL_ID || "").trim().toLowerCase();
+      String(record.MAIL_ID || "")
+        .trim()
+        .toLowerCase();
     if (mailChanged && !editOtpVerified) {
       alert(
         "Please verify the new contractor email address with OTP before saving.",
@@ -444,49 +451,50 @@ export default function ContractorCredentials({ handleSyncContractor }) {
         />
       ) : null}
 
-      {userType !== "Contractor" ?
-      <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Bulk Upload of via Excel
-        </Typography>
-
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-            Please use our official excel template.
+      {userType !== "Contractor" ? (
+        <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Bulk Upload of via Excel
           </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Download />}
-            href="/template_contractor.xlsx" // Points directly to the file in your public folder
-            download="Contractor_Template.xlsx" // Forces the browser to download it instead of opening it
-          >
-            Download Excel Template
-          </Button>
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              Please use our official excel template.
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Download />}
+              href="/template_contractor.xlsx" // Points directly to the file in your public folder
+              download="Contractor_Template.xlsx" // Forces the browser to download it instead of opening it
+            >
+              Download Excel Template
+            </Button>
+          </Box>
+
+          <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
+
+          <form onSubmit={handleExcelSubmit}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleExcelChange}
+              style={{ marginBottom: "1rem" }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              sx={{ mb: 2 }}
+              style={{ width: 150 }}
+            >
+              {loading ? "Uploading..." : "Upload"}
+            </Button>
+          </form>
         </Box>
-
-        <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
-
-        <form onSubmit={handleExcelSubmit}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleExcelChange}
-            style={{ marginBottom: "1rem" }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            sx={{ mb: 2 }}
-            style={{ width: 150 }}
-          >
-            {loading ? "Uploading..." : "Upload"}
-          </Button>
-        </form>
-      </Box> : null}
+      ) : null}
 
       <div
         className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
@@ -711,22 +719,22 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                       {isEditing && record ? (
                         <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
                           <TextField
-                          size="small"
-                          value={editingContractor.contractorName}
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                            flex: 1,
-                          }}
-                          onChange={(e) =>
-                            setEditingContractor({
-                              ...editingContractor,
-                              contractorName: e.target.value,
-                            })
-                          }
-                        />
+                            size="small"
+                            value={editingContractor.contractorName}
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                              flex: 1,
+                            }}
+                            onChange={(e) =>
+                              setEditingContractor({
+                                ...editingContractor,
+                                contractorName: e.target.value,
+                              })
+                            }
+                          />
                         </div>
                       ) : record ? (
                         record.CONTRACTOR_NAME
@@ -913,9 +921,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                           </>
                         )}
                       </td>
-                    ) : (
-                      null
-                    )}
+                    ) : null}
                   </tr>
                 );
               },
