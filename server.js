@@ -1924,7 +1924,7 @@ function createLabourPermissionReport(rows) {
   ];
 
   const showTimeInPerRow = time_in_multiple.length > 1;
-  console.log("showTimeInPerRow:", showTimeInPerRow, 'time_in_multiple:', time_in_multiple);
+
   const showApproverPerRow = approvers.length > 1;
 
   if (fs.existsSync(logoPath)) {
@@ -2056,7 +2056,6 @@ const labourWorkflowBaseUrl = (process.env.APP_BASE_URL || "http://localhost:300
 async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
   const applicationLink = `${labourWorkflowBaseUrl}/approve-labour/${requestToken}`;
   const first = rows[0] || {};
-  console.log('first',first);
   
   await transporter.sendMail({
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
