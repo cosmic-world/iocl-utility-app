@@ -1825,6 +1825,17 @@ function createLabourPermissionReport(rows) {
         .filter(Boolean),
     ),
   ];
+
+  const time_in_multiple = [
+    ...new Set(
+      rows
+        .map((row) => row.TIME_IN)
+        .filter(Boolean),
+    ),
+  ];
+
+  const showTimeInPerRow = time_in_multiple.length > 1;
+
   const showApproverPerRow = approvers.length > 1;
 
   if (fs.existsSync(logoPath)) {
@@ -1833,7 +1844,7 @@ function createLabourPermissionReport(rows) {
   doc.font("Helvetica-Bold").fontSize(13).text("INDIAN OIL CORPORATION LIMITED", left, 30, { align: "center", width: pageWidth });
   doc.fontSize(11).text("COIMBATORE TERMINAL", left, 47, { align: "center", width: pageWidth });
   doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
-  showApproverPerRow
+  !showTimeInPerRow
     ? doc.fontSize(10).text(`Date: ${formatReportDate(first.TIME_IN)}`, right - 180, 38, { width: 180, align: "right" })
     : null;
   doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS", left, 82, { align: "center", width: pageWidth });
@@ -1864,7 +1875,7 @@ function createLabourPermissionReport(rows) {
         doc,
         row
           ? showApproverPerRow
-            ? `${row.LABOUR_NAME || ""}\nTime In: ${row.TIME_IN}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
+            ? `${row.LABOUR_NAME || ""} ${showTimeInPerRow ? `\nTime In: ${row.TIME_IN}` : ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
             : row.LABOUR_NAME || ""
           : "",
         x + 38,
