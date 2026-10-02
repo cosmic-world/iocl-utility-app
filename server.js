@@ -1832,9 +1832,10 @@ function createLabourPermissionReport(rows) {
   }
   doc.font("Helvetica-Bold").fontSize(13).text("INDIAN OIL CORPORATION LIMITED", left, 30, { align: "center", width: pageWidth });
   doc.fontSize(11).text("COIMBATORE TERMINAL", left, 47, { align: "center", width: pageWidth });
+  doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
   showApproverPerRow
-    ? doc.fontSize(10).text(`Date: ${formatReportDate(first.APPROVED_AT).split(",")[0]}`, right - 180, 38, { width: 180, align: "right" })
-    : doc.fontSize(10).text(`Date/Time: ${formatReportDate(first.APPROVED_AT)}`, right - 180, 38, { width: 180, align: "right" });
+    ? doc.fontSize(10).text(`Date: ${formatReportDate(first.TIME_IN)}`, right - 180, 38, { width: 180, align: "right" })
+    : null;
   doc.fontSize(12).text("Sub : PERMISSION FOR ENTRY OF CONTRACTORS' WORKERS", left, 82, { align: "center", width: pageWidth });
   doc.font("Helvetica").fontSize(9).text(`Dear Sir,\n\nWe request permission for entry into the IOCL Coimbatore Terminal for the following persons.`, left, 108);
 
@@ -1858,12 +1859,12 @@ function createLabourPermissionReport(rows) {
       const row = rows[group * 7 + rowIndex];
       const rowY = y + headerHeight + rowIndex * rowHeight;
       drawReportCell(doc, row ? rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { align: "center" });
-      const approverName = row?.APPROVER_NAME || row?.APPROVED_BY || "";
+      const approverName = row?.APPROVED_BY || "";
       drawReportCell(
         doc,
         row
           ? showApproverPerRow
-            ? `${row.LABOUR_NAME || ""}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
+            ? `${row.LABOUR_NAME || ""}\nTime In: ${row.TIME_IN}\nApproved by: ${approverName}\nApproved On: ${formatReportDate(row.APPROVED_AT)}`
             : row.LABOUR_NAME || ""
           : "",
         x + 38,
@@ -1959,7 +1960,7 @@ async function sendLabourWorkflowEmail(officerEmail, requestToken, rows) {
     from: '"IOCL_Utility_App" <ioclcbe4149@gmail.com>',
     to: officerEmail,
     subject: `Action required: Labour pass request for ${first.CONTRACTOR || "contractor"}`,
-    html: `<div style="font-family:Aptos;font-size:12px;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Worker Entry Approval</h2><p>A request for <strong>${rows.length} worker${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><br><strong>Worker${rows.length === 1 ? "" : "s"}:</strong> ${rows.map((row) => row.LABOUR_NAME || row.labourName || "").join(", ")}<br><br><strong>Purpose:</strong> ${first.PURPOSE || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p></div>`,  });
+    html: `<div style="font-family:Aptos;font-size:14px;max-width:640px;margin:auto;padding:28px;border:1px solid #d9e2ec;border-radius:10px;color:#1f2937"><h2 style="color:#0b5cab;margin:0 0 8px">Worker Entry Approval</h2><p>A request for <strong>${rows.length} worker${rows.length === 1 ? "" : "s"}</strong> is waiting for your review.</p><p><strong>Contractor:</strong> ${first.CONTRACTOR || ""}<br><br><strong>Worker${rows.length === 1 ? "" : "s"}:</strong> ${rows.map((row) => row.LABOUR_NAME || row.labourName || "").join(", ")}<br><br><strong>Purpose:</strong> ${first.PURPOSE || ""}<br><br><strong>Time In:</strong> ${first.TIME_IN || ""}</p><p style="text-align:center;margin:28px 0"><a href="${applicationLink}" style="background:#0b5cab;color:white;padding:13px 22px;text-decoration:none;border-radius:5px;font-weight:bold">Review and approve</a></p></div>`,  });
 }
 
 app.post("/api/labour-pass-requests", async (req, res) => {
