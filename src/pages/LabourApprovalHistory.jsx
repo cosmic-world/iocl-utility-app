@@ -203,8 +203,6 @@ export default function LabourApprovalHistory() {
                     format="DD-MM-YYYY"
                     onChange={(newValue) => {
                       if (newValue) {
-                        console.log("newValue", newValue, new Date());
-
                         setCreation_date(newValue.format("DD-MM-YYYY"));
                       } else {
                         setCreation_date("");
