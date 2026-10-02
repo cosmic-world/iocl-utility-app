@@ -30,8 +30,8 @@ export default function contacts() {
       dispatch(SetSelectedApplication("Permit Display Table View"));
       dispatch(NavBarComponent("permitDisplay"));
     } else if (selectedCard === "Labour Entry") {
-      dispatch(SetSelectedApplication("Worker Pass Approval Centre"));
-      dispatch(NavBarComponent("labourPassApproval"));
+      dispatch(SetSelectedApplication("Worker Entry Request"));
+      dispatch(NavBarComponent("labourPassDashboard"));
     } else if (selectedCard === "TT IN-OUT") {
       dispatch(SetSelectedApplication("TT In-Out"));
       dispatch(NavBarComponent("ttInOutDashboard"));

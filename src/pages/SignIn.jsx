@@ -972,7 +972,7 @@ function SignIn() {
               <FormControlLabel
                 value="User"
                 control={<Radio />}
-                label="Viewer"
+                label="Normal User"
               />
               <FormControlLabel
                 value="Admin"

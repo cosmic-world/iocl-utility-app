@@ -336,7 +336,7 @@ export default function Header({}) {
             }}
           >{`${
             userType == "User"
-              ? "Viewer"
+              ? "Normal User"
               : userType
                   .trim()
                   .replace(/_/g, " ")
@@ -411,7 +411,7 @@ export default function Header({}) {
           <label>{`Role:`}&nbsp;</label>
           <label style={{ color: "orange" }}>{`${
             userType == "User"
-              ? "Viewer"
+              ? "Normal User"
               : userType
                   .trim()
                   .replace(/_/g, " ")
