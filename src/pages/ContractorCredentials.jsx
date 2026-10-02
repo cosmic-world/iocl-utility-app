@@ -885,7 +885,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
                         )}
                       </td>
                     ) : (
-                      <td></td>
+                      null
                     )}
                   </tr>
                 );
