@@ -176,7 +176,7 @@ export default function LabourPassDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationCode: String(locationCode),
-          contractor,
+          contractor: userType === "Contractor" ? userName : contractor,
           purpose,
           timeIn,
           approvingOfficer: officerName,
@@ -229,7 +229,7 @@ export default function LabourPassDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationCode: String(locationCode),
-          contractor: searchContractor,
+          contractor: userType === "Contractor" ? userName : searchContractor,
           purpose: multiPurpose,
           timeIn: multiTimeIn,
           approvingOfficer: selectedOfficerName,
