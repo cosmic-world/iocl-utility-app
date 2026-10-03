@@ -270,19 +270,15 @@ export default function LabourPassDashboard() {
         selectedRequests.map((item) => item.REQUEST_TOKEN).filter(Boolean),
       ),
     ];
-    if (!selectedRequests.length || requestTokens.length !== 1) {
-      alert("Select pending request only.");
-      return;
-    }
     if (!selectedOfficerName || !selectedOfficerMail) {
       alert("Select the next approving officer first.");
       return;
     }
-
+    requestTokens.forEach(async (token, index) => {
     try {
       setSaveLoader(true);
       const response = await fetch(
-        apiUrl(`/api/labour-pass-requests/${requestTokens[0]}/forward`),
+        apiUrl(`/api/labour-pass-requests/${token}/forward`),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -297,14 +293,15 @@ export default function LabourPassDashboard() {
         throw new Error(data.message || "Unable to forward request.");
       await fetchLabourEntryRecords();
       setSelectedForwardLabourIds([]);
-      alert(`Request forwarded to ${data.approvingOfficer} for approval.`);
+      setApprovingOfficer_1("");
+      requestTokens.length === index + 1 ? alert(`Request forwarded to ${data.approvingOfficer} for approval.`) : null;
     } catch (error) {
       alert(error.message);
     } finally {
       setSaveLoader(false);
     }
+    });
   };
-
   const fetchRecords = async () => {
     setSaveLoader(true);
     setSearching(true);
@@ -1319,7 +1316,7 @@ export default function LabourPassDashboard() {
                           }
                           onChange={() => (
                             <>
-                              {requestStatus === ""
+                              {requestStatus === "" || requestStatus === "REJECTED"
                                 ? toggleLabourSelection(record)
                                 : ""}
                               {requestStatus === "PENDING"
@@ -1347,7 +1344,7 @@ export default function LabourPassDashboard() {
                     <td style={{ textAlign: "center" }}>
                       {record ? record["AADHAAR_NO"] : ""}
                     </td>
-                    <td style={{ textAlign: "center" }}>
+                    <td style={{ textAlign: "center", overflowWrap: "anywhere" }}>
                       {record ? record["ADDRESS"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>

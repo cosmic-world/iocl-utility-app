@@ -165,16 +165,6 @@ export default function ExportCustomToolbar({}) {
       cellClassName: "id-column",
     },
     {
-      field: "location_code",
-      headerName: "LOCATION CODE",
-      minWidth: 100,
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-      headerClassName: "id-column",
-      cellClassName: "id-column",
-    },
-    {
       field: "crew_type",
       headerName: "CREW TYPE",
       minWidth: 100,
@@ -426,7 +416,6 @@ export default function ExportCustomToolbar({}) {
     date1: new Date(record.created_at)
       .toLocaleDateString("en-GB")
       .replace(/\//g, "-"),
-    location_code: record.location_code,
     crew_type: record.crew_type,
     crew_name: record.crew_name,
     vendor: record.vendor,

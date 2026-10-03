@@ -24,7 +24,7 @@ export default function LabourApprovalDashboard() {
   const $table_height = $table ? $table.clientHeight : 500;
   const $thead = document.querySelector(".table-head");
   const $thead_height = $thead ? $thead.clientHeight : 50;
-  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 50);
+  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
   const [approvingId, setApprovingId] = useState(null);
@@ -122,7 +122,15 @@ export default function LabourApprovalDashboard() {
       }
     >
       <NavbarWorkerEntry />
-      <Box sx={{ width: "100%", flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{
+          width: "100%",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="center"
@@ -255,12 +263,12 @@ export default function LabourApprovalDashboard() {
                 <th style={{ width: 100 }}>SL NO</th>
                 <th style={{ width: 250 }}>CONTRACTOR NAME</th>
                 <th style={{ width: 250 }}>WORKER NAME</th>
-                <th style={{ width: 160 }}>MOBILE NO</th>
-                <th style={{ width: 160 }}>AADHAAR NO</th>
+                <th style={{ width: 140 }}>MOBILE NO</th>
+                <th style={{ width: 140 }}>AADHAAR NO</th>
                 <th>ADDRESS</th>
-                <th style={{ width: 120 }}>TIME IN</th>
+                <th style={{ width: 100 }}>TIME IN</th>
                 <th style={{ width: 200 }}>APPROVING OFFICER</th>
-                <th style={{ width: 200 }}>APPROVAL STATUS</th>
+                <th style={{ width: 100 }}>APPROVAL STATUS</th>
                 <th style={{ width: 300 }}>GATE PASS NO</th>
               </tr>
             </thead>
@@ -292,7 +300,7 @@ export default function LabourApprovalDashboard() {
                       <td style={{ textAlign: "center" }}>
                         {record ? record["AADHAAR_NO"] : ""}
                       </td>
-                      <td style={{ textAlign: "center" }}>
+                      <td style={{ textAlign: "center", overflowWrap: "anywhere" }}>
                         {record ? record["ADDRESS"] : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>

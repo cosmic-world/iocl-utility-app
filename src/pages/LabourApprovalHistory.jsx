@@ -25,7 +25,7 @@ export default function LabourApprovalHistory() {
   const $table_height = $table ? $table.clientHeight : 500;
   const $thead = document.querySelector(".table-head");
   const $thead_height = $thead ? $thead.clientHeight : 50;
-  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 50);
+  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
   const getTodayLabel = () =>
@@ -115,7 +115,15 @@ export default function LabourApprovalHistory() {
       }
     >
       <NavbarWorkerEntry />
-      <Box sx={{ width: "100%", flex: 1, minHeight: 0 }}>
+      <Box
+        sx={{
+          width: "100%",
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <div className="d-flex flex-wrap gap-2 justify-content-center align-items-center my-2">
           <div style={{ width: "100%", maxWidth: 350 }}>
             <Autocomplete
@@ -287,7 +295,7 @@ export default function LabourApprovalHistory() {
           />
         ) : null}
 
-        <div className="ttes_table_view">
+        <div className="ttes_table_view" style={{ flex: 1, minHeight: 0, height: "auto" }}>
           <Table bordered hover striped className="ttes_table">
             <thead className="table-head">
               <tr>
@@ -335,7 +343,7 @@ export default function LabourApprovalHistory() {
                       <td style={{ textAlign: "center" }}>
                         {record ? record["AADHAAR_NO"] : ""}
                       </td>
-                      <td style={{ textAlign: "center" }}>
+                      <td style={{ textAlign: "center", overflowWrap: "anywhere" }}>
                         {record ? record["ADDRESS"] : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>

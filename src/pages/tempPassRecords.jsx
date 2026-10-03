@@ -444,7 +444,7 @@ export default function tempPassDashboard() {
   return (
     <div
       className={
-        "d-flex flex-column justify-content-start align-items-center w-100"
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
       }
     >
       <NavbarTemporaryPass />
@@ -1428,13 +1428,6 @@ export default function tempPassDashboard() {
 
       <div
         className="ttes_table_view"
-        style={{
-          height: "auto",
-          maxHeight: 480,
-          minHeight: 0,
-          overflowX: "auto",
-          overflowY: "auto",
-        }}
       >
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
