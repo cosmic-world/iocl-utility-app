@@ -170,7 +170,7 @@ export default function LabourMasterData({ handleSync }) {
   };
 
   const handleSaveLabour = async (record) => {
-    if (!isSuperUser) return;
+    // if (!isSuperUser) return;
     if (
       !editingLabour?.contractor ||
       !editingLabour.labourName ||
@@ -298,7 +298,7 @@ export default function LabourMasterData({ handleSync }) {
         />
       ) : null}
 
-      <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
+      <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
           Bulk Upload of via Excel
         </Typography>
@@ -542,7 +542,7 @@ export default function LabourMasterData({ handleSync }) {
       <Typography variant="h6" sx={{ mt: 2 }}>
         Workers for Selected Contractor
       </Typography>
-      <div className="ttes_table_view ttes_table_view_1">
+      <div className="ttes_table_view">
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>

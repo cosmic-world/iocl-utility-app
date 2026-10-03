@@ -452,7 +452,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
       ) : null}
 
       {userType !== "Contractor" ? (
-        <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
+        <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
           <Typography variant="h6" gutterBottom>
             Bulk Upload of via Excel
           </Typography>
@@ -695,7 +695,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
       <Typography variant="h6" sx={{ mt: 2 }}>
         Existing Contractors for Location
       </Typography>
-      <div className="ttes_table_view ttes_table_view_1">
+      <div className="ttes_table_view">
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>

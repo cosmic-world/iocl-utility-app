@@ -27,12 +27,14 @@
 .ttes_table {
   background-color: #dee4ea;
   width: 100% !important;
+  /* border-collapse: separate; */
+  border-spacing: 0;
 }
 
 .ttes_table > thead tr > th {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   font-size: 16px;
   vertical-align: middle;
   padding: 2px;
@@ -44,6 +46,11 @@
   font-weight: normal;
   min-width: 100px;
   font-weight: bold !important;
+  border-bottom: 2px solid #000;
+}
+
+.ttes_table > tbody {
+  overflow: visible;
 }
 .ttes_table > tbody > tr > td {
   color: black;
@@ -53,7 +60,7 @@
   vertical-align: middle;
   font-family: "Lucida Sans";
   border: 1px solid black;
-  height: 45px !important;
+  min-height: 45px;
   padding: 0px 2px !important;
   max-width: 250px;
   font-weight: bold !important;
@@ -116,10 +123,7 @@
     margin-right: 50 !important;
   }
   .ttes_table_view {
-    min-height: 80%;
-  }
-  .ttes_table_view_1 {
-    min-height: 60%;
+    min-height: 430px;
   }
   .ttes_table > tbody {
     min-height: 80%;

@@ -7,13 +7,17 @@ import NavbarPermit from "../components/NavbarPermit";
 export default function PermitDisplay() {
   const { PermitList, officerList } = useSelector((state) => state.myApp);
   const [startIndex, setstartIndex] = useState(0);
+  const [resizeTick, setResizeTick] = useState(0);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;
   const $thead = document.querySelector(".table-head");
   const $thead_height = $thead ? $thead.clientHeight : 50;
-  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45) - 1;
+  const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45);
   const step = tbody_rows_count;
-  const [show, setShow] = useState(false);
+  const rowHeight =
+    tbody_rows_count > 0
+      ? Math.max(45, ($table_height - $thead_height) / tbody_rows_count)
+      : 45;
   const [clock, setClock] = React.useState(0);
   const officerListForLocation = officerList;
 
@@ -27,11 +31,10 @@ export default function PermitDisplay() {
     }, 5000);
   }, []);
 
-  useEffect(() => {
-    setstartIndex((prevState) =>
-      prevState + step < PermitList.length ? prevState + step : 0,
-    );
-  }, [clock]);
+  const uniquePermitList = [
+    ...new Map(PermitList.map((item) => [item["Permit No"], item])).values(),
+  ];
+
   const findOfficerName = (item) => {
     const filteredOfficerName = officerListForLocation.find(
       (officer) => officer["Emp_ID"] == item,
@@ -42,9 +45,18 @@ export default function PermitDisplay() {
       return item;
     }
   };
-  const uniquePermitList = [
-    ...new Map(PermitList.map((item) => [item["Permit No"], item])).values(),
-  ];
+
+  useEffect(() => {
+    setstartIndex((prevState) =>
+      prevState + step < uniquePermitList.length ? prevState + step : 0,
+    );
+  }, [clock]);
+
+  useEffect(() => {
+    const handleResize = () => setResizeTick((t) => t + 1);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div
@@ -59,8 +71,8 @@ export default function PermitDisplay() {
     >
       <NavbarPermit />
 
-      <div className="ttes_table_view h-100 m-0">
-        <Table bordered hover className="ttes_table">
+      <div className="ttes_table_view">
+        <Table bordered hover className="ttes_table" style={{margin: 0}}>
           <thead className="table-head">
             <tr>
               <th style={{ width: 100 }}>SL NO</th>
@@ -83,7 +95,7 @@ export default function PermitDisplay() {
             {Array.from({ length: tbody_rows_count }, (_, i) => {
               const permit = uniquePermitList[i + startIndex];
               return (
-                <tr key={i}>
+                <tr key={i} style={{ height: rowHeight }}>
                   <td style={{ textAlign: "center" }}>
                     {permit ? i + 1 + startIndex : ""}
                   </td>

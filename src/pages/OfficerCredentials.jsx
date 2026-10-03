@@ -62,8 +62,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
     officerList,
     locationCode,
     selectedTerminal,
-    userType,
-    locationCode: selectedLocationCode,
+    userType
   } = useSelector((state) => state.myApp);
 
   const [saveLoader, setSaveLoader] = useState(false);
@@ -223,12 +222,12 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
       return;
     }
 
-    if (!empID && role != "SECURITY") {
+    if (!empID && officerRole != "SECURITY") {
       alert("Please enter Emp ID");
       return;
     }
 
-    if (!/^[0-9]{8}$/.test(empID) && role != "SECURITY") {
+    if (!/^[0-9]{8}$/.test(empID) && officerRole != "SECURITY") {
       alert("Company Emp ID should be exactly 8 digits.");
       return;
     }

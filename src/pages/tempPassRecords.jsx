@@ -49,7 +49,6 @@ export default function tempPassDashboard() {
   const [requestEnd, setRequestEnd] = useState("");
   const [searchTT, setSearchTT] = useState("");
   const [searchVendor, setSearchVendor] = useState("");
-  const [showRecords, setShowRecords] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [seaching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -110,7 +109,6 @@ export default function tempPassDashboard() {
       zlist.length > 0 ? (
         <>
           {setRecords(zlist)}
-          {type === "search" ? setShowRecords(true) : setShowRecords(false)}
         </>
       ) : (
         <>
@@ -1409,7 +1407,6 @@ export default function tempPassDashboard() {
           disabled={seaching}
           onClick={(e) => {
             fetchRecords(e, "search");
-            setShowRecords(true);
           }}
         >
           {seaching ? "Searching..." : "SEARCH RECORDS"}
@@ -1423,7 +1420,6 @@ export default function tempPassDashboard() {
             setRecords([]);
             setSearchTT("");
             setSearchVendor("");
-            setShowRecords(false);
           }}
         >
           CLEAR VIEW
@@ -1466,7 +1462,7 @@ export default function tempPassDashboard() {
             {Array.from(
               {
                 length:
-                  filteredRecords.length > 0 && showRecords
+                  filteredRecords.length > 0
                     ? filteredRecords.length
                     : 7,
               },
@@ -1503,51 +1499,51 @@ export default function tempPassDashboard() {
                 return (
                   <tr key={i}>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record
                         ? new Date(record.created_at)
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["crew_type"] : ""}
+                      {record ? record["crew_type"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["crew_name"] : ""}
+                      {record ? record["crew_name"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["vendor"] : ""}
+                      {record ? record["vendor"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["tt_no"] : ""}
+                      {record ? record["tt_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["mobile_no"] : ""}
+                      {record ? record["mobile_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords ? record["govt_id"] : ""}
+                      {record ? record["govt_id"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record
                         ? record["driving_licence_no"]
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record
                         ? new Date(record["request_from"])
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record
                         ? new Date(record["request_to"])
                             .toLocaleDateString("en-GB")
                             .replace(/\//g, "-")
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record
                         ? getDaysDifference(
                             new Date(record["request_from"])
                               .toLocaleDateString("en-GB")
@@ -1559,7 +1555,7 @@ export default function tempPassDashboard() {
                         : ""}
                     </td>
                     <td style={{ textAlign: "center", minWidth: 180 }}>
-                      {record && showRecords ? (
+                      {record ? (
                         <div className="d-flex justify-content-center align-items-center gap-2 text-nowrap">
                           <Button
                             size="small"
@@ -1612,27 +1608,27 @@ export default function tempPassDashboard() {
                       )}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record 
                         ? getLink(record.request_letter_path)
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record 
                         ? getLink(record.id_proof_path)
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record 
                         ? getLink(record.driving_licence_front_path)
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record 
                         ? getLink(record.driving_licence_back_path)
                         : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record && showRecords
+                      {record 
                         ? getLink(record.additional_doc_path)
                         : ""}
                     </td>

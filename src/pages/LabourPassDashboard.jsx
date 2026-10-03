@@ -1290,11 +1290,7 @@ export default function LabourPassDashboard() {
               <th style={{ width: 200 }}>APPROVAL STATUS</th>
             </tr>
           </thead>
-          <tbody
-            style={{
-              overflow: "hidden",
-            }}
-          >
+          <tbody>
             {Array.from(
               { length: records.length > 0 ? records.length : 8 },
               (_, i) => {

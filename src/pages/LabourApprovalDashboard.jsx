@@ -259,6 +259,7 @@ export default function LabourApprovalDashboard() {
                 <th style={{ width: 160 }}>AADHAAR NO</th>
                 <th>ADDRESS</th>
                 <th style={{ width: 120 }}>TIME IN</th>
+                <th style={{ width: 200 }}>APPROVING OFFICER</th>
                 <th style={{ width: 200 }}>APPROVAL STATUS</th>
                 <th style={{ width: 300 }}>GATE PASS NO</th>
               </tr>
@@ -296,6 +297,9 @@ export default function LabourApprovalDashboard() {
                       </td>
                       <td style={{ textAlign: "center" }}>
                         {record ? record["TIME_IN"] : ""}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        {record ? record["APPROVING_OFFICER"] : ""}
                       </td>
                       <td
                         style={{

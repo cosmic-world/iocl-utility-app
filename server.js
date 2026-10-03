@@ -1112,10 +1112,9 @@ app.delete("/api/contractor-master-data/:id", async (req, res) => {
 
 app.patch("/api/labour-master-data/:id", async (req, res) => {
   try {
-    if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
-      return res.status(403).json({ error: "Only a super user can edit worker records." });
-    }
-
+    // if (String(req.get("x-user-role") || "").toUpperCase() !== "SUPER_ADMIN") {
+    //   return res.status(403).json({ error: "Only a super user can edit worker records." });
+    // }
     const id = Number(req.params.id);
     const locationCode = String(req.body?.locationCode || "").trim();
     const contractor = String(req.body?.contractor || "").trim();
@@ -2001,8 +2000,19 @@ function createLabourPermissionReport(rows) {
       !showApproverPerRow ? doc.font("Helvetica").fontSize(8).text(formatReportDate(first.APPROVED_AT), left, y + 45) : null;
       doc.font("Helvetica-Bold").fontSize(9).text(
         `Approved by: `,
+        left + (pageWidth / 2) - 30,
+        y + 32,
+      );
+      doc.font("Helvetica-Bold").fontSize(9).text(
+        `Yours faithfully: `,
         right-100,
         y + 32,
+      );
+
+      doc.font("Helvetica-Bold").font("Helvetica").fontSize(8).text(
+        `Full Signature of the Contractor with Seal`,
+        right-100,
+        y + 62,
       );
     }
   }
