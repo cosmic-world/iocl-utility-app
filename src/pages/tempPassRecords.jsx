@@ -107,9 +107,7 @@ export default function tempPassDashboard() {
       const data = await response.json();
       const zlist = Array.isArray(data) ? data : [];
       zlist.length > 0 ? (
-        <>
-          {setRecords(zlist)}
-        </>
+        <>{setRecords(zlist)}</>
       ) : (
         <>
           {setRecords(zlist)}
@@ -1426,9 +1424,7 @@ export default function tempPassDashboard() {
         </Button>
       </div>
 
-      <div
-        className="ttes_table_view"
-      >
+      <div className="ttes_table_view">
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>
@@ -1454,10 +1450,7 @@ export default function tempPassDashboard() {
           <tbody>
             {Array.from(
               {
-                length:
-                  filteredRecords.length > 0
-                    ? filteredRecords.length
-                    : 7,
+                length: filteredRecords.length > 0 ? filteredRecords.length : 7,
               },
               (_, i) => {
                 const record = filteredRecords[i];
@@ -1517,9 +1510,7 @@ export default function tempPassDashboard() {
                       {record ? record["govt_id"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record
-                        ? record["driving_licence_no"]
-                        : ""}
+                      {record ? record["driving_licence_no"] : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       {record
@@ -1601,29 +1592,19 @@ export default function tempPassDashboard() {
                       )}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record 
-                        ? getLink(record.request_letter_path)
-                        : ""}
+                      {record ? getLink(record.request_letter_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record 
-                        ? getLink(record.id_proof_path)
-                        : ""}
+                      {record ? getLink(record.id_proof_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record 
-                        ? getLink(record.driving_licence_front_path)
-                        : ""}
+                      {record ? getLink(record.driving_licence_front_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record 
-                        ? getLink(record.driving_licence_back_path)
-                        : ""}
+                      {record ? getLink(record.driving_licence_back_path) : ""}
                     </td>
                     <td style={{ textAlign: "center" }}>
-                      {record 
-                        ? getLink(record.additional_doc_path)
-                        : ""}
+                      {record ? getLink(record.additional_doc_path) : ""}
                     </td>
                   </tr>
                 );

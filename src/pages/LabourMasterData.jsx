@@ -9,15 +9,15 @@ import {
   CircularProgress,
   Autocomplete,
   Typography,
-  Box
+  Box,
 } from "@mui/material";
 import { Download, Edit, Save, Cancel, Delete, Add } from "@mui/icons-material";
 import { SetLabourMasterList } from "../action/userSlice";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function LabourMasterData({ handleSync }) {
   const dispatch = useDispatch();
@@ -302,468 +302,488 @@ export default function LabourMasterData({ handleSync }) {
         />
       ) : null}
       <div className="p-2 w-100">
-      <Accordion sx={{ width: "100%", backgroundColor: "transparent"}}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-        >
-          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add Worker</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-                <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Bulk Upload of via Excel
-        </Typography>
+        <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} />
+            <Typography
+              component="span"
+              variant="h6"
+              style={{ fontStyle: "italic", paddingTop: "2px" }}
+            >
+              Add Worker
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box
+              sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Bulk Upload of via Excel
+              </Typography>
 
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-            Please use our official excel template.
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Download />}
-            href="/template_labour.xlsx" // Points directly to the file in your public folder
-            download="Labour_Master_Template.xlsx" // Forces the browser to download it instead of opening it
-          >
-            Download Excel Template
-          </Button>
-        </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ mb: 1 }}
+                >
+                  Please use our official excel template.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Download />}
+                  href="/template_labour.xlsx" // Points directly to the file in your public folder
+                  download="Labour_Master_Template.xlsx" // Forces the browser to download it instead of opening it
+                >
+                  Download Excel Template
+                </Button>
+              </Box>
 
-        <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
+              <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
 
-        <form onSubmit={handleExcelSubmit}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleExcelChange}
-            style={{ marginBottom: "1rem" }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            sx={{ mb: 2 }}
-            style={{ width: 150 }}
-          >
-            {loading ? "Uploading..." : "Upload"}
-          </Button>
-        </form>
-      </Box>
-
-      <div
-        className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
-        style={{ border: "1px dashed #ccc" }}
-      >
-        <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Location Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              disabled
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Contractor Name</Typography>
-            <Autocomplete
-              name="Search Contractor"
-              className="w-100"
-              value={
-                userType === "Contractor"
-                  ? userName
-                  : contractor !== ""
-                    ? contractor
-                    : null
-              }
-              onChange={(event, newValue) => {
-                newValue !== null ? setContractor(newValue) : setContractor("");
-              }}
-              disabled={userType === "Contractor"}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
-              options={
-                contractorList.length > 0
-                  ? contractorList.map(
-                      (contractor) => contractor["CONTRACTOR_NAME"],
-                    )
-                  : []
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder={"Select Contractor from Dropdown"}
-                  InputLabelProps={{
-                    ...params.InputLabelProps,
-                    shrink: true,
-                  }}
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
+              <form onSubmit={handleExcelSubmit}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={handleExcelChange}
+                  style={{ marginBottom: "1rem" }}
                 />
-              )}
-            />
-          </div>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                  sx={{ mb: 2 }}
+                  style={{ width: 150 }}
+                >
+                  {loading ? "Uploading..." : "Upload"}
+                </Button>
+              </form>
+            </Box>
 
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Worker Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={labourName}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setLabourName(
-                  e.target.value?.toLowerCase().replace(/\b\w/g, (char) =>
-                    char
-                      .trim()
-                      .replace(/\s+/g, " ")
-                      .toLowerCase()
-                      .replace(/\b\w/g, (char) => char.toUpperCase()),
-                  ) || "",
-                )
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
+            <div
+              className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
+              style={{ border: "1px dashed #ccc" }}
+            >
+              <div className="d-flex flex-wrap justify-content-center gap-2 align-items-center w-100 p-2">
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Location Name</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={locationName}
+                    style={{ backgroundColor: "white" }}
+                    disabled
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Contractor Name</Typography>
+                  <Autocomplete
+                    name="Search Contractor"
+                    className="w-100"
+                    value={
+                      userType === "Contractor"
+                        ? userName
+                        : contractor !== ""
+                          ? contractor
+                          : null
+                    }
+                    onChange={(event, newValue) => {
+                      newValue !== null
+                        ? setContractor(newValue)
+                        : setContractor("");
+                    }}
+                    disabled={userType === "Contractor"}
+                    selectOnFocus
+                    clearOnBlur
+                    handleHomeEndKeys
+                    freeSolo
+                    options={
+                      contractorList.length > 0
+                        ? contractorList.map(
+                            (contractor) => contractor["CONTRACTOR_NAME"],
+                          )
+                        : []
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        paddingTop: "2px !important", // Reducer top whitespace
+                        paddingBottom: "2px !important", // Keeps it centered vertically
+                      },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={"Select Contractor from Dropdown"}
+                        InputLabelProps={{
+                          ...params.InputLabelProps,
+                          shrink: true,
+                        }}
+                        InputProps={{
+                          ...params.InputProps,
+                          style: {
+                            fontFamily: "Lucida Sans",
+                            backgroundColor: "white",
+                          },
+                          sx: {
+                            "& input::placeholder": {
+                              fontFamily: "Lucida Sans",
+                              fontSize: "0.8rem", // Optional: adjust placeholder size
+                              fontStyle: "italic", // Optional: make placeholder italicized
+                            },
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Worker Name</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={labourName}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) =>
+                      setLabourName(
+                        e.target.value?.toLowerCase().replace(/\b\w/g, (char) =>
+                          char
+                            .trim()
+                            .replace(/\s+/g, " ")
+                            .toLowerCase()
+                            .replace(/\b\w/g, (char) => char.toUpperCase()),
+                        ) || "",
+                      )
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Mobile No (10-digit)</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={mobileNo}
+                    type="text"
+                    inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                    style={{ backgroundColor: "white" }}
+                    error={mobileNo && mobileNo.length !== 10}
+                    onChange={(e) =>
+                      setMobileNo(e.target.value.replace(/\D/g, ""))
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Aadhaar No (12-digit)</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={aadhaarNo}
+                    type="text"
+                    inputProps={{ inputMode: "numeric", maxLength: 12 }}
+                    error={aadhaarNo && aadhaarNo.length !== 12}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) =>
+                      setAadhaarNo(e.target.value.replace(/\D/g, ""))
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Address</Typography>
+                  <TextField
+                    fullWidth
+                    multiline
+                    variant="outlined"
+                    value={address}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) =>
+                      setAddress(e.target.value ? e.target.value : "")
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              <Button
+                color="primary"
+                variant="contained"
+                sx={{ m: 2 }}
+                style={{ width: 200 }}
+                disabled={submitting}
+                onClick={(e) => {
+                  handlePostData(e);
+                }}
+              >
+                {submitting ? "Submitting..." : "SUBMIT"}
+              </Button>
+            </div>
+          </AccordionDetails>
+        </Accordion>
+
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Workers for Selected Contractor
+        </Typography>
+        <div className="ttes_table_view">
+          <Table bordered hover striped className="ttes_table">
+            <thead className="table-head">
+              <tr>
+                <th>CONTRACTOR</th>
+                <th>WORKER NAME</th>
+                <th>MOBILE NO</th>
+                <th>AADHAAR / ID PROOF</th>
+                <th>ADDRESS</th>
+                {userType != "Contractor" && userType != "User" ? (
+                  <th>ACTION</th>
+                ) : null}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from(
+                {
+                  length:
+                    selected_labour_masterList.length > 0
+                      ? selected_labour_masterList.length
+                      : 7,
                 },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Mobile No (10-digit)</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={mobileNo}
-              type="text"
-              inputProps={{ inputMode: "numeric", maxLength: 10 }}
-              style={{ backgroundColor: "white" }}
-              error={mobileNo && mobileNo.length !== 10}
-              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Aadhaar No (12-digit)</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={aadhaarNo}
-              type="text"
-              inputProps={{ inputMode: "numeric", maxLength: 12 }}
-              error={aadhaarNo && aadhaarNo.length !== 12}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => setAadhaarNo(e.target.value.replace(/\D/g, ""))}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Address</Typography>
-            <TextField
-              fullWidth
-              multiline
-              variant="outlined"
-              value={address}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => setAddress(e.target.value ? e.target.value : "")}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                },
-              }}
-            />
-          </div>
-        </div>
-
-        <Button
-          color="primary"
-          variant="contained"
-          sx={{ m: 2 }}
-          style={{ width: 200 }}
-          disabled={submitting}
-          onClick={(e) => {
-            handlePostData(e);
-          }}
-        >
-          {submitting ? "Submitting..." : "SUBMIT"}
-        </Button>
-      </div>
-        </AccordionDetails>
-      </Accordion>
-
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        Workers for Selected Contractor
-      </Typography>
-      <div className="ttes_table_view">
-        <Table bordered hover striped className="ttes_table">
-          <thead className="table-head">
-            <tr>
-              <th>CONTRACTOR</th>
-              <th>WORKER NAME</th>
-              <th>MOBILE NO</th>
-              <th>AADHAAR / ID PROOF</th>
-              <th>ADDRESS</th>
-              {userType != "Contractor" && userType != "User" ? (
-                <th>ACTION</th>
-              ) : null}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from(
-              {
-                length:
-                  selected_labour_masterList.length > 0
-                    ? selected_labour_masterList.length
-                    : 7,
-              },
-              (_, i) => {
-                const record = selected_labour_masterList[i];
-                const isEditing = editingLabourId === (record ? record.ID : i);
-                return (
-                  <tr key={record ? record.ID : i}>
-                    <td>
-                      {isEditing && record ? (
-                        <TextField
-                          select
-                          size="small"
-                          value={editingLabour.contractor}
-                          SelectProps={{ native: true }}
-                          sx={{
-                            minWidth: 180,
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          onChange={(e) =>
-                            setEditingLabour({
-                              ...editingLabour,
-                              contractor: e.target.value,
-                            })
-                          }
-                        >
-                          {contractorList.map((contractorRecord) => (
-                            <option
-                              key={contractorRecord.ID}
-                              value={contractorRecord.CONTRACTOR_NAME}
-                            >
-                              {contractorRecord.CONTRACTOR_NAME}
-                            </option>
-                          ))}
-                        </TextField>
-                      ) : record ? (
-                        record.CONTRACTOR
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <TextField
-                          size="small"
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          value={editingLabour.labourName}
-                          onChange={(e) =>
-                            setEditingLabour({
-                              ...editingLabour,
-                              labourName: e.target.value,
-                            })
-                          }
-                        />
-                      ) : record ? (
-                        record.LABOUR_NAME
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <TextField
-                          size="small"
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          value={editingLabour.mobileNo}
-                          inputProps={{ maxLength: 10, inputMode: "numeric" }}
-                          onChange={(e) =>
-                            setEditingLabour({
-                              ...editingLabour,
-                              mobileNo: e.target.value.replace(/\D/g, ""),
-                            })
-                          }
-                        />
-                      ) : record ? (
-                        record.MOBILE_NO
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <TextField
-                          size="small"
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          value={editingLabour.aadhaarNo}
-                          onChange={(e) =>
-                            setEditingLabour({
-                              ...editingLabour,
-                              aadhaarNo: e.target.value,
-                            })
-                          }
-                        />
-                      ) : record ? (
-                        record.AADHAAR_NO
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <TextField
-                          size="small"
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          value={editingLabour.address}
-                          onChange={(e) =>
-                            setEditingLabour({
-                              ...editingLabour,
-                              address: e.target.value,
-                            })
-                          }
-                        />
-                      ) : record ? (
-                        record.ADDRESS
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    {userType != "Contractor" && userType != "User" ? (
+                (_, i) => {
+                  const record = selected_labour_masterList[i];
+                  const isEditing =
+                    editingLabourId === (record ? record.ID : i);
+                  return (
+                    <tr key={record ? record.ID : i}>
                       <td>
-                        {isEditing ? (
-                          <>
-                            <Button
-                              startIcon={<Save />}
-                              onClick={() => handleSaveLabour(record)}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              startIcon={<Cancel />}
-                              onClick={() => {
-                                setEditingLabourId(null);
-                                setEditingLabour(null);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </>
+                        {isEditing && record ? (
+                          <TextField
+                            select
+                            size="small"
+                            value={editingLabour.contractor}
+                            SelectProps={{ native: true }}
+                            sx={{
+                              minWidth: 180,
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            onChange={(e) =>
+                              setEditingLabour({
+                                ...editingLabour,
+                                contractor: e.target.value,
+                              })
+                            }
+                          >
+                            {contractorList.map((contractorRecord) => (
+                              <option
+                                key={contractorRecord.ID}
+                                value={contractorRecord.CONTRACTOR_NAME}
+                              >
+                                {contractorRecord.CONTRACTOR_NAME}
+                              </option>
+                            ))}
+                          </TextField>
+                        ) : record ? (
+                          record.CONTRACTOR
                         ) : (
-                          <>
-                            <Button
-                              startIcon={<Edit />}
-                              onClick={() => handleEditLabour(record)}
-                              disabled={saveLoader}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              color="error"
-                              startIcon={<Delete />}
-                              onClick={() => handleDeleteLabour(record)}
-                              disabled={saveLoader}
-                            >
-                              Delete
-                            </Button>
-                          </>
+                          ""
                         )}
                       </td>
-                    ) : null}
-                  </tr>
-                );
-              },
-            )}
-          </tbody>
-        </Table>
+                      <td>
+                        {isEditing ? (
+                          <TextField
+                            size="small"
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            value={editingLabour.labourName}
+                            onChange={(e) =>
+                              setEditingLabour({
+                                ...editingLabour,
+                                labourName: e.target.value,
+                              })
+                            }
+                          />
+                        ) : record ? (
+                          record.LABOUR_NAME
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <TextField
+                            size="small"
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            value={editingLabour.mobileNo}
+                            inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                            onChange={(e) =>
+                              setEditingLabour({
+                                ...editingLabour,
+                                mobileNo: e.target.value.replace(/\D/g, ""),
+                              })
+                            }
+                          />
+                        ) : record ? (
+                          record.MOBILE_NO
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <TextField
+                            size="small"
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            value={editingLabour.aadhaarNo}
+                            onChange={(e) =>
+                              setEditingLabour({
+                                ...editingLabour,
+                                aadhaarNo: e.target.value,
+                              })
+                            }
+                          />
+                        ) : record ? (
+                          record.AADHAAR_NO
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <TextField
+                            size="small"
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            value={editingLabour.address}
+                            onChange={(e) =>
+                              setEditingLabour({
+                                ...editingLabour,
+                                address: e.target.value,
+                              })
+                            }
+                          />
+                        ) : record ? (
+                          record.ADDRESS
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      {userType != "Contractor" && userType != "User" ? (
+                        <td>
+                          {isEditing ? (
+                            <>
+                              <Button
+                                startIcon={<Save />}
+                                onClick={() => handleSaveLabour(record)}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                startIcon={<Cancel />}
+                                onClick={() => {
+                                  setEditingLabourId(null);
+                                  setEditingLabour(null);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                startIcon={<Edit />}
+                                onClick={() => handleEditLabour(record)}
+                                disabled={saveLoader}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                color="error"
+                                startIcon={<Delete />}
+                                onClick={() => handleDeleteLabour(record)}
+                                disabled={saveLoader}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      ) : null}
+                    </tr>
+                  );
+                },
+              )}
+            </tbody>
+          </Table>
+        </div>
       </div>
     </div>
-  </div>
   );
 }

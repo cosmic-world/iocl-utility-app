@@ -72,7 +72,7 @@ export default function PermitDisplay() {
       <NavbarPermit />
 
       <div className="ttes_table_view">
-        <Table bordered hover className="ttes_table" style={{margin: 0}}>
+        <Table bordered hover className="ttes_table" style={{ margin: 0 }}>
           <thead className="table-head">
             <tr>
               <th style={{ width: 100 }}>SL NO</th>

@@ -300,7 +300,12 @@ export default function LabourApprovalDashboard() {
                       <td style={{ textAlign: "center" }}>
                         {record ? record["AADHAAR_NO"] : ""}
                       </td>
-                      <td style={{ textAlign: "center", overflowWrap: "anywhere" }}>
+                      <td
+                        style={{
+                          textAlign: "center",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
                         {record ? record["ADDRESS"] : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>

@@ -17,14 +17,14 @@ import {
   Edit as EditIcon,
   Save,
   Close,
-  Add
+  Add,
 } from "@mui/icons-material";
 import { SetOfficerMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FREE_EMAIL_DOMAINS = new Set([
@@ -63,12 +63,9 @@ const isBusinessEmail = (value) => {
 
 export default function OfficerCredentials({ handleSyncOfficer }) {
   const dispatch = useDispatch();
-  const {
-    officerList,
-    locationCode,
-    selectedTerminal,
-    userType
-  } = useSelector((state) => state.myApp);
+  const { officerList, locationCode, selectedTerminal, userType } = useSelector(
+    (state) => state.myApp,
+  );
 
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -807,286 +804,292 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
       ) : null}
 
       <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-        >
-          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add User</Typography>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} />
+          <Typography
+            component="span"
+            variant="h6"
+            style={{ fontStyle: "italic", paddingTop: "2px" }}
+          >
+            Add User
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
-      <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Bulk Upload of via Excel
-        </Typography>
+          <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Bulk Upload of via Excel
+            </Typography>
 
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-            Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO,
-            ROLE. ROLE must be ADMIN, SUPER_ADMIN, or SECURITY.
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Download />}
-            href="/template_officer.xlsx" // Points directly to the file in your public folder
-            download="Officer_Template.xlsx" // Forces the browser to download it instead of opening it
-          >
-            Download Excel Template
-          </Button>
-        </Box>
-
-        <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
-
-        <form onSubmit={handleExcelSubmit}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleExcelChange}
-            style={{ marginBottom: "1rem" }}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            sx={{ mb: 2 }}
-            style={{ width: 150 }}
-          >
-            {loading ? "Uploading..." : "Upload"}
-          </Button>
-        </form>
-      </Box>
-
-      <div
-        className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
-        style={{ border: "1px dashed #ccc" }}
-      >
-        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              size="small"
-              disabled
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "1px !important", // Reducer top whitespace
-                  paddingBottom: "1px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={name}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setName(
-                  e.target.value
-                    ?.replace(/\s+/g, " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-                )
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Emp ID</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              type="text"
-              value={empID}
-              inputProps={{ inputMode: "numeric", maxLength: 10 }}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => setEmpID(e.target.value.replace(/\D/g, ""))}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mobile No (10-digit)</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              type="text"
-              value={mobileNo}
-              error={mobileNo && mobileNo.length !== 10}
-              inputProps={{ inputMode: "numeric", maxLength: 10 }}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Role</Typography>
-            <TextField
-              select
-              fullWidth
-              value={userType == "SECURITY" ? userType : role}
-              disabled={userType == "SECURITY"}
-              onChange={(e) => setRole(e.target.value)}
-              SelectProps={{ native: true }}
-              style={{ backgroundColor: "white" }}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "uppercase",
-                },
-              }}
-            >
-              <option value="" disabled>
-                Select Role
-              </option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="SECURITY">SECURITY</option>
-            </TextField>
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mail ID</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              type="email"
-              value={mailID}
-              error={Boolean(mailID) && !isValidEmail(mailID)}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => {
-                setMailID(e.target.value || "");
-                setOtpSent(false);
-                setOtpVerified(false);
-                setOtp("");
-                otpCooldown.resetCooldown();
-              }}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "lowercase",
-                },
-              }}
-            />
-            <Button
-              variant="outlined"
-              onClick={handleSendOtp}
-              disabled={otpLoading || otpVerified || !otpCooldown.canResend}
-              style={{ width: 150 }}
-            >
-              {!otpCooldown.canResend
-                ? `Resend in ${otpCooldown.timeLabel}`
-                : otpSent
-                  ? "Resend"
-                  : "Send OTP"}
-            </Button>
-          </div>
-
-          <div
-            className="break d-flex justify-content-center"
-            style={{ width: "100%" }}
-          >
-            <div
-              className="d-flex flex-wrap justify-content-start align-items-center"
-              style={{ width: "100%", maxWidth: 350 }}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                value={otp}
-                inputProps={{ maxLength: 6, inputMode: "numeric" }}
-                label="Email OTP"
-                disabled={!otpSent || otpVerified}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                style={{ backgroundColor: "white" }}
-                sx={{
-                  // 1. Increase font size of the placeholder/input text
-                  "& .MuiInputBase-input": {
-                    fontSize: "1rem",
-                    fontFamily: "Lucida Sans",
-                  },
-                }}
-              />
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                Excel columns: LOCATION CODE, OFFICER NAME, MAIL ID, MOBILE NO,
+                ROLE. ROLE must be ADMIN, SUPER_ADMIN, or SECURITY.
+              </Typography>
               <Button
                 variant="outlined"
-                color="success"
-                onClick={handleVerifyOtp}
-                disabled={otpLoading || !otpSent || otpVerified}
+                size="small"
+                startIcon={<Download />}
+                href="/template_officer.xlsx" // Points directly to the file in your public folder
+                download="Officer_Template.xlsx" // Forces the browser to download it instead of opening it
+              >
+                Download Excel Template
+              </Button>
+            </Box>
+
+            <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
+
+            <form onSubmit={handleExcelSubmit}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleExcelChange}
+                style={{ marginBottom: "1rem" }}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+                sx={{ mb: 2 }}
                 style={{ width: 150 }}
               >
-                {otpVerified ? "Email Verified" : "Verify OTP"}
+                {loading ? "Uploading..." : "Upload"}
               </Button>
+            </form>
+          </Box>
+
+          <div
+            className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
+            style={{ border: "1px dashed #ccc" }}
+          >
+            <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Location Name</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  value={locationName}
+                  style={{ backgroundColor: "white" }}
+                  size="small"
+                  disabled
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      paddingTop: "1px !important", // Reducer top whitespace
+                      paddingBottom: "1px !important", // Keeps it centered vertically
+                    },
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                      textTransform: "none",
+                    },
+                  }}
+                />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Name</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  value={name}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) =>
+                    setName(
+                      e.target.value
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                    },
+                  }}
+                />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Emp ID</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="text"
+                  value={empID}
+                  inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) => setEmpID(e.target.value.replace(/\D/g, ""))}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                    },
+                  }}
+                />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Mobile No (10-digit)</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="text"
+                  value={mobileNo}
+                  error={mobileNo && mobileNo.length !== 10}
+                  inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) =>
+                    setMobileNo(e.target.value.replace(/\D/g, ""))
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                    },
+                  }}
+                />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Role</Typography>
+                <TextField
+                  select
+                  fullWidth
+                  value={userType == "SECURITY" ? userType : role}
+                  disabled={userType == "SECURITY"}
+                  onChange={(e) => setRole(e.target.value)}
+                  SelectProps={{ native: true }}
+                  style={{ backgroundColor: "white" }}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                      textTransform: "uppercase",
+                    },
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Role
+                  </option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="SECURITY">SECURITY</option>
+                </TextField>
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Mail ID</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="email"
+                  value={mailID}
+                  error={Boolean(mailID) && !isValidEmail(mailID)}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) => {
+                    setMailID(e.target.value || "");
+                    setOtpSent(false);
+                    setOtpVerified(false);
+                    setOtp("");
+                    otpCooldown.resetCooldown();
+                  }}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                      textTransform: "lowercase",
+                    },
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleSendOtp}
+                  disabled={otpLoading || otpVerified || !otpCooldown.canResend}
+                  style={{ width: 150 }}
+                >
+                  {!otpCooldown.canResend
+                    ? `Resend in ${otpCooldown.timeLabel}`
+                    : otpSent
+                      ? "Resend"
+                      : "Send OTP"}
+                </Button>
+              </div>
+
+              <div
+                className="break d-flex justify-content-center"
+                style={{ width: "100%" }}
+              >
+                <div
+                  className="d-flex flex-wrap justify-content-start align-items-center"
+                  style={{ width: "100%", maxWidth: 350 }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    value={otp}
+                    inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                    label="Email OTP"
+                    disabled={!otpSent || otpVerified}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    style={{ backgroundColor: "white" }}
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    onClick={handleVerifyOtp}
+                    disabled={otpLoading || !otpSent || otpVerified}
+                    style={{ width: 150 }}
+                  >
+                    {otpVerified ? "Email Verified" : "Verify OTP"}
+                  </Button>
+                </div>
+              </div>
             </div>
+
+            <Button
+              color="primary"
+              variant="contained"
+              sx={{ m: 2 }}
+              style={{ width: 200 }}
+              disabled={submitting}
+              onClick={(e) => {
+                handlePostData(e);
+              }}
+            >
+              {submitting ? "Submitting..." : "SUBMIT"}
+            </Button>
           </div>
-        </div>
-
-        <Button
-          color="primary"
-          variant="contained"
-          sx={{ m: 2 }}
-          style={{ width: 200 }}
-          disabled={submitting}
-          onClick={(e) => {
-            handlePostData(e);
-          }}
-        >
-          {submitting ? "Submitting..." : "SUBMIT"}
-        </Button>
-      </div>
-
         </AccordionDetails>
       </Accordion>
 

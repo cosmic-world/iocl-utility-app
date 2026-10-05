@@ -17,7 +17,9 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
 
 export default function LabourApprovalHistory() {
-  const { locationCode, contractorList, officerList } = useSelector((state) => state.myApp);
+  const { locationCode, contractorList, officerList } = useSelector(
+    (state) => state.myApp,
+  );
   const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;
@@ -26,11 +28,14 @@ export default function LabourApprovalHistory() {
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
-  const location_officerList = officerList.filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE));
+  const location_officerList = officerList.filter((item) =>
+    ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE),
+  );
 
   const checkIfOfficerListHasDuplicates =
     location_officerList.length !=
-    [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))].length;
+    [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))]
+      .length;
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [creation_date, setCreation_date] = useState(getTodayLabel());
@@ -303,7 +308,10 @@ export default function LabourApprovalHistory() {
           />
         ) : null}
 
-        <div className="ttes_table_view" style={{ flex: 1, minHeight: 0, height: "auto" }}>
+        <div
+          className="ttes_table_view"
+          style={{ flex: 1, minHeight: 0, height: "auto" }}
+        >
           <Table bordered hover striped className="ttes_table">
             <thead className="table-head">
               <tr>
@@ -351,7 +359,12 @@ export default function LabourApprovalHistory() {
                       <td style={{ textAlign: "center" }}>
                         {record ? record["AADHAAR_NO"] : ""}
                       </td>
-                      <td style={{ textAlign: "center", overflowWrap: "anywhere" }}>
+                      <td
+                        style={{
+                          textAlign: "center",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
                         {record ? record["ADDRESS"] : ""}
                       </td>
                       <td style={{ textAlign: "center" }}>

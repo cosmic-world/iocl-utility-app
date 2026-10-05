@@ -8,16 +8,16 @@ import {
   TextField,
   CircularProgress,
   Typography,
-  Box
+  Box,
 } from "@mui/material";
 import { Download, Edit, Save, Cancel, Delete, Add } from "@mui/icons-material";
 import { SetContractorMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value) =>
@@ -29,12 +29,8 @@ const isValidEmail = (value) =>
 
 export default function ContractorCredentials({ handleSyncContractor }) {
   const dispatch = useDispatch();
-  const {
-    locationCode,
-    selectedTerminal,
-    contractorList,
-    userType,
-  } = useSelector((state) => state.myApp);
+  const { locationCode, selectedTerminal, contractorList, userType } =
+    useSelector((state) => state.myApp);
   const [saveLoader, setSaveLoader] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -453,495 +449,516 @@ export default function ContractorCredentials({ handleSyncContractor }) {
           }}
         />
       ) : null}
-<div className="p-2 w-100">
-      <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-        >
-          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add Contractor</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-      {userType !== "Contractor" ? (
-        <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Bulk Upload of via Excel
-          </Typography>
-
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              Please use our official excel template.
+      <div className="p-2 w-100">
+        <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} />
+            <Typography
+              component="span"
+              variant="h6"
+              style={{ fontStyle: "italic", paddingTop: "2px" }}
+            >
+              Add Contractor
             </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Download />}
-              href="/template_contractor.xlsx" // Points directly to the file in your public folder
-              download="Contractor_Template.xlsx" // Forces the browser to download it instead of opening it
-            >
-              Download Excel Template
-            </Button>
-          </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {userType !== "Contractor" ? (
+              <Box
+                sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}
+              >
+                <Typography variant="h6" gutterBottom>
+                  Bulk Upload of via Excel
+                </Typography>
 
-          <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={{ mb: 1 }}
+                  >
+                    Please use our official excel template.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Download />}
+                    href="/template_contractor.xlsx" // Points directly to the file in your public folder
+                    download="Contractor_Template.xlsx" // Forces the browser to download it instead of opening it
+                  >
+                    Download Excel Template
+                  </Button>
+                </Box>
 
-          <form onSubmit={handleExcelSubmit}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleExcelChange}
-              style={{ marginBottom: "1rem" }}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              sx={{ mb: 2 }}
-              style={{ width: 150 }}
-            >
-              {loading ? "Uploading..." : "Upload"}
-            </Button>
-          </form>
-        </Box>
-      ) : null}
+                <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
 
-      <div
-        className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
-        style={{ border: "1px dashed #ccc" }}
-      >
-        <div
-          className="d-flex flex-wrap gap-20 justify-content-center align-items-center w-100 p-2"
-          style={{ gap: 20 }}
-        >
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Location Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              size="small"
-              disabled
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "1px !important", // Reducer top whitespace
-                  paddingBottom: "1px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
-          </div>
+                <form onSubmit={handleExcelSubmit}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx, .xls"
+                    onChange={handleExcelChange}
+                    style={{ marginBottom: "1rem" }}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    disabled={loading}
+                    sx={{ mb: 2 }}
+                    style={{ width: 150 }}
+                  >
+                    {loading ? "Uploading..." : "Upload"}
+                  </Button>
+                </form>
+              </Box>
+            ) : null}
 
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Contractor Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={contractorName}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) =>
-                setContractorName(
-                  e.target.value
-                    ?.replace(/\s+/g, " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-                )
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Mobile No (10-digit)</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={mobileNo}
-              type="text"
-              inputProps={{ inputMode: "numeric", maxLength: 10 }}
-              error={mobileNo && mobileNo.length !== 10}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, ""))}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350 }}>
-            <Typography>Mail ID</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              type="email"
-              value={mailID}
-              error={Boolean(mailID) && !isValidEmail(mailID)}
-              style={{ backgroundColor: "white" }}
-              onChange={(e) => {
-                setMailID(e.target.value?.toLowerCase() || "");
-                setOtpSent(false);
-                setOtpVerified(false);
-                setOtp("");
-                otpCooldown.resetCooldown();
-              }}
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                  textTransform: "lowercase",
-                },
-              }}
-            />
-          </div>
-
-          <div
-            className="break d-flex justify-content-center"
-            style={{ width: "100%" }}
-          >
             <div
-              className="d-flex flex-wrap justify-content-center align-items-center gap-2"
-              style={{ width: "100%", maxWidth: 350 }}
+              className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
+              style={{ border: "1px dashed #ccc" }}
             >
-              <TextField
-                fullWidth
-                variant="outlined"
-                value={otp}
-                size="small"
-                type="text"
-                label="Email OTP"
-                inputProps={{ maxLength: 6, inputMode: "numeric" }}
-                disabled={!otpSent || otpVerified}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                style={{ backgroundColor: "white", maxWidth: 350 }}
-                sx={{
-                  // 1. Increase font size of the placeholder/input text
-                  "& .MuiInputBase-input": {
-                    fontSize: "1rem",
-                    fontFamily: "Lucida Sans",
-                  },
-                }}
-              />
-              {otpSent ? (
-                <label
-                  style={{
-                    display: "block",
-                    color: "brown",
-                    fontWeight: "bold",
-                    fontSize: "0.9rem",
-                    fontStyle: "italic",
-                  }}
+              <div
+                className="d-flex flex-wrap gap-20 justify-content-center align-items-center w-100 p-2"
+                style={{ gap: 20 }}
+              >
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Location Name</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={locationName}
+                    style={{ backgroundColor: "white" }}
+                    size="small"
+                    disabled
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        paddingTop: "1px !important", // Reducer top whitespace
+                        paddingBottom: "1px !important", // Keeps it centered vertically
+                      },
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        backgroundColor: "white",
+                      },
+                      "& .MuiInputBase-input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                        textTransform: "none",
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Contractor Name</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={contractorName}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) =>
+                      setContractorName(
+                        e.target.value
+                          ?.replace(/\s+/g, " ")
+                          .toLowerCase()
+                          .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                      )
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Mobile No (10-digit)</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={mobileNo}
+                    type="text"
+                    inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                    error={mobileNo && mobileNo.length !== 10}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) =>
+                      setMobileNo(e.target.value.replace(/\D/g, ""))
+                    }
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                      },
+                    }}
+                  />
+                </div>
+
+                <div style={{ width: "100%", maxWidth: 350 }}>
+                  <Typography>Mail ID</Typography>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    type="email"
+                    value={mailID}
+                    error={Boolean(mailID) && !isValidEmail(mailID)}
+                    style={{ backgroundColor: "white" }}
+                    onChange={(e) => {
+                      setMailID(e.target.value?.toLowerCase() || "");
+                      setOtpSent(false);
+                      setOtpVerified(false);
+                      setOtp("");
+                      otpCooldown.resetCooldown();
+                    }}
+                    sx={{
+                      // 1. Increase font size of the placeholder/input text
+                      "& .MuiInputBase-input": {
+                        fontSize: "1rem",
+                        fontFamily: "Lucida Sans",
+                        paddingTop: "10px !important", // Reducer top whitespace
+                        paddingBottom: "10px !important", // Keeps it centered vertically
+                        textTransform: "lowercase",
+                      },
+                    }}
+                  />
+                </div>
+
+                <div
+                  className="break d-flex justify-content-center"
+                  style={{ width: "100%" }}
                 >
-                  {"If OTP is not received, check Junk/Spam folder for the OTP"}
-                </label>
-              ) : null}
+                  <div
+                    className="d-flex flex-wrap justify-content-center align-items-center gap-2"
+                    style={{ width: "100%", maxWidth: 350 }}
+                  >
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      value={otp}
+                      size="small"
+                      type="text"
+                      label="Email OTP"
+                      inputProps={{ maxLength: 6, inputMode: "numeric" }}
+                      disabled={!otpSent || otpVerified}
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, ""))
+                      }
+                      style={{ backgroundColor: "white", maxWidth: 350 }}
+                      sx={{
+                        // 1. Increase font size of the placeholder/input text
+                        "& .MuiInputBase-input": {
+                          fontSize: "1rem",
+                          fontFamily: "Lucida Sans",
+                        },
+                      }}
+                    />
+                    {otpSent ? (
+                      <label
+                        style={{
+                          display: "block",
+                          color: "brown",
+                          fontWeight: "bold",
+                          fontSize: "0.9rem",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {
+                          "If OTP is not received, check Junk/Spam folder for the OTP"
+                        }
+                      </label>
+                    ) : null}
+                    <Button
+                      variant="outlined"
+                      onClick={handleSendOtp}
+                      disabled={
+                        otpLoading || otpVerified || !otpCooldown.canResend
+                      }
+                      style={{ width: 150 }}
+                    >
+                      {!otpCooldown.canResend
+                        ? `Resend in ${otpCooldown.timeLabel}`
+                        : otpSent
+                          ? "Resend"
+                          : "Send OTP"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      onClick={handleVerifyOtp}
+                      disabled={otpLoading || !otpSent || otpVerified}
+                      style={{ width: 150 }}
+                    >
+                      {otpVerified ? "Email Verified" : "Verify OTP"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               <Button
-                variant="outlined"
-                onClick={handleSendOtp}
-                disabled={otpLoading || otpVerified || !otpCooldown.canResend}
-                style={{ width: 150 }}
+                color="primary"
+                variant="contained"
+                sx={{ m: 2 }}
+                style={{ width: 200 }}
+                disabled={submitting}
+                onClick={(e) => {
+                  handlePostData(e);
+                }}
               >
-                {!otpCooldown.canResend
-                  ? `Resend in ${otpCooldown.timeLabel}`
-                  : otpSent
-                    ? "Resend"
-                    : "Send OTP"}
-              </Button>
-              <Button
-                variant="outlined"
-                color="success"
-                onClick={handleVerifyOtp}
-                disabled={otpLoading || !otpSent || otpVerified}
-                style={{ width: 150 }}
-              >
-                {otpVerified ? "Email Verified" : "Verify OTP"}
+                {submitting ? "Submitting..." : "SUBMIT"}
               </Button>
             </div>
-          </div>
-        </div>
+          </AccordionDetails>
+        </Accordion>
 
-        <Button
-          color="primary"
-          variant="contained"
-          sx={{ m: 2 }}
-          style={{ width: 200 }}
-          disabled={submitting}
-          onClick={(e) => {
-            handlePostData(e);
-          }}
-        >
-          {submitting ? "Submitting..." : "SUBMIT"}
-        </Button>
-      </div>
-        </AccordionDetails>
-      </Accordion>
-
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        Existing Contractors for Location
-      </Typography>
-      <div className="ttes_table_view">
-        <Table bordered hover striped className="ttes_table">
-          <thead className="table-head">
-            <tr>
-              <th>CONTRACTOR NAME</th>
-              <th>MAIL ID</th>
-              <th>MOBILE NO (10-digit)</th>
-              {isSuperUser ? <th>ACTION</th> : null}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from(
-              {
-                length: contractorList.length > 0 ? contractorList.length : 7,
-              },
-              (_, i) => {
-                const record = contractorList[i];
-                const isEditing = editingContractorId === record.ID;
-                return (
-                  <tr key={record ? record.ID : i}>
-                    <td>
-                      {isEditing && record ? (
-                        <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
-                          <TextField
-                            size="small"
-                            value={editingContractor.contractorName}
-                            sx={{
-                              "& .MuiInputBase-input": {
-                                textAlign: "center",
-                                backgroundColor: "#f5f5f5",
-                              },
-                              flex: 1,
-                            }}
-                            onChange={(e) =>
-                              setEditingContractor({
-                                ...editingContractor,
-                                contractorName: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      ) : record ? (
-                        record.CONTRACTOR_NAME
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing && record ? (
-                        <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
-                          <TextField
-                            size="small"
-                            type="email"
-                            value={editingContractor.mailID}
-                            error={
-                              Boolean(editingContractor.mailID) &&
-                              !isValidEmail(editingContractor.mailID)
-                            }
-                            sx={{
-                              "& .MuiInputBase-input": {
-                                textAlign: "center",
-                                backgroundColor: "#f5f5f5",
-                                textTransform: "lowercase",
-                              },
-                              flex: 1,
-                            }}
-                            onChange={(e) => {
-                              setEditingContractor({
-                                ...editingContractor,
-                                mailID: e.target.value,
-                              });
-                              setEditOtpSent(false);
-                              setEditOtpVerified(false);
-                              setEditOtp("");
-                              editOtpCooldown.resetCooldown();
-                            }}
-                          />
-                          <div className="d-flex gap-1">
-                            {editingContractor.mailID.trim().toLowerCase() !==
-                            String(record.MAIL_ID || "")
-                              .trim()
-                              .toLowerCase() ? (
-                              <>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={handleSendEditOtp}
-                                  disabled={
-                                    editOtpLoading ||
-                                    editOtpVerified ||
-                                    !editOtpCooldown.canResend
-                                  }
-                                >
-                                  {!editOtpCooldown.canResend
-                                    ? `Resend ${editOtpCooldown.timeLabel}`
-                                    : editOtpSent
-                                      ? "Resend OTP"
-                                      : "Send OTP"}
-                                </Button>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  color="success"
-                                  onClick={handleVerifyEditOtp}
-                                  disabled={
-                                    editOtpLoading ||
-                                    !editOtpSent ||
-                                    editOtpVerified
-                                  }
-                                >
-                                  {editOtpVerified ? "Verified" : "Verify OTP"}
-                                </Button>
-                              </>
-                            ) : null}
-                          </div>
-                          {editOtpSent &&
-                          !editOtpVerified &&
-                          editingContractor.mailID.trim().toLowerCase() !==
-                            String(record.MAIL_ID || "")
-                              .trim()
-                              .toLowerCase() ? (
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Existing Contractors for Location
+        </Typography>
+        <div className="ttes_table_view">
+          <Table bordered hover striped className="ttes_table">
+            <thead className="table-head">
+              <tr>
+                <th>CONTRACTOR NAME</th>
+                <th>MAIL ID</th>
+                <th>MOBILE NO (10-digit)</th>
+                {isSuperUser ? <th>ACTION</th> : null}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from(
+                {
+                  length: contractorList.length > 0 ? contractorList.length : 7,
+                },
+                (_, i) => {
+                  const record = contractorList[i];
+                  const isEditing = editingContractorId === record.ID;
+                  return (
+                    <tr key={record ? record.ID : i}>
+                      <td>
+                        {isEditing && record ? (
+                          <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
                             <TextField
                               size="small"
-                              label="Email OTP"
-                              value={editOtp}
-                              inputProps={{
-                                maxLength: 6,
-                                inputMode: "numeric",
-                              }}
-                              onChange={(e) =>
-                                setEditOtp(e.target.value.replace(/\D/g, ""))
-                              }
+                              value={editingContractor.contractorName}
                               sx={{
                                 "& .MuiInputBase-input": {
                                   textAlign: "center",
                                   backgroundColor: "#f5f5f5",
                                 },
+                                flex: 1,
                               }}
-                            />
-                          ) : null}
-                        </div>
-                      ) : record ? (
-                        record.MAIL_ID
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td>
-                      {isEditing && record ? (
-                        <TextField
-                          size="small"
-                          value={editingContractor.mobileNo}
-                          error={
-                            editingContractor.mobileNo &&
-                            editingContractor.mobileNo.length !== 10
-                          }
-                          inputProps={{ maxLength: 10, inputMode: "numeric" }}
-                          sx={{
-                            "& .MuiInputBase-input": {
-                              textAlign: "center",
-                              backgroundColor: "#f5f5f5",
-                            },
-                          }}
-                          onChange={(e) =>
-                            setEditingContractor({
-                              ...editingContractor,
-                              mobileNo: e.target.value.replace(/\D/g, ""),
-                            })
-                          }
-                        />
-                      ) : record ? (
-                        record.MOBILE_NO
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    {isSuperUser && record ? (
-                      <td>
-                        {isEditing ? (
-                          <>
-                            <Button
-                              startIcon={<Save />}
-                              onClick={() => handleSaveContractor(record)}
-                              disabled={
-                                saveLoader ||
-                                (editingContractor.mailID
-                                  .trim()
-                                  .toLowerCase() !==
-                                  String(record.MAIL_ID || "")
-                                    .trim()
-                                    .toLowerCase() &&
-                                  !editOtpVerified)
+                              onChange={(e) =>
+                                setEditingContractor({
+                                  ...editingContractor,
+                                  contractorName: e.target.value,
+                                })
                               }
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              startIcon={<Cancel />}
-                              onClick={() => {
-                                setEditingContractorId(null);
-                                setEditingContractor(null);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </>
+                            />
+                          </div>
+                        ) : record ? (
+                          record.CONTRACTOR_NAME
                         ) : (
-                          <>
-                            <Button
-                              startIcon={<Edit />}
-                              onClick={() => handleEditContractor(record)}
-                              disabled={saveLoader}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              color="error"
-                              startIcon={<Delete />}
-                              onClick={() => handleDeleteContractor(record)}
-                              disabled={saveLoader}
-                            >
-                              Delete
-                            </Button>
-                          </>
+                          ""
                         )}
                       </td>
-                    ) : null}
-                  </tr>
-                );
-              },
-            )}
-          </tbody>
-        </Table>
+                      <td>
+                        {isEditing && record ? (
+                          <div className="d-flex flex-wrap justify-content-center align-items-center gap-1">
+                            <TextField
+                              size="small"
+                              type="email"
+                              value={editingContractor.mailID}
+                              error={
+                                Boolean(editingContractor.mailID) &&
+                                !isValidEmail(editingContractor.mailID)
+                              }
+                              sx={{
+                                "& .MuiInputBase-input": {
+                                  textAlign: "center",
+                                  backgroundColor: "#f5f5f5",
+                                  textTransform: "lowercase",
+                                },
+                                flex: 1,
+                              }}
+                              onChange={(e) => {
+                                setEditingContractor({
+                                  ...editingContractor,
+                                  mailID: e.target.value,
+                                });
+                                setEditOtpSent(false);
+                                setEditOtpVerified(false);
+                                setEditOtp("");
+                                editOtpCooldown.resetCooldown();
+                              }}
+                            />
+                            <div className="d-flex gap-1">
+                              {editingContractor.mailID.trim().toLowerCase() !==
+                              String(record.MAIL_ID || "")
+                                .trim()
+                                .toLowerCase() ? (
+                                <>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={handleSendEditOtp}
+                                    disabled={
+                                      editOtpLoading ||
+                                      editOtpVerified ||
+                                      !editOtpCooldown.canResend
+                                    }
+                                  >
+                                    {!editOtpCooldown.canResend
+                                      ? `Resend ${editOtpCooldown.timeLabel}`
+                                      : editOtpSent
+                                        ? "Resend OTP"
+                                        : "Send OTP"}
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="success"
+                                    onClick={handleVerifyEditOtp}
+                                    disabled={
+                                      editOtpLoading ||
+                                      !editOtpSent ||
+                                      editOtpVerified
+                                    }
+                                  >
+                                    {editOtpVerified
+                                      ? "Verified"
+                                      : "Verify OTP"}
+                                  </Button>
+                                </>
+                              ) : null}
+                            </div>
+                            {editOtpSent &&
+                            !editOtpVerified &&
+                            editingContractor.mailID.trim().toLowerCase() !==
+                              String(record.MAIL_ID || "")
+                                .trim()
+                                .toLowerCase() ? (
+                              <TextField
+                                size="small"
+                                label="Email OTP"
+                                value={editOtp}
+                                inputProps={{
+                                  maxLength: 6,
+                                  inputMode: "numeric",
+                                }}
+                                onChange={(e) =>
+                                  setEditOtp(e.target.value.replace(/\D/g, ""))
+                                }
+                                sx={{
+                                  "& .MuiInputBase-input": {
+                                    textAlign: "center",
+                                    backgroundColor: "#f5f5f5",
+                                  },
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                        ) : record ? (
+                          record.MAIL_ID
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      <td>
+                        {isEditing && record ? (
+                          <TextField
+                            size="small"
+                            value={editingContractor.mobileNo}
+                            error={
+                              editingContractor.mobileNo &&
+                              editingContractor.mobileNo.length !== 10
+                            }
+                            inputProps={{ maxLength: 10, inputMode: "numeric" }}
+                            sx={{
+                              "& .MuiInputBase-input": {
+                                textAlign: "center",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                            onChange={(e) =>
+                              setEditingContractor({
+                                ...editingContractor,
+                                mobileNo: e.target.value.replace(/\D/g, ""),
+                              })
+                            }
+                          />
+                        ) : record ? (
+                          record.MOBILE_NO
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      {isSuperUser && record ? (
+                        <td>
+                          {isEditing ? (
+                            <>
+                              <Button
+                                startIcon={<Save />}
+                                onClick={() => handleSaveContractor(record)}
+                                disabled={
+                                  saveLoader ||
+                                  (editingContractor.mailID
+                                    .trim()
+                                    .toLowerCase() !==
+                                    String(record.MAIL_ID || "")
+                                      .trim()
+                                      .toLowerCase() &&
+                                    !editOtpVerified)
+                                }
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                startIcon={<Cancel />}
+                                onClick={() => {
+                                  setEditingContractorId(null);
+                                  setEditingContractor(null);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                startIcon={<Edit />}
+                                onClick={() => handleEditContractor(record)}
+                                disabled={saveLoader}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                color="error"
+                                startIcon={<Delete />}
+                                onClick={() => handleDeleteContractor(record)}
+                                disabled={saveLoader}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      ) : null}
+                    </tr>
+                  );
+                },
+              )}
+            </tbody>
+          </Table>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
