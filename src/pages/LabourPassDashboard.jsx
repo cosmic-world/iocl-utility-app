@@ -10,6 +10,11 @@ import {
   Autocomplete,
   Typography,
   Checkbox,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Box
 } from "@mui/material";
 import { DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -49,7 +54,7 @@ export default function LabourPassDashboard() {
   const [seaching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitting_1, setSubmitting_1] = useState(false);
-
+  const [formType, setFormType] = useState("Multi");
   useEffect(() => {
     fetchLabourEntryRecords();
   }, []);
@@ -375,585 +380,18 @@ export default function LabourPassDashboard() {
               : contractor.toLowerCase()),
         )
       : [];
-
-  return (
-    <div
-      className={
-        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
-      }
-    >
-      <NavbarWorkerEntry />
-      <div
-        className="d-flex flex-column justify-content-center align-items-center"
-        style={{ border: "1px solid black", width: "100%" }}
-      >
-        <Typography
-          variant="h4"
-          className="w-75 d-flex justify-content-center align-items-center"
-          style={{ borderBottom: "1px dashed black" }}
-        >
-          Single Worker Pass Request
-        </Typography>
-        <Typography
-          variant="h7"
-          className="w-75 d-flex justify-content-center align-items-center"
-          style={{ borderBottom: "1px dashed black" }}
-        >
-          If the Worker is new and expected to come regularly, please add in the
-          Contractor Master Data for ease of apply.
-        </Typography>
-        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
-          {saveLoader ? (
-            <CircularProgress
-              color="success"
-              sx={{
-                position: "fixed",
-                zIndex: 2000,
-                transform: "translate(-50%, -50%)",
-                left: "45%",
-                top: "40%",
-                zoom: 3,
-              }}
-            />
-          ) : null}
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Location Name</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              value={locationName}
-              style={{ backgroundColor: "white" }}
-              size="small"
-              disabled
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "1px !important", // Reducer top whitespace
-                  paddingBottom: "1px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Contractor Name</Typography>
-            <Autocomplete
-              className="w-100"
-              options={
-                contractorList.length > 0
-                  ? [
-                      ...new Set(
-                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
-                      ),
-                    ]
-                  : []
-              }
-              name="contractor"
-              value={
-                userType === "Contractor"
-                  ? userName
-                  : contractor !== ""
-                    ? contractor
-                    : null
-              }
-              disabled={userType === "Contractor"}
-              freeSolo
-              isOptionEqualToValue={(option, value) =>
-                String(option).toLowerCase() === String(value).toLowerCase()
-              }
-              onInputChange={(event, newValue, reason) => {
-                newValue !== null
-                  ? setContractor(
-                      newValue
-                        ?.replace(/\s+/g, " ")
-                        .toLowerCase()
-                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-                    )
-                  : setContractor("");
-              }}
-              onChange={(e, newValue) =>
-                newValue !== null ? setContractor(newValue) : setContractor("")
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder={"Select Contractor from Dropdown"}
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Worker Name</Typography>
-            <Autocomplete
-              name="labourName"
-              className="w-100"
-              value={labourName !== "" ? labourName : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onInputChange={(event, newValue, reason) => {
-                newValue !== null
-                  ? setLabourName(
-                      newValue
-                        ?.replace(/\s+/g, " ")
-                        .toLowerCase()
-                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
-                    )
-                  : setLabourName("");
-              }}
-              onChange={(event, newValue) => {
-                newValue !== null ? setLabourName(newValue) : setLabourName("");
-              }}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
-              disabled={contractor == ""}
-              options={
-                selected_labour_masterList.length > 0
-                  ? [
-                      ...new Set(
-                        selected_labour_masterList.map(
-                          (item) => item["LABOUR_NAME"],
-                        ),
-                      ),
-                    ]
-                  : []
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder={
-                    contractor == ""
-                      ? "Select Contractor First"
-                      : "Select From Dropdown or Type For New..."
-                  }
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Mobile No (10-digit)</Typography>
-            <Autocomplete
-              name="Mobile No"
-              className="w-100"
-              value={mobileNo !== "" ? mobileNo : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onInputChange={(event, newValue) => {
-                newValue !== null
-                  ? setMobileNo(newValue.replace(/\D/g, ""))
-                  : setMobileNo("");
-              }}
-              onChange={(event, newValue) => {
-                newValue !== null
-                  ? setMobileNo(newValue.replace(/\D/g, ""))
-                  : setMobileNo("");
-              }}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
-              disabled={labourName == ""}
-              options={
-                labour_masterList.length > 0
-                  ? [
-                      ...new Set(
-                        labour_masterList
-                          .filter(
-                            (ele) =>
-                              ele.LABOUR_NAME == labourName && ele.MOBILE_NO,
-                          )
-                          .map((item) => item["MOBILE_NO"]),
-                      ),
-                    ]
-                  : []
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  type="text"
-                  inputProps={{
-                    ...params.inputProps,
-                    inputMode: "numeric",
-                    maxLength: 10,
-                  }}
-                  placeholder={
-                    labourName == ""
-                      ? "Select Worker Name First"
-                      : "Select From Dropdown or Type For New..."
-                  }
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Aadhaar No / ID Proof No</Typography>
-            <Autocomplete
-              name="Aadhaar No"
-              className="w-100"
-              value={aadhaarNo !== "" ? aadhaarNo : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onInputChange={(event, newValue) => {
-                newValue !== null
-                  ? setAadhaarNo(newValue.toLocaleUpperCase())
-                  : setAadhaarNo("");
-              }}
-              onChange={(event, newValue) => {
-                newValue !== null ? setAadhaarNo(newValue) : setAadhaarNo("");
-              }}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
-              disabled={labourName == ""}
-              options={
-                labour_masterList.length > 0
-                  ? [
-                      ...new Set(
-                        labour_masterList
-                          .filter(
-                            (ele) =>
-                              ele.LABOUR_NAME == labourName && ele.AADHAAR_NO,
-                          )
-                          .map((item) => item["AADHAAR_NO"]),
-                      ),
-                    ]
-                  : []
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder={
-                    labourName == ""
-                      ? "Select Worker Name First"
-                      : "Select From Dropdown or Type For New..."
-                  }
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Address</Typography>
-            <Autocomplete
-              name="address"
-              className="w-100"
-              value={address !== "" ? address : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onInputChange={(event, newValue) => {
-                newValue !== null ? setAddress(newValue) : setAddress("");
-              }}
-              onChange={(event, newValue) => {
-                newValue !== null ? setAddress(newValue) : setAddress("");
-              }}
-              selectOnFocus
-              clearOnBlur
-              handleHomeEndKeys
-              freeSolo
-              disabled={labourName == ""}
-              options={
-                labour_masterList.length > 0
-                  ? [
-                      ...new Set(
-                        labour_masterList
-                          .filter(
-                            (ele) =>
-                              ele.LABOUR_NAME == labourName && ele.ADDRESS,
-                          )
-                          .map((item) => item["ADDRESS"]),
-                      ),
-                    ]
-                  : []
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  multiline
-                  placeholder={
-                    labourName == ""
-                      ? "Select Worker Name First"
-                      : "Select From Dropdown or Type For New..."
-                  }
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& .MuiInputBase-input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Purpose</Typography>
-            <TextField
-              fullWidth
-              variant="outlined"
-              multiline
-              value={purpose}
-              style={{ backgroundColor: "white" }}
-              placeholder={"Type Purpose..."}
-              onChange={(e) => setPurpose(e.target.value ? e.target.value : "")}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "10px !important", // Reducer top whitespace
-                  paddingBottom: "10px !important", // Keeps it centered vertically
-                },
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                  fontFamily: "Lucida Sans",
-                  backgroundColor: "white",
-                },
-                "& .MuiInputBase-input::placeholder": {
-                  fontFamily: "Lucida Sans",
-                  fontSize: "0.8rem", // Optional: adjust placeholder size
-                  fontStyle: "italic", // Optional: make placeholder italicized
-                  textTransform: "none",
-                },
-              }}
-            />
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Time In</Typography>
-            <div style={{ backgroundColor: "white" }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoItem>
-                  <TimePicker
-                    value={timeIn ? dayjs(timeIn, "HH:mm:ss") : null}
-                    format="HH:mm:ss"
-                    onChange={(newValue) => {
-                      if (newValue) {
-                        setTimeIn(newValue.format("HH:mm:ss"));
-                      } else {
-                        setTimeIn("");
-                      }
-                    }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        sx: {
-                          "& .MuiInputBase-input": {
-                            fontSize: "1rem",
-                            paddingTop: "10px !important", // Reduces extra top whitespace
-                            paddingBottom: "10px !important", // Keeps it centered vertically
-                            fontFamily: "Lucida Sans",
-                            color: "black",
-                          },
-                          "& input::placeholder": {
-                            fontFamily: "Lucida Sans",
-                            fontSize: "0.8rem", // Optional: adjust placeholder size
-                            fontStyle: "italic", // Optional: make placeholder italicized
-                          },
-                        },
-                      },
-                    }}
-                  />
-                </DemoItem>
-              </LocalizationProvider>
-            </div>
-          </div>
-
-          <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-            <Typography>Approving Officer</Typography>
-            <Autocomplete
-              className="w-100"
-              options={FinalOfficerList}
-              name="Location Code"
-              value={approvingOfficer !== "" ? approvingOfficer : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onChange={(e, newValue) =>
-                newValue !== null
-                  ? setApprovingOfficer(newValue)
-                  : setApprovingOfficer("")
-              }
-              sx={{
-                // 1. Increase font size of the placeholder/input text
-                "& .MuiInputBase-input": {
-                  fontSize: "1rem",
-                },
-                "& .MuiOutlinedInput-root": {
-                  paddingTop: "2px !important", // Reducer top whitespace
-                  paddingBottom: "2px !important", // Keeps it centered vertically
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Select Location Code"
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      backgroundColor: "white",
-                    },
-                    sx: {
-                      "& input::placeholder": {
-                        fontFamily: "Lucida Sans",
-                        fontSize: "0.8rem", // Optional: adjust placeholder size
-                        fontStyle: "italic", // Optional: make placeholder italicized
-                      },
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-        </div>
-        <div
-          className="d-flex flex-sm-row justify-content-center align-items-center position-relative pt-0"
-          style={{ borderTop: "1px dashed", width: "90%" }}
-        >
-          <Button
-            color="primary"
-            variant="contained"
-            sx={{ m: 1 }}
-            style={{ width: 200 }}
-            disabled={submitting}
-            onClick={handleSubmit}
-          >
-            {submitting ? "Submitting..." : "SUBMIT"}
-          </Button>
-        </div>
-      </div>
-
-      <Typography
-        variant="h4"
-        className="w-75 d-flex justify-content-center align-items-center mt-3"
-        style={{ borderBottom: "1px dashed black" }}
+  const MultiForm = <div className="d-flex flex-column justify-content-center align-items-center w-100" style={{ borderTop: "1px solid black", }}>
+          <Typography
+        // variant="h4"
+        className="px-2 px-lg-0 text-center"
+        sx={{ fontSize: { xs: '24px', lg: '32px' } }}
+        style={{ borderBottom: "1px dashed black", width: "90%" }}
       >
         Multiple Worker Pass Request
       </Typography>
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+       <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
           <Typography>Location Name</Typography>
           <TextField
             fullWidth
@@ -981,9 +419,9 @@ export default function LabourPassDashboard() {
               },
             }}
           />
-        </div>
+        </Box>
 
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
           <Typography>Contractor</Typography>
           <Autocomplete
             name="Search Contractor"
@@ -1049,13 +487,13 @@ export default function LabourPassDashboard() {
               />
             )}
           />
-        </div>
+        </Box>
 
         <Button
           color="primary"
           variant="contained"
-          sx={{ m: 2, mt: 4 }}
-          style={{ width: 200 }}
+          sx={{ m: 2 , mt: {xs: 0,lg: 5}}}
+          style={{ width: 220 }}
           disabled={seaching}
           onClick={(e) => {
             if (searchContractor !== "" || userType === "Contractor") {
@@ -1072,8 +510,8 @@ export default function LabourPassDashboard() {
         <Button
           color="primary"
           variant="outlined"
-          sx={{ m: 2, mt: 4 }}
-          style={{ width: 200, backgroundColor: "white" }}
+          sx={{ m: 2 , mt: {xs: 0,lg: 5}}}
+          style={{ width: 220, backgroundColor: "white" }}
           onClick={(e) => {
             setRecords([]);
             setSearchContractor("");
@@ -1085,7 +523,7 @@ export default function LabourPassDashboard() {
       </div>
 
       <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-0">
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
           <Typography>Purpose of Request</Typography>
           <TextField
             fullWidth
@@ -1116,8 +554,9 @@ export default function LabourPassDashboard() {
               },
             }}
           />
-        </div>
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        </Box>
+        
+        <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
           <Typography>Time In</Typography>
           <div style={{ backgroundColor: "white" }}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -1155,8 +594,9 @@ export default function LabourPassDashboard() {
               </DemoItem>
             </LocalizationProvider>
           </div>
-        </div>
-        <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+        </Box>
+
+        <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
           <Typography>Approving Officer</Typography>
           <Autocomplete
             className="w-100"
@@ -1204,13 +644,13 @@ export default function LabourPassDashboard() {
               />
             )}
           />
-        </div>
+        </Box>
 
         <Button
           color="success"
           variant="contained"
-          sx={{ m: 2, mt: 4 }}
-          style={{ width: 200 }}
+          sx={{ m: 2 , mt: {xs: 0,lg: 5}}}
+          style={{ width: 220 }}
           disabled={submitting_1 || selectedLabourIds.length === 0}
           onClick={submitSelectedLabours}
         >
@@ -1219,7 +659,7 @@ export default function LabourPassDashboard() {
         <Button
           color="warning"
           variant="outlined"
-          sx={{ m: 2, mt: 4 }}
+          sx={{ m: 2 , mt: {xs: 0,lg: 5}}}
           style={{ width: 220, backgroundColor: "white" }}
           disabled={saveLoader || !selectedForwardLabourIds.length}
           onClick={forwardSelectedRequest}
@@ -1384,6 +824,607 @@ export default function LabourPassDashboard() {
           </tbody>
         </Table>
       </div>
+  </div>;
+  
+  const SingleForm = (
+          <div className="d-flex flex-column justify-content-center align-items-center w-100">
+        <Typography
+          className="px-2 px-lg-0 text-center"
+          sx={{ fontSize: { xs: '24px', lg: '32px' } }}
+          style={{ borderBottom: "1px dashed black", width: "90%" }}
+        >
+          Single Worker Pass Request
+        </Typography>
+        <Typography
+          variant="h7"
+          className="px-2 px-lg-0 text-center"
+          style={{ borderBottom: "1px dashed black", width: "90%" }}
+        >
+          If the Worker is new and expected to come regularly, please add in the
+          Contractor Master Data for ease of apply.
+        </Typography>
+        <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
+          {saveLoader ? (
+            <CircularProgress
+              color="success"
+              sx={{
+                position: "fixed",
+                zIndex: 2000,
+                transform: "translate(-50%, -50%)",
+                left: "45%",
+                top: "40%",
+                zoom: 3,
+              }}
+            />
+          ) : null}
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Location Name</Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              value={locationName}
+              style={{ backgroundColor: "white" }}
+              size="small"
+              disabled
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "1px !important", // Reducer top whitespace
+                  paddingBottom: "1px !important", // Keeps it centered vertically
+                },
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  backgroundColor: "white",
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
+                },
+              }}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Contractor Name</Typography>
+            <Autocomplete
+              className="w-100"
+              options={
+                contractorList.length > 0
+                  ? [
+                      ...new Set(
+                        contractorList.map((item) => item["CONTRACTOR_NAME"]),
+                      ),
+                    ]
+                  : []
+              }
+              name="contractor"
+              value={
+                userType === "Contractor"
+                  ? userName
+                  : contractor !== ""
+                    ? contractor
+                    : null
+              }
+              disabled={userType === "Contractor"}
+              freeSolo
+              isOptionEqualToValue={(option, value) =>
+                String(option).toLowerCase() === String(value).toLowerCase()
+              }
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setContractor(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
+                  : setContractor("");
+              }}
+              onChange={(e, newValue) =>
+                newValue !== null ? setContractor(newValue) : setContractor("")
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={"Select Contractor from Dropdown"}
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Worker Name</Typography>
+            <Autocomplete
+              name="labourName"
+              className="w-100"
+              value={labourName !== "" ? labourName : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onInputChange={(event, newValue, reason) => {
+                newValue !== null
+                  ? setLabourName(
+                      newValue
+                        ?.replace(/\s+/g, " ")
+                        .toLowerCase()
+                        .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    )
+                  : setLabourName("");
+              }}
+              onChange={(event, newValue) => {
+                newValue !== null ? setLabourName(newValue) : setLabourName("");
+              }}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              freeSolo
+              disabled={contractor == ""}
+              options={
+                selected_labour_masterList.length > 0
+                  ? [
+                      ...new Set(
+                        selected_labour_masterList.map(
+                          (item) => item["LABOUR_NAME"],
+                        ),
+                      ),
+                    ]
+                  : []
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={
+                    contractor == ""
+                      ? "Select Contractor First"
+                      : "Select From Dropdown or Type For New..."
+                  }
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Mobile No (10-digit)</Typography>
+            <Autocomplete
+              name="Mobile No"
+              className="w-100"
+              value={mobileNo !== "" ? mobileNo : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onInputChange={(event, newValue) => {
+                newValue !== null
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
+                  : setMobileNo("");
+              }}
+              onChange={(event, newValue) => {
+                newValue !== null
+                  ? setMobileNo(newValue.replace(/\D/g, ""))
+                  : setMobileNo("");
+              }}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              freeSolo
+              disabled={labourName == ""}
+              options={
+                labour_masterList.length > 0
+                  ? [
+                      ...new Set(
+                        labour_masterList
+                          .filter(
+                            (ele) =>
+                              ele.LABOUR_NAME == labourName && ele.MOBILE_NO,
+                          )
+                          .map((item) => item["MOBILE_NO"]),
+                      ),
+                    ]
+                  : []
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  type="text"
+                  inputProps={{
+                    ...params.inputProps,
+                    inputMode: "numeric",
+                    maxLength: 10,
+                  }}
+                  placeholder={
+                    labourName == ""
+                      ? "Select Worker Name First"
+                      : "Select From Dropdown or Type For New..."
+                  }
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Aadhaar No / ID Proof No</Typography>
+            <Autocomplete
+              name="Aadhaar No"
+              className="w-100"
+              value={aadhaarNo !== "" ? aadhaarNo : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onInputChange={(event, newValue) => {
+                newValue !== null
+                  ? setAadhaarNo(newValue.toLocaleUpperCase())
+                  : setAadhaarNo("");
+              }}
+              onChange={(event, newValue) => {
+                newValue !== null ? setAadhaarNo(newValue) : setAadhaarNo("");
+              }}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              freeSolo
+              disabled={labourName == ""}
+              options={
+                labour_masterList.length > 0
+                  ? [
+                      ...new Set(
+                        labour_masterList
+                          .filter(
+                            (ele) =>
+                              ele.LABOUR_NAME == labourName && ele.AADHAAR_NO,
+                          )
+                          .map((item) => item["AADHAAR_NO"]),
+                      ),
+                    ]
+                  : []
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={
+                    labourName == ""
+                      ? "Select Worker Name First"
+                      : "Select From Dropdown or Type For New..."
+                  }
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Address</Typography>
+            <Autocomplete
+              name="address"
+              className="w-100"
+              value={address !== "" ? address : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onInputChange={(event, newValue) => {
+                newValue !== null ? setAddress(newValue) : setAddress("");
+              }}
+              onChange={(event, newValue) => {
+                newValue !== null ? setAddress(newValue) : setAddress("");
+              }}
+              selectOnFocus
+              clearOnBlur
+              handleHomeEndKeys
+              freeSolo
+              disabled={labourName == ""}
+              options={
+                labour_masterList.length > 0
+                  ? [
+                      ...new Set(
+                        labour_masterList
+                          .filter(
+                            (ele) =>
+                              ele.LABOUR_NAME == labourName && ele.ADDRESS,
+                          )
+                          .map((item) => item["ADDRESS"]),
+                      ),
+                    ]
+                  : []
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  multiline
+                  placeholder={
+                    labourName == ""
+                      ? "Select Worker Name First"
+                      : "Select From Dropdown or Type For New..."
+                  }
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& .MuiInputBase-input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Purpose</Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              multiline
+              value={purpose}
+              style={{ backgroundColor: "white" }}
+              placeholder={"Type Purpose..."}
+              onChange={(e) => setPurpose(e.target.value ? e.target.value : "")}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "10px !important", // Reducer top whitespace
+                  paddingBottom: "10px !important", // Keeps it centered vertically
+                },
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                  fontFamily: "Lucida Sans",
+                  backgroundColor: "white",
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  fontFamily: "Lucida Sans",
+                  fontSize: "0.8rem", // Optional: adjust placeholder size
+                  fontStyle: "italic", // Optional: make placeholder italicized
+                  textTransform: "none",
+                },
+              }}
+            />
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Time In</Typography>
+            <div style={{ backgroundColor: "white" }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DemoItem>
+                  <TimePicker
+                    value={timeIn ? dayjs(timeIn, "HH:mm:ss") : null}
+                    format="HH:mm:ss"
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setTimeIn(newValue.format("HH:mm:ss"));
+                      } else {
+                        setTimeIn("");
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        sx: {
+                          "& .MuiInputBase-input": {
+                            fontSize: "1rem",
+                            paddingTop: "10px !important", // Reduces extra top whitespace
+                            paddingBottom: "10px !important", // Keeps it centered vertically
+                            fontFamily: "Lucida Sans",
+                            color: "black",
+                          },
+                          "& input::placeholder": {
+                            fontFamily: "Lucida Sans",
+                            fontSize: "0.8rem", // Optional: adjust placeholder size
+                            fontStyle: "italic", // Optional: make placeholder italicized
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </DemoItem>
+              </LocalizationProvider>
+            </div>
+          </Box>
+
+          <Box sx={{maxWidth: {xs: '100%',lg: '350px'},width: '100%', margin:1}}>
+            <Typography>Approving Officer</Typography>
+            <Autocomplete
+              className="w-100"
+              options={FinalOfficerList}
+              name="Location Code"
+              value={approvingOfficer !== "" ? approvingOfficer : null}
+              isOptionEqualToValue={(option, value) => option === value}
+              onChange={(e, newValue) =>
+                newValue !== null
+                  ? setApprovingOfficer(newValue)
+                  : setApprovingOfficer("")
+              }
+              sx={{
+                // 1. Increase font size of the placeholder/input text
+                "& .MuiInputBase-input": {
+                  fontSize: "1rem",
+                },
+                "& .MuiOutlinedInput-root": {
+                  paddingTop: "2px !important", // Reducer top whitespace
+                  paddingBottom: "2px !important", // Keeps it centered vertically
+                },
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Select Location Code"
+                  InputProps={{
+                    ...params.InputProps,
+                    style: {
+                      fontFamily: "Lucida Sans",
+                      backgroundColor: "white",
+                    },
+                    sx: {
+                      "& input::placeholder": {
+                        fontFamily: "Lucida Sans",
+                        fontSize: "0.8rem", // Optional: adjust placeholder size
+                        fontStyle: "italic", // Optional: make placeholder italicized
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
+        </div>
+        <div
+          className="d-flex flex-sm-row justify-content-center align-items-center position-relative pt-0"
+          style={{ borderTop: "1px dashed", width: "90%" }}
+        >
+          <Button
+            color="primary"
+            variant="contained"
+            sx={{ m: 1 }}
+            style={{ width: 200 }}
+            disabled={submitting}
+            onClick={handleSubmit}
+          >
+            {submitting ? "Submitting..." : "SUBMIT"}
+          </Button>
+        </div>
+      </div>
+  );
+  
+  return (
+    <div
+      className={
+        "d-flex flex-column justify-content-start align-items-center w-100 h-100"
+      }
+    >
+      <NavbarWorkerEntry />
+
+      <FormControl className="d-xxl-none d-flex align-items-center justify-content-center w-100" 
+      sx={{ borderBottom: formType === "Single" ? "1px solid black" : "none" }} disabled={locationName == ""}>
+            <RadioGroup
+              row
+              value={formType}
+              onChange={(event) => {
+                setFormType(event.target.value);
+              }}
+            >
+              <FormControlLabel
+                value="Single"
+                control={<Radio />}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                label="Single Worker Pass Request"
+              />
+              <FormControlLabel
+                value="Multi"
+                control={<Radio />}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                label="Multiple Worker Pass Request"
+              />
+            </RadioGroup>
+          </FormControl>
+      {formType=='Single' && (
+        <div className="d-xxl-none d-block w-100">{SingleForm}</div>
+      )}
+      <div className="d-xxl-block d-none w-100">{SingleForm}</div>
+      {formType=='Multi' && (
+        <div className="d-xxl-none d-block w-100">{MultiForm}</div>
+      )}
+      <div className="d-xxl-block d-none w-100">{MultiForm}</div>
     </div>
   );
 }
