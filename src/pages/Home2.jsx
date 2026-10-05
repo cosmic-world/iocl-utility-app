@@ -15,11 +15,10 @@ import {
   SetOfficerMasterList,
 } from "../action/userSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { apiUrl } from "../api";
 
 export default function contacts() {
   const dispatch = useDispatch();
-  const { selectedApplication } = useSelector((state) => state.myApp);
+  const { selectedApplication, userType } = useSelector((state) => state.myApp);
   const [selectedCard, setSelectedCard] = useState("");
 
   const handleSubmit = (e) => {
