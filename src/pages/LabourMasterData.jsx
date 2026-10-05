@@ -9,11 +9,15 @@ import {
   CircularProgress,
   Autocomplete,
   Typography,
-  Box,
+  Box
 } from "@mui/material";
-import { Download, Edit, Save, Cancel, Delete } from "@mui/icons-material";
+import { Download, Edit, Save, Cancel, Delete, Add } from "@mui/icons-material";
 import { SetLabourMasterList } from "../action/userSlice";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function LabourMasterData({ handleSync }) {
   const dispatch = useDispatch();
@@ -297,8 +301,15 @@ export default function LabourMasterData({ handleSync }) {
           }}
         />
       ) : null}
-
-      <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
+      <div className="p-2 w-100">
+      <Accordion sx={{ width: "100%", backgroundColor: "transparent"}}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+        >
+          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add Worker</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+                <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
           Bulk Upload of via Excel
         </Typography>
@@ -538,6 +549,8 @@ export default function LabourMasterData({ handleSync }) {
           {submitting ? "Submitting..." : "SUBMIT"}
         </Button>
       </div>
+        </AccordionDetails>
+      </Accordion>
 
       <Typography variant="h6" sx={{ mt: 2 }}>
         Workers for Selected Contractor
@@ -751,5 +764,6 @@ export default function LabourMasterData({ handleSync }) {
         </Table>
       </div>
     </div>
+  </div>
   );
 }

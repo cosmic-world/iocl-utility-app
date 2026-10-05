@@ -53,40 +53,39 @@ export default function LabourPassDashboard() {
   useEffect(() => {
     fetchLabourEntryRecords();
   }, []);
-
+  const location_officerList = officerList.filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE));
   const checkIfOfficerListHasDuplicates =
-    officerList.length !=
-    [...new Set(officerList.map((item) => item["OFFICER_NAME"]))].length;
+    location_officerList.length !=
+    [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))].length;
 
   const FinalOfficerList = checkIfOfficerListHasDuplicates
     ? [
         ...new Set(
-          officerList
-            .filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE))
-            .map((item) => `${item["OFFICER_NAME"]} - ${item["MAIL_ID"]}`),
+          location_officerList
+            .map((item) => `${item["OFFICER_NAME"]}(${item["Emp_ID"]})`),
         ),
       ]
     : [
         ...new Set(
-          officerList
-            .filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE))
+          location_officerList
             .map((item) => item["OFFICER_NAME"]),
         ),
       ];
-
+  const designation = location_officerList.filter(val => checkIfOfficerListHasDuplicates? 
+    val["OFFICER_NAME"] === approvingOfficer.split("(")[0].trim() : val["OFFICER_NAME"].toLowerCase() === approvingOfficer.toLowerCase()).map(val => val["DESIGNATION"]);
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 
   const officerName =
     approvingOfficer !== ""
       ? checkIfOfficerListHasDuplicates
-        ? approvingOfficer.split("-")[0].trim()
+        ? approvingOfficer.split("(")[0].trim()
         : approvingOfficer
       : "";
   const mailID =
     approvingOfficer !== ""
       ? checkIfOfficerListHasDuplicates
-        ? approvingOfficer.split("-")[1].trim()
+        ? officerList.find((item) => item.OFFICER_NAME === approvingOfficer.split("(")[0].trim())?.MAIL_ID || ""
         : officerList.find((item) => item.OFFICER_NAME === approvingOfficer)
             ?.MAIL_ID || ""
       : "";
@@ -94,13 +93,13 @@ export default function LabourPassDashboard() {
   const selectedOfficerName =
     approvingOfficer_1 !== ""
       ? checkIfOfficerListHasDuplicates
-        ? approvingOfficer_1.split("-")[0].trim()
+        ? approvingOfficer_1.split("(")[0].trim()
         : approvingOfficer_1
       : "";
   const selectedOfficerMail =
     approvingOfficer_1 !== ""
       ? checkIfOfficerListHasDuplicates
-        ? approvingOfficer_1.split("-").slice(1).join("-").trim()
+        ? officerList.find((item) => item.OFFICER_NAME === approvingOfficer_1.split("(")[0].trim())?.MAIL_ID || ""
         : officerList.find((item) => item.OFFICER_NAME === approvingOfficer_1)
             ?.MAIL_ID || ""
       : "";

@@ -17,9 +17,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
 
 export default function LabourApprovalHistory() {
-  const { userType, locationCode, contractorList, navBarComponent } =
-    useSelector((state) => state.myApp);
-  const dispatch = useDispatch();
+  const { locationCode, contractorList, officerList } = useSelector((state) => state.myApp);
   const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;
@@ -28,6 +26,11 @@ export default function LabourApprovalHistory() {
   const tbody_rows_count = Math.floor(($table_height - $thead_height) / 45);
   const [saveLoader, setSaveLoader] = useState(false);
   const [searchContractor, setSearchContractor] = useState("");
+  const location_officerList = officerList.filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE));
+
+  const checkIfOfficerListHasDuplicates =
+    location_officerList.length !=
+    [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))].length;
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
   const [creation_date, setCreation_date] = useState(getTodayLabel());
@@ -79,6 +82,11 @@ export default function LabourApprovalHistory() {
       format,
       location_code: String(locationCode),
     });
+    params.append("location_officerList", JSON.stringify(location_officerList));
+    params.append(
+      "checkIfOfficerListHasDuplicates",
+      String(checkIfOfficerListHasDuplicates),
+    );
     if (format === "permission" && searchContractor)
       params.append("contractor", searchContractor);
     if (creation_date) {

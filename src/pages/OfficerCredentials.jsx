@@ -17,9 +17,14 @@ import {
   Edit as EditIcon,
   Save,
   Close,
+  Add
 } from "@mui/icons-material";
 import { SetOfficerMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FREE_EMAIL_DOMAINS = new Set([
@@ -672,6 +677,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
 
   const handleUpdateOfficer = async (officer) => {
     const name = String(editDraft.OFFICER_NAME || "").trim();
+    const designation = String(editDraft.DESIGNATION || "").trim();
     const empID = String(editDraft.Emp_ID || "").trim();
     const mobileNo = String(editDraft.MOBILE_NO || "").trim();
     const mailID = String(editDraft.MAIL_ID || "")
@@ -725,7 +731,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
             "Content-Type": "application/json",
             "x-user-role": userType,
           },
-          body: JSON.stringify({ name, empID, mobileNo, mailID }),
+          body: JSON.stringify({ name, empID, designation, mobileNo, mailID }),
         },
       );
       const data = await response.json();
@@ -758,6 +764,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                   ...item,
                   OFFICER_NAME: name,
                   Emp_ID: empID,
+                  DESIGNATION: designation,
                   MOBILE_NO: mobileNo,
                   MAIL_ID: mailID,
                   STATUS: mailChanged ? "ACTIVE" : item.STATUS,
@@ -799,6 +806,13 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         />
       ) : null}
 
+      <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+        >
+          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add User</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
       <Box sx={{ p: 3, border: "1px dashed #ccc", m: 3, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>
           Bulk Upload of via Excel
@@ -1073,6 +1087,9 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         </Button>
       </div>
 
+        </AccordionDetails>
+      </Accordion>
+
       <Typography variant="h6" sx={{ mt: 2 }}>
         Existing Users at {locationName}
       </Typography>
@@ -1080,12 +1097,13 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         <Table bordered hover striped className="ttes_table">
           <thead className="table-head">
             <tr>
-              <th>NAME</th>
+              <th style={{ width: 200 }}>NAME</th>
+              <th style={{ width: 200 }}>DESIGNATION</th>
               <th style={{ width: 100 }}>EMP ID</th>
-              <th style={{ width: 150 }}>MOBILE NO</th>
+              <th style={{ width: 120 }}>MOBILE NO</th>
               <th>MAIL ID</th>
               <th style={{ width: 200 }}>ROLE</th>
-              <th style={{ width: 100 }}>STATUS</th>
+              <th style={{ width: 150 }}>STATUS</th>
               <th style={{ minWidth: 800 }}>ACTION</th>
             </tr>
           </thead>
@@ -1107,6 +1125,23 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                     />
                   ) : (
                     officer.OFFICER_NAME
+                  )}
+                </td>
+                <td>
+                  {editingOfficerId === officer.ID ? (
+                    <TextField
+                      size="small"
+                      value={editDraft.DESIGNATION}
+                      onChange={(event) =>
+                        setEditDraft((draft) => ({
+                          ...draft,
+                          DESIGNATION: event.target.value,
+                        }))
+                      }
+                      fullWidth
+                    />
+                  ) : (
+                    officer.DESIGNATION
                   )}
                 </td>
                 <td>

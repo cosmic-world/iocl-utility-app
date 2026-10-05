@@ -196,8 +196,6 @@ export default function MasterData() {
         <Typography variant="h6" gutterBottom>
           Bulk Upload via Excel
         </Typography>
-
-        {/* Download Link Block */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
             Please use our official excel template.
@@ -212,10 +210,7 @@ export default function MasterData() {
             Download Excel Template
           </Button>
         </Box>
-
         <hr style={{ border: "0.5px solid #eee", margin: "15px 0" }} />
-
-        {/* Form Submission Block */}
         <form onSubmit={handleExcelSubmit}>
           <input
             ref={fileInputRef}

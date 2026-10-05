@@ -8,12 +8,16 @@ import {
   TextField,
   CircularProgress,
   Typography,
-  Box,
+  Box
 } from "@mui/material";
-import { Download, Edit, Save, Cancel, Delete } from "@mui/icons-material";
+import { Download, Edit, Save, Cancel, Delete, Add } from "@mui/icons-material";
 import { SetContractorMasterList } from "../action/userSlice";
 import { useOtpCooldown } from "../otpCooldown";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value) =>
@@ -26,7 +30,6 @@ const isValidEmail = (value) =>
 export default function ContractorCredentials({ handleSyncContractor }) {
   const dispatch = useDispatch();
   const {
-    navBarComponent,
     locationCode,
     selectedTerminal,
     contractorList,
@@ -450,7 +453,14 @@ export default function ContractorCredentials({ handleSyncContractor }) {
           }}
         />
       ) : null}
-
+<div className="p-2 w-100">
+      <Accordion sx={{ width: "100%", backgroundColor: "transparent" }}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+        >
+          <Add color="success" style={{ marginRight: "4px", zoom: 1.5 }} /><Typography component="span" variant="h6" style={{fontStyle:'italic', paddingTop: "2px"}}>Add Contractor</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
       {userType !== "Contractor" ? (
         <Box sx={{ p: 3, border: "1px dashed #ccc", mt: 1, borderRadius: 2 }}>
           <Typography variant="h6" gutterBottom>
@@ -691,6 +701,8 @@ export default function ContractorCredentials({ handleSyncContractor }) {
           {submitting ? "Submitting..." : "SUBMIT"}
         </Button>
       </div>
+        </AccordionDetails>
+      </Accordion>
 
       <Typography variant="h6" sx={{ mt: 2 }}>
         Existing Contractors for Location
@@ -929,6 +941,7 @@ export default function ContractorCredentials({ handleSyncContractor }) {
           </tbody>
         </Table>
       </div>
+    </div>
     </div>
   );
 }

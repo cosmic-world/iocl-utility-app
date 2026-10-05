@@ -1510,6 +1510,7 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 const mobile         = sanitizeValue(row['MOBILE NO']);
                 const mailID       = (sanitizeValue(row['MAIL ID']) || '').toLocaleLowerCase();
                 const role = String(sanitizeValue(row['ROLE'])).toUpperCase();
+                const designation = (sanitizeValue(row['DESIGNATION']) || '')?.replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) || "";
 
                 if (!isValidEmail(mailID)) {
                   throw new Error(`Invalid email for officer ${name || '(unknown)'}.`);
@@ -1526,12 +1527,13 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
                 .input('locationCode', sql.VarChar, locationCode)
                 .input('name', sql.VarChar, name)
                 .input('empID', sql.VarChar, empID)
+                .input('designation', sql.VarChar, designation)
                 .input('mobile', sql.VarChar, mobile)
                 .input('mailID', sql.VarChar, mailID)
                 .input('role', sql.VarChar, role)
                 .query(`
-                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE], [STATUS])
-                VALUES (@locationCode, @name, @empID, @mobile, @mailID, @role, 'INACTIVE')
+                INSERT INTO OfficerCredentials (LOCATION_CODE, OFFICER_NAME, Emp_ID, DESIGNATION, MOBILE_NO, MAIL_ID, [ROLE], [STATUS])
+                VALUES (@locationCode, @name, @empID, @designation, @mobile, @mailID, @role, 'INACTIVE')
                 `)
     }
     catch (err) {
@@ -1593,10 +1595,11 @@ app.post("/api/upload-officer-single",
       request.input('mobileNo', sql.NVarChar, bodyData['mobileNo']?.trim() || null);
       request.input('mailID', sql.NVarChar, mailID);
       request.input('role', sql.NVarChar, role);
+      request.input('designation', sql.NVarChar, bodyData['designation']?.trim() || null);
       
       const insertSql = `INSERT INTO dbo.OfficerCredentials (
-        LOCATION_CODE, OFFICER_NAME, Emp_ID, MOBILE_NO, MAIL_ID, [ROLE], [STATUS]) 
-        VALUES (@locationCode, @name, @empID, @mobileNo, @mailID, @role, 'ACTIVE')`;
+        LOCATION_CODE, OFFICER_NAME, Emp_ID, DESIGNATION, MOBILE_NO, MAIL_ID, [ROLE], [STATUS]) 
+        VALUES (@locationCode, @name, @empID, @designation, @mobileNo, @mailID, @role, 'ACTIVE')`;
       await request.query(insertSql)
       
         res.status(200).json({ success: true });
@@ -1671,6 +1674,7 @@ app.patch("/api/officer-master-data/:id", async (req, res) => {
     const officerId = Number(req.params.id);
     const name = String(req.body?.name || "").trim();
     const empID = String(req.body?.empID || "").trim();
+    const designation = String(req.body?.designation || "").trim();
     const mobileNo = String(req.body?.mobileNo || "").trim();
     const mailID = String(req.body?.mailID || "").trim().toLowerCase();
 
@@ -1679,12 +1683,14 @@ app.patch("/api/officer-master-data/:id", async (req, res) => {
     request.input("id", sql.Int, officerId);
     request.input("name", sql.NVarChar, name);
     request.input("empID", sql.NVarChar, empID);
+    request.input("designation", sql.NVarChar, designation);
     request.input("mobileNo", sql.NVarChar, mobileNo);
     request.input("mailID", sql.NVarChar, mailID);
     const result = await request.query(`
       UPDATE dbo.OfficerCredentials
       SET OFFICER_NAME = @name,
           Emp_ID = @empID,
+          DESIGNATION = @designation,
           MOBILE_NO = @mobileNo,
           MAIL_ID = @mailID
       WHERE ID = @id
@@ -1696,7 +1702,7 @@ app.patch("/api/officer-master-data/:id", async (req, res) => {
     return res.status(200).json({
       success: true,
       id: officerId,
-      officer: { OFFICER_NAME: name, Emp_ID: empID, MOBILE_NO: mobileNo, MAIL_ID: mailID },
+      officer: { OFFICER_NAME: name, Emp_ID: empID, DESIGNATION: designation, MOBILE_NO: mobileNo, MAIL_ID: mailID },
     });
   } catch (error) {
     console.error("Officer update error:", error);
@@ -1993,7 +1999,7 @@ function createLabourPermissionReport(rows) {
       y += headerHeight + rowHeight * 7 + 20;
       doc.font("Helvetica").fontSize(8).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
       doc.font("Helvetica-Bold").fontSize(9).text(
-        `Authorized by: ${approvers.length === 1 ? approvers[0] : "Approved by the authorized officers shown above"}`,
+        `Authorized by: ${approvers.length === 1 ? `${approvers[0]} - ${first.designation}` : "Approved by the authorized officers shown above"}`,
         left,
         y + 32,
       );
@@ -2081,12 +2087,12 @@ function createLabourRegisterReport(rows) {
       rowY = y + headerHeight;
     }
     let x = left;
-    const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", row.APPROVING_OFFICER,];
+    const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", `${row.APPROVING_OFFICER}\n${row.designation}`];
     (Array.isArray(columns) ? columns : []).forEach(([, columnWidth], columnIndex) => {
       const scaledWidth = columnWidth * scale;
       drawReportCell(doc, values[columnIndex], x, rowY, scaledWidth, rowHeight, {
         fontSize: 7,
-        align: columnIndex === 5 ? "left" : "center",
+        align: "center",
       });
       x += scaledWidth;
     });
@@ -2251,7 +2257,14 @@ app.get("/api/labour-pass-requests", async (req, res) => {
 
 app.get("/api/labour-pass-reports", async (req, res) => {
   try {
-    const { fetchdate, location_code, contractor, format } = req.query;
+    const {
+      fetchdate,
+      location_code,
+      contractor,
+      format,
+      location_officerList,
+      checkIfOfficerListHasDuplicates,
+    } = req.query;
     if (!["permission", "register"].includes(format)) {
       return res.status(400).json({ error: "A valid report format is required." });
     }
@@ -2260,7 +2273,17 @@ app.get("/api/labour-pass-reports", async (req, res) => {
         error: "Contractor and creation date are required for the permission letter.",
       });
     }
-
+    let parsedOfficerList = [];
+    if (typeof location_officerList === "string" && location_officerList.trim() !== "") {
+      try {
+        parsedOfficerList = JSON.parse(location_officerList);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid location officer list payload." });
+      }
+      if (!Array.isArray(parsedOfficerList)) {
+        return res.status(400).json({ error: "Location officer list must be an array." });
+      }
+    }
     const pool = await sql.connect(sqlConfig);
     await ensureLabourWorkflowColumns(pool);
     const request = pool.request();
@@ -2277,8 +2300,17 @@ app.get("/api/labour-pass-reports", async (req, res) => {
       request.input("contractor", sql.NVarChar, String(contractor));
       conditions.push("CONTRACTOR = @contractor");
     }
-    const result = await request.query(`SELECT *, COALESCE(NULLIF(LTRIM(RTRIM(APPROVED_BY)), ''), APPROVING_OFFICER) AS APPROVER_NAME FROM dbo.LabourEntryRecord WHERE ${conditions.join(" AND ")} ORDER BY CREATED_AT, ID`);
-    const rows = Array.isArray(result.recordset) ? result.recordset : [];
+    const result = await request.query(`SELECT * FROM dbo.LabourEntryRecord WHERE ${conditions.join(" AND ")} ORDER BY CREATED_AT, ID`);
+    const rows1 = Array.isArray(result.recordset) ? result.recordset : [];
+    const rows = rows1.map((row) => {
+      const approvingOfficer = String(row.APPROVING_OFFICER || "").trim();
+      const normalizedOfficerName = checkIfOfficerListHasDuplicates
+        ? approvingOfficer.split("(")[0].trim().toLowerCase()
+        : approvingOfficer.toLowerCase();
+      const designation = parsedOfficerList.filter((officer) => officer.OFFICER_NAME.toLowerCase() === normalizedOfficerName).map((officer) => officer?.DESIGNATION)
+
+      return { ...row, designation };
+    });
     if (!rows.length) {
       return res.status(404).json({ error: "No approved labour records found for the selected filters." });
     }
