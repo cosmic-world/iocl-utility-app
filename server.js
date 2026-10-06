@@ -1896,7 +1896,7 @@ function drawReportCell(doc, text, x, y, width, height, options = {}) {
       height: height - padding * 2,
       align: options.align || "left",
       valign: "center",
-      ellipsis: true,
+      ellipsis: !options.wrap,
     });
 }
 
@@ -1976,7 +1976,7 @@ function createLabourPermissionReport(rows) {
       for (let rowIndex = 0; rowIndex < 7; rowIndex += 1) {
         const row = pageRows[group * 7 + rowIndex];
         const rowY = y + headerHeight + rowIndex * rowHeight;
-        drawReportCell(doc, row ? pageIndex * rowsPerPage + rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { align: "center" });
+        drawReportCell(doc, row ? pageIndex * rowsPerPage + rowIndex + 1 + group * 7 : "", x, rowY, 38, rowHeight, { fontSize: 9, align: "center" });
         const approverName = row?.APPROVED_BY || "";
         drawReportCell(
           doc,
@@ -1989,15 +1989,15 @@ function createLabourPermissionReport(rows) {
           rowY,
           groupWidth - 88,
           rowHeight,
-          { fontSize: 6, padding: 3 },
+          { fontSize: 9, padding: 3 },
         );
-        drawReportCell(doc, row?.GATE_PASS_NO || "", x + groupWidth - 50, rowY, 50, rowHeight, { align: "center" });
+        drawReportCell(doc, row?.GATE_PASS_NO || "", x + groupWidth - 50, rowY, 50, rowHeight, { fontSize: 9, align: "center" });
       }
     }
 
     if (pageIndex === totalPages - 1) {
       y += headerHeight + rowHeight * 7 + 20;
-      doc.font("Helvetica").fontSize(8).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
+      doc.font("Helvetica").fontSize(9).text("We hereby undertake responsibility for all activities including safety and security of all the above persons.", left, y, { width: pageWidth });
       doc.font("Helvetica-Bold").fontSize(9).text(
         `Authorized by: ${approvers.length === 1 ? `${approvers[0]} - ${first.designation}` : "Approved by the authorized officers shown above"}`,
         left,
@@ -2071,15 +2071,27 @@ function createLabourRegisterReport(rows) {
     let x = left;
     (Array.isArray(columns) ? columns : []).forEach(([label, columnWidth]) => {
       const scaledWidth = columnWidth * scale;
-      drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 6, align: "center" });
+      drawReportCell(doc, label, x, y, scaledWidth, headerHeight, { bold: true, fontSize: 9, align: "center" });
       x += scaledWidth;
     });
   };
   drawHeader();
-  const rowHeight = 25;
+  const minRowHeight = 25;
+  const cellPadding = 4;
   const pageBottom = () => doc.page.height - doc.page.margins.bottom;
   let rowY = y + headerHeight;
   (Array.isArray(rows) ? rows : []).forEach((row, index) => {
+    const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", `${row.APPROVING_OFFICER}\n${row.designation}`];
+    doc.font("Helvetica").fontSize(9);
+    const rowHeight = Math.max(
+      minRowHeight,
+      ...columns.map(([, columnWidth], columnIndex) =>
+        doc.heightOfString(String(values[columnIndex] ?? ""), {
+          width: columnWidth * scale - cellPadding * 2,
+          align: "center",
+        }) + cellPadding * 2,
+      ),
+    );
     if (rowY + rowHeight > pageBottom()) {
       doc.addPage();
       y = doc.page.margins.top;
@@ -2087,12 +2099,13 @@ function createLabourRegisterReport(rows) {
       rowY = y + headerHeight;
     }
     let x = left;
-    const values = [index + 1, formatReportDate(row.CREATED_AT).split(",")[0] || "", row.CONTRACTOR, row.LABOUR_NAME, row.AADHAAR_NO, row.MOBILE_NO, row.GATE_PASS_NO, row.ADDRESS, row.TIME_IN, "", `${row.APPROVING_OFFICER}\n${row.designation}`];
     (Array.isArray(columns) ? columns : []).forEach(([, columnWidth], columnIndex) => {
       const scaledWidth = columnWidth * scale;
       drawReportCell(doc, values[columnIndex], x, rowY, scaledWidth, rowHeight, {
-        fontSize: 7,
+        fontSize: 9,
         align: "center",
+        wrap: true,
+        padding: cellPadding,
       });
       x += scaledWidth;
     });
