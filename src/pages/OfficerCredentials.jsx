@@ -92,6 +92,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
   const [editOtpSent, setEditOtpSent] = useState(false);
   const [editOtpVerified, setEditOtpVerified] = useState(false);
   const [editOtpLoading, setEditOtpLoading] = useState(false);
+  const [designation, setDesignation] = useState("");
   const editOtpCooldown = useOtpCooldown();
   const otpCooldown = useOtpCooldown();
   const verificationOtpCooldown = useOtpCooldown();
@@ -234,6 +235,11 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
       return;
     }
 
+    if (!designation && officerRole != "SECURITY") {
+      alert("Please enter Designation.");
+      return;
+    }
+
     if (!mobileNo) {
       alert("Please enter Mobile No.");
       return;
@@ -276,6 +282,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         empID,
         mobileNo,
         mailID: mailID.trim().toLowerCase(),
+        designation,
         role: officerRole,
       };
       // Submit to server
@@ -300,6 +307,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
         setName("");
         setMobileNo("");
         setRole("");
+        setDesignation("");
       } else {
         alert("Upload failed: " + data.error);
       }
@@ -863,7 +871,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
             className="d-flex flex-column justify-content-center align-items-center w-100 p-2 mt-2"
             style={{ border: "1px dashed #ccc" }}
           >
-            <div className="d-flex flex-wrap justify-content-center align-items-center w-100 p-2">
+            <div className="d-flex flex-wrap justify-content-center align-items-start w-100 p-2">
               <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
                 <Typography>Location Name</Typography>
                 <TextField
@@ -892,6 +900,35 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                     },
                   }}
                 />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Role</Typography>
+                <TextField
+                  select
+                  fullWidth
+                  value={userType == "SECURITY" ? userType : role}
+                  disabled={userType == "SECURITY"}
+                  onChange={(e) => setRole(e.target.value)}
+                  SelectProps={{ native: true }}
+                  style={{ backgroundColor: "white" }}
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                      textTransform: "uppercase",
+                    },
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Role
+                  </option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="SECURITY">SECURITY</option>
+                </TextField>
               </div>
 
               <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
@@ -928,6 +965,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                   variant="outlined"
                   type="text"
                   value={empID}
+                  placeholder="Emp id must be 8-digit for officer role else enter '1'"
                   inputProps={{ inputMode: "numeric", maxLength: 10 }}
                   style={{ backgroundColor: "white" }}
                   onChange={(e) => setEmpID(e.target.value.replace(/\D/g, ""))}
@@ -939,6 +977,44 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       paddingTop: "10px !important", // Reducer top whitespace
                       paddingBottom: "10px !important", // Keeps it centered vertically
                     },
+                    "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
+              },
+                  }}
+                />
+              </div>
+
+              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
+                <Typography>Designation</Typography>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  value={designation}
+                  placeholder="required only for officer role"
+                  style={{ backgroundColor: "white" }}
+                  disabled = {userType === "SECURITY" || role === "SECURITY"}
+                  onChange={(e) =>
+                    setDesignation(
+                      e.target.value
+                    )
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                      paddingTop: "10px !important", // Reducer top whitespace
+                      paddingBottom: "10px !important", // Keeps it centered vertically
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                fontFamily: "Lucida Sans",
+                fontSize: "0.8rem", // Optional: adjust placeholder size
+                fontStyle: "italic", // Optional: make placeholder italicized
+                textTransform: "none",
+              },
                   }}
                 />
               </div>
@@ -966,35 +1042,6 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                     },
                   }}
                 />
-              </div>
-
-              <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
-                <Typography>Role</Typography>
-                <TextField
-                  select
-                  fullWidth
-                  value={userType == "SECURITY" ? userType : role}
-                  disabled={userType == "SECURITY"}
-                  onChange={(e) => setRole(e.target.value)}
-                  SelectProps={{ native: true }}
-                  style={{ backgroundColor: "white" }}
-                  sx={{
-                    // 1. Increase font size of the placeholder/input text
-                    "& .MuiInputBase-input": {
-                      fontSize: "1rem",
-                      fontFamily: "Lucida Sans",
-                      paddingTop: "10px !important", // Reducer top whitespace
-                      paddingBottom: "10px !important", // Keeps it centered vertically
-                      textTransform: "uppercase",
-                    },
-                  }}
-                >
-                  <option value="" disabled>
-                    Select Role
-                  </option>
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="SECURITY">SECURITY</option>
-                </TextField>
               </div>
 
               <div style={{ width: "100%", maxWidth: 350, margin: 5 }}>
@@ -1162,7 +1209,7 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       fullWidth
                     />
                   ) : (
-                    officer.Emp_ID
+                    officer.ROLE=='SECURITY' ? Number(officer.Emp_ID) : officer.Emp_ID
                   )}
                 </td>
                 <td>

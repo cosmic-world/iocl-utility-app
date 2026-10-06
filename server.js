@@ -577,7 +577,7 @@ const sanitizeValue = (val) => {
 
 const normalizeOfficerEmpId = (value, role) => {
   const empId = sanitizeValue(value)?.toLowerCase();
-  return empId && role !== 'SECURITY' ? empId.padStart(8, '0') : empId;
+  return role == 'SECURITY' ? empId.padStart(8, '0') : empId;
 };
 
 const isValidMobile = (value) => /^\d{10}$/.test(String(value || '').trim());
@@ -608,7 +608,7 @@ const validateExcelUploadLocation = (req, res, sheetData) => {
     res.status(403).json({
       success: false,
       message: [...unauthorizedLocationCodes]
-        .map((locationCode) => `you are not authorized for this location code ${locationCode}`)
+        .map((locationCode) => `You are not authorized for location code ${locationCode}. Remove rows with this location code.`)
         .join('; '),
     });
     return null;
@@ -1494,9 +1494,21 @@ app.post('/api/upload-officer-excel', uploadExcel.single('excel_file'), async (r
       const mobile = sanitizeValue(row['MOBILE NO']);
       const mailID = sanitizeValue(row['MAIL ID'])?.toLowerCase();
       const role = String(sanitizeValue(row['ROLE']) || '').toUpperCase();
-      if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
-      if (!isValidEmail(mailID)) validationErrors.push(`Row ${rowNumber}: MAIL ID must be a valid email address.`);
-      if (role === 'ADMIN' && !isBusinessEmail(mailID)) validationErrors.push(`Row ${rowNumber}: ADMIN must use a business email address.`);
+      const name = String(sanitizeValue(row['NAME']) || '').trim();
+      const designation = String(sanitizeValue(row['DESIGNATION']) || '').trim();
+      const empID = normalizeOfficerEmpId(row['EMPLOYEE ID'], role);
+      if (!name) validationErrors.push(`Row ${rowNumber}: NAME is required.`);
+      if (!['ADMIN', 'SECURITY'].includes(role)) validationErrors.push(`Row ${rowNumber}: ROLE must be ADMIN or SECURITY.`);
+      if (role !== 'SECURITY') {
+        if (!empID) validationErrors.push(`Row ${rowNumber}: EMPLOYEE ID is required for officer role.`);
+        else if (!/^[0-9]{8}$/.test(empID)) validationErrors.push(`Row ${rowNumber}: EMPLOYEE ID should be exactly 8 digits for officer role.`);
+        if (!designation) validationErrors.push(`Row ${rowNumber}: DESIGNATION is required for officer role.`);
+      }
+      if (!mobile) validationErrors.push(`Row ${rowNumber}: MOBILE NO is required.`);
+      else if (!isValidMobile(mobile)) validationErrors.push(`Row ${rowNumber}: MOBILE NO must contain exactly 10 digits.`);
+      if (!mailID) validationErrors.push(`Row ${rowNumber}: MAIL ID is required.`);
+      else if (!isValidEmail(mailID)) validationErrors.push(`Row ${rowNumber}: MAIL ID must be a valid email address.`);
+      if (role === 'ADMIN' && !isBusinessEmail(mailID)) validationErrors.push(`Row ${rowNumber}: ADMIN role user must use a business email address.`);
     });
     if (bulkValidationResponse(validationErrors, res)) return;
 
