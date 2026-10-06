@@ -2262,8 +2262,6 @@ app.get("/api/labour-pass-reports", async (req, res) => {
       location_code,
       contractor,
       format,
-      location_officerList,
-      checkIfOfficerListHasDuplicates,
     } = req.query;
     if (!["permission", "register"].includes(format)) {
       return res.status(400).json({ error: "A valid report format is required." });
@@ -2273,19 +2271,24 @@ app.get("/api/labour-pass-reports", async (req, res) => {
         error: "Contractor and creation date are required for the permission letter.",
       });
     }
-    let parsedOfficerList = [];
-    if (typeof location_officerList === "string" && location_officerList.trim() !== "") {
-      try {
-        parsedOfficerList = JSON.parse(location_officerList);
-      } catch (error) {
-        return res.status(400).json({ error: "Invalid location officer list payload." });
-      }
-      if (!Array.isArray(parsedOfficerList)) {
-        return res.status(400).json({ error: "Location officer list must be an array." });
-      }
-    }
     const pool = await sql.connect(sqlConfig);
     await ensureLabourWorkflowColumns(pool);
+    let parsedOfficerList = [];
+    let officersHaveDuplicateNames = false;
+    if (location_code) {
+      const officerRequest = pool.request();
+      officerRequest.input("officerLocationCode", sql.NVarChar, String(location_code));
+      const officerResult = await officerRequest.query(`
+        SELECT OFFICER_NAME, DESIGNATION
+        FROM dbo.OfficerCredentials
+        WHERE LOCATION_CODE = @officerLocationCode
+          AND UPPER(LTRIM(RTRIM([ROLE]))) IN ('ADMIN', 'SUPER_ADMIN')
+      `);
+      parsedOfficerList = (officerResult.recordset || []).filter((o) => o.OFFICER_NAME);
+      officersHaveDuplicateNames =
+        new Set(parsedOfficerList.map((o) => String(o.OFFICER_NAME).trim().toLowerCase())).size !==
+        parsedOfficerList.length;
+    }
     const request = pool.request();
     const conditions = ["REQUEST_TOKEN IS NOT NULL", "REQUEST_STATUS = 'APPROVED'"];
     if (fetchdate) {
@@ -2304,16 +2307,19 @@ app.get("/api/labour-pass-reports", async (req, res) => {
     const rows1 = Array.isArray(result.recordset) ? result.recordset : [];
     const rows = rows1.map((row) => {
       const approvingOfficer = String(row.APPROVING_OFFICER || "").trim();
-      const normalizedOfficerName = checkIfOfficerListHasDuplicates
+      const normalizedOfficerName = officersHaveDuplicateNames
         ? approvingOfficer.split("(")[0].trim().toLowerCase()
         : approvingOfficer.toLowerCase();
-      const designation = parsedOfficerList.filter((officer) => officer.OFFICER_NAME.toLowerCase() === normalizedOfficerName).map((officer) => officer?.DESIGNATION)
+      const designation = parsedOfficerList
+        .filter((officer) => String(officer.OFFICER_NAME).trim().toLowerCase() === normalizedOfficerName)
+        .map((officer) => officer?.DESIGNATION);
 
       return { ...row, designation };
     });
     if (!rows.length) {
       return res.status(404).json({ error: "No approved labour records found for the selected filters." });
     }
+    console.log("Filtered rows for labour report:", rows);
     const pdf = format === "permission"
       ? await createLabourPermissionReport(rows)
       : await createLabourRegisterReport(rows);
