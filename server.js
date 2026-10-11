@@ -279,6 +279,9 @@ app.post("/api/utility-locations/register/request-otp", async (req, res) => {
     if (!isValidEmail(email)) {
       return res.status(400).json({ success: false, message: "Enter a valid admin email address." });
     }
+    if (!isBusinessEmail(email)) {
+      return res.status(400).json({ success: false, message: "You must use a business email address." });
+    }
 
     const otp = generateOtp();
     const otpKey = `register:${email}`;
@@ -305,7 +308,7 @@ app.post("/api/utility-locations/register/request-otp", async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "OTP sent to the admin email for registration verification.",
+      message: "OTP sent to the email id provided for registration.",
     });
   } catch (error) {
     console.error("Location registration OTP request failed:", error);
@@ -343,7 +346,7 @@ app.post("/api/utility-locations/register/verify-otp", async (req, res) => {
     delete otpStore[otpKey];
     return res.status(200).json({
       success: true,
-      message: "Admin email verified successfully. You can proceed with registration.",
+      message: "Email verified successfully. You can proceed with registration.",
     });
   } catch (error) {
     console.error("Location registration OTP verification failed:", error);
@@ -1243,7 +1246,7 @@ app.post("/api/utility-locations/register", async (req, res) => {
         (STATE_OFFICE, LOCATION_NAME, PASSCODE, LOCATION_CODE, ADMIN_MAIL_ID, ACTIVE)
       VALUES (@stateOffice, @locationName, @passcode, @locationCode, @adminMailId, 'Y')
     `);
-    return res.status(201).json({ success: true, message: "Location registered successfully." });
+    return res.status(201).json({ success: true, message: "Registration successful." });
   } catch (error) {
     console.error("Location registration error:", error);
     return res.status(500).json({ success: false, message: "Unable to register the location." });
@@ -1259,6 +1262,10 @@ app.post("/api/utility-locations/change/request-otp", async (req, res) => {
     }
     if (!isValidEmail(currentEmail)) {
       return res.status(400).json({ success: false, message: "Enter a valid current admin email address." });
+    }
+
+    if (!isBusinessEmail(currentEmail)) {
+      return res.status(400).json({ success: false, message: "Admin email must be a business email address." });
     }
 
     await sql.connect(sqlConfig);
@@ -1302,6 +1309,95 @@ app.post("/api/utility-locations/change/request-otp", async (req, res) => {
   }
 });
 
+app.post("/api/utility-locations/change/request-new-email-otp", async (req, res) => {
+  try {
+    const locationName = String(req.body.locationName || "").trim();
+    const currentEmail = String(req.body.currentEmail || "").trim().toLowerCase();
+    const newAdminMailId = String(req.body.newAdminMailId || "").trim().toLowerCase();
+    if (!locationName || !currentEmail || !newAdminMailId) {
+      return res.status(400).json({ success: false, message: "Location, current email, and new admin email are required." });
+    }
+    if (!isValidEmail(currentEmail) || !isValidEmail(newAdminMailId)) {
+      return res.status(400).json({ success: false, message: "Enter valid email addresses." });
+    }
+    if (!isBusinessEmail(newAdminMailId)) {
+      return res.status(400).json({ success: false, message: "The new admin email must be a business email address." });
+    }
+
+    await sql.connect(sqlConfig);
+    const request = new sql.Request();
+    request.input("locationName", sql.NVarChar, locationName);
+    request.input("currentEmail", sql.NVarChar, currentEmail);
+    const result = await request.query(`
+      SELECT TOP 1 LOCATION_CODE
+      FROM IOCLUtilityCredentials
+      WHERE LOCATION_NAME = @locationName
+        AND LOWER(LTRIM(RTRIM(ADMIN_MAIL_ID))) = @currentEmail
+        AND ACTIVE = 'Y'
+    `);
+    if (!result.recordset?.length) {
+      return res.status(404).json({ success: false, message: "Current admin email does not match this location." });
+    }
+
+    const otp = generateOtp();
+    const otpKey = `location-new-email:${locationName}:${currentEmail}:${newAdminMailId}`;
+    otpStore[otpKey] = {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+    await transporter.sendMail({
+      from: '"IOCL Utility App" <ioclcbe4149@gmail.com>',
+      to: newAdminMailId,
+      subject: "New admin email verification",
+      text: `Your OTP for verifying the new admin email in the IOCL Utility App is ${otp}. It is valid for 5 minutes. If you did not request this change, please ignore this email.`,
+      html: `<div style="font-family: Arial, sans-serif; max-width: 420px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h3 style="margin-bottom: 12px; color: #1a73e8;">New Admin Email Verification</h3>
+          <p>Your verification code is:</p>
+          <p style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 16px 0;">${otp}</p>
+          <p>This code is valid for 5 minutes.</p>
+        </div>`,
+    });
+    return res.json({ success: true, message: "OTP sent to the new admin email." });
+  } catch (error) {
+    console.error("New admin email OTP request failed:", error);
+    return res.status(500).json({ success: false, message: "Unable to send verification OTP." });
+  }
+});
+
+app.post("/api/utility-locations/change/verify-new-email-otp", (req, res) => {
+  const locationName = String(req.body.locationName || "").trim();
+  const currentEmail = String(req.body.currentEmail || "").trim().toLowerCase();
+  const newAdminMailId = String(req.body.newAdminMailId || "").trim().toLowerCase();
+  const otp = String(req.body.otp || "").trim();
+  const otpKey = `location-new-email:${locationName}:${currentEmail}:${newAdminMailId}`;
+  const stored = otpStore[otpKey];
+
+  if (!locationName || !isValidEmail(currentEmail) || !isValidEmail(newAdminMailId) || !/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ success: false, message: "Enter valid email addresses and a six-digit OTP." });
+  }
+  if (!stored || Date.now() > stored.expiresAt) {
+    delete otpStore[otpKey];
+    return res.status(400).json({ success: false, message: "OTP expired or not requested." });
+  }
+  if (stored.otp !== otp) {
+    return res.status(401).json({ success: false, message: "Invalid OTP." });
+  }
+
+  delete otpStore[otpKey];
+  const verificationToken = crypto.randomUUID();
+  otpStore[`location-new-email-verified:${verificationToken}`] = {
+    locationName,
+    currentEmail,
+    newAdminMailId,
+    expiresAt: Date.now() + 10 * 60 * 1000,
+  };
+  return res.json({
+    success: true,
+    message: "New admin email verified successfully.",
+    verificationToken,
+  });
+});
+
 app.patch("/api/utility-locations/change", async (req, res) => {
   try {
     const locationName = String(req.body.locationName || "").trim();
@@ -1309,6 +1405,7 @@ app.patch("/api/utility-locations/change", async (req, res) => {
     const otp = String(req.body.otp || "").trim();
     const newPasscode = String(req.body.newPasscode || "").trim();
     const newAdminMailId = String(req.body.newAdminMailId || "").trim().toLowerCase();
+    const newAdminOtpToken = String(req.body.newAdminOtpToken || "").trim();
 
     if (!locationName || !currentEmail || !otp || (!newPasscode && !newAdminMailId)) {
       return res.status(400).json({ success: false, message: "OTP and at least one new value are required." });
@@ -1318,6 +1415,9 @@ app.patch("/api/utility-locations/change", async (req, res) => {
     }
     if (newAdminMailId && !isValidEmail(newAdminMailId)) {
       return res.status(400).json({ success: false, message: "Enter a valid new admin email address." });
+    }
+    if (newAdminMailId && !isBusinessEmail(newAdminMailId)) {
+      return res.status(400).json({ success: false, message: "The new admin email must be a business email address." });
     }
 
     await sql.connect(sqlConfig);
@@ -1337,6 +1437,20 @@ app.patch("/api/utility-locations/change", async (req, res) => {
     const stored = otpStore[`location:${currentEmail}:${locationCode}`];
     if (!stored || Date.now() > stored.expiresAt || stored.otp !== otp) {
       return res.status(401).json({ success: false, message: "Invalid or expired OTP." });
+    }
+    if (newAdminMailId) {
+      const verifiedKey = `location-new-email-verified:${newAdminOtpToken}`;
+      const verified = otpStore[verifiedKey];
+      if (
+        !verified ||
+        Date.now() > verified.expiresAt ||
+        verified.locationName !== locationName ||
+        verified.currentEmail !== currentEmail ||
+        verified.newAdminMailId !== newAdminMailId
+      ) {
+        return res.status(401).json({ success: false, message: "Verify the new admin email with OTP before updating." });
+      }
+      delete otpStore[verifiedKey];
     }
 
     const request = new sql.Request();
@@ -1582,8 +1696,8 @@ app.post("/api/upload-officer-single",
       if (!isValidEmail(mailID)) {
         return res.status(400).json({ error: "Please provide a valid officer email address." });
       }
-      if (role === "ADMIN" && !isBusinessEmail(mailID)) {
-        return res.status(400).json({ error: "ADMIN must use a business email address." });
+      if ((role === "ADMIN" || role === "SUPER_ADMIN") && !isBusinessEmail(mailID)) {
+        return res.status(400).json({ error: "You must use a business email address." });
       }
 
       const sqlConfig = {

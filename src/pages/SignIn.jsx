@@ -33,12 +33,39 @@ import { useOtpCooldown } from "../otpCooldown";
 import "../css/page_layout.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FREE_EMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "yahoo.com",
+  "yahoo.co.in",
+  "ymail.com",
+  "rediffmail.com",
+  "rediff.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "msn.com",
+  "icloud.com",
+  "me.com",
+  "aol.com",
+  "protonmail.com",
+  "proton.me",
+  "mail.com",
+  "zoho.com",
+]);
 const isValidEmail = (value) =>
   EMAIL_REGEX.test(
     String(value || "")
       .trim()
       .toLowerCase(),
   );
+const isBusinessEmail = (value) => {
+  const domain = String(value || "")
+    .trim()
+    .toLowerCase()
+    .split("@")[1];
+  return Boolean(domain) && !FREE_EMAIL_DOMAINS.has(domain);
+};
 
 function maskEmail(email) {
   if (!email) return "";
@@ -84,7 +111,17 @@ function SignIn() {
     newPasscode: "",
     newAdminMailId: "",
   });
+  const [superUserDetail, setSuperUserDetail] = useState({
+    name: "",
+    empID: "",
+    mobileNo: "",
+    designation: "",
+  });
   const [changeOtpSent, setChangeOtpSent] = useState(false);
+  const [newAdminOtp, setNewAdminOtp] = useState("");
+  const [newAdminOtpSent, setNewAdminOtpSent] = useState(false);
+  const [newAdminOtpVerified, setNewAdminOtpVerified] = useState(false);
+  const [newAdminOtpToken, setNewAdminOtpToken] = useState("");
   const [message, setMessage] = useState({ type: "", text: "" });
   const loginOtpCooldown = useOtpCooldown();
   const registrationOtpCooldown = useOtpCooldown();
@@ -278,6 +315,7 @@ function SignIn() {
       setIsLoading(false);
     }
   };
+
   const handleRefreshLocations = async () => {
     try {
       setIsRefreshing(true);
@@ -301,10 +339,40 @@ function SignIn() {
   }, [dispatch]);
 
   const handleSendRegistrationOtp = async () => {
+          if (!superUserDetail.name) {
+        alert("Please enter Officer Name.");
+        return;
+      }
+  
+      if (!superUserDetail.empID ) {
+        alert("Please enter Emp ID");
+        return;
+      }
+  
+      if (!/^[0-9]{8}$/.test(superUserDetail.empID)) {
+        alert("Company Emp ID should be exactly 8 digits.");
+        return;
+      }
+  
+      if (!superUserDetail.designation) {
+        alert("Please enter Designation.");
+        return;
+      }
+  
+      if (!superUserDetail.mobileNo) {
+        alert("Please enter Mobile No.");
+        return;
+      }
+  
+      if (!/^[0-9]{10}$/.test(superUserDetail.mobileNo)) {
+        alert("Mobile No should be exactly 10 digits.");
+        return;
+      }
+
     if (!registration.adminMailId.trim()) {
       setMessage({
         type: "error",
-        text: "Enter the admin email to receive the OTP.",
+        text: "Enter the email to receive the OTP.",
       });
       return;
     }
@@ -316,6 +384,12 @@ function SignIn() {
       });
       return;
     }
+    if (!isBusinessEmail(registration.adminMailId)) {
+      alert(
+        "Kindly use a business email address, not a personal email provider.",
+      );
+      return;
+    }
     const duplicateLocation = (locationList || []).find(
       (location) =>
         String(location.ADMIN_MAIL_ID || "")
@@ -323,7 +397,6 @@ function SignIn() {
           .toLowerCase() === registration.adminMailId.trim().toLowerCase() &&
         location.LOCATION_NAME !== registration.locationName,
     );
-
     if (duplicateLocation) {
       const messageText = `This admin email already exists for ${duplicateLocation.LOCATION_NAME}.`;
       alert(messageText);
@@ -396,25 +469,49 @@ function SignIn() {
     }
   };
 
+  const handlePostSuperUserData = async (e) => {
+      try {
+        const payload = {
+          locationCode: String(registration.locationCode),
+          name:superUserDetail.name,
+          empID: superUserDetail.empID,
+          mobileNo: superUserDetail.mobileNo,
+          mailID: registration.adminMailId,
+          designation: superUserDetail.designation,
+          role: 'SUPER_ADMIN',
+        };
+        // Submit to server
+        const response = await fetch(apiUrl("/api/upload-officer-single"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert("Record submitted successfully!");
+          // Reset form
+          setSuperUserDetail({
+            name: "",
+            empID: "",
+            mobileNo: "",
+            mailID: "",
+            designation: "",
+          });
+          return true;
+        } else {
+          alert("Upload failed: " + data.error);
+          return false;
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+        return false;
+      }
+  };
+
   const handleRegisterLocation = async (event) => {
     event.preventDefault();
-
-    if (!registration.adminMailId.trim()) {
-      setMessage({
-        type: "error",
-        text: "Enter the admin email before registration.",
-      });
-      return;
-    }
-    if (!isValidEmail(registration.adminMailId)) {
-      alert("Enter a valid email address.");
-      setMessage({
-        type: "error",
-        text: "Enter a valid email address.",
-      });
-      return;
-    }
-
     if (!registrationOtpVerified) {
       const verified = await handleVerifyRegistrationOtp();
       if (!verified) return;
@@ -433,6 +530,9 @@ function SignIn() {
     }
     setIsLoading(true);
     try {
+      const superUserCreated = await handlePostSuperUserData();
+      if (!superUserCreated) return;
+
       const response = await fetch(apiUrl("/api/utility-locations/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -461,7 +561,7 @@ function SignIn() {
       registrationOtpCooldown.resetCooldown();
       handleRefreshLocations();
       alert(
-        "Registration successful. Contact admin for assigning a Super Admin user for this location.",
+        data.message
       );
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -486,6 +586,16 @@ function SignIn() {
       });
       return;
     }
+    if (!isBusinessEmail(changeDetails.currentEmail)) {
+      alert(
+        "Kindly use a business email address, not a personal email provider.",
+      );
+      setMessage({
+        type: "error",
+        text: "Kindly use a business email address, not a personal email provider.",
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -502,6 +612,10 @@ function SignIn() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
       setChangeOtpSent(true);
+      setNewAdminOtp("");
+      setNewAdminOtpSent(false);
+      setNewAdminOtpVerified(false);
+      setNewAdminOtpToken("");
       changeOtpCooldown.startCooldown();
       setMessage({ type: "success", text: data.message });
       handleRefreshLocations();
@@ -525,14 +639,29 @@ function SignIn() {
       });
       return;
     }
-    if (
-      changeDetails.newAdminMailId &&
-      !isValidEmail(changeDetails.newAdminMailId)
-    ) {
+    const newAdminMailId = changeDetails.newAdminMailId.trim().toLowerCase();
+    if (newAdminMailId && !isValidEmail(newAdminMailId)) {
       alert("Enter a valid email address.");
       setMessage({
         type: "error",
         text: "Enter a valid email address.",
+      });
+      return;
+    }
+    if (newAdminMailId && !isBusinessEmail(newAdminMailId)) {
+      alert(
+        "Kindly use a business email address, not a personal email provider.",
+      );
+      setMessage({
+        type: "error",
+        text: "Kindly use a business email address, not a personal email provider.",
+      });
+      return;
+    }
+    if (newAdminMailId && !newAdminOtpVerified) {
+      setMessage({
+        type: "error",
+        text: "Verify the new admin email with OTP before updating.",
       });
       return;
     }
@@ -541,7 +670,11 @@ function SignIn() {
       const response = await fetch(apiUrl("/api/utility-locations/change"), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(changeDetails),
+        body: JSON.stringify({
+          ...changeDetails,
+          newAdminMailId,
+          newAdminOtpToken: newAdminMailId ? newAdminOtpToken : "",
+        }),
       });
       const data = await response.json();
       if (!response.ok)
@@ -557,9 +690,96 @@ function SignIn() {
       });
       setChangeOtpSent(false);
       changeOtpCooldown.resetCooldown();
+      setNewAdminOtp("");
+      setNewAdminOtpSent(false);
+      setNewAdminOtpVerified(false);
+      setNewAdminOtpToken("");
       dispatch(SelectedTerminal(""));
       await handleRefreshLocations();
     } catch (error) {
+      setMessage({ type: "error", text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendNewAdminOtp = async () => {
+    const newAdminMailId = changeDetails.newAdminMailId.trim().toLowerCase();
+    if (!isValidEmail(newAdminMailId)) {
+      setMessage({
+        type: "error",
+        text: "Enter a valid new admin email address.",
+      });
+      return;
+    }
+    if (!isBusinessEmail(newAdminMailId)) {
+      setMessage({
+        type: "error",
+        text: "Kindly use a business email address, not a personal email provider.",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        apiUrl("/api/utility-locations/change/request-new-email-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locationName: changeDetails.locationName,
+            currentEmail: changeDetails.currentEmail,
+            newAdminMailId,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Unable to send OTP.");
+      setNewAdminOtpSent(true);
+      setNewAdminOtpVerified(false);
+      setNewAdminOtpToken("");
+      setNewAdminOtp("");
+      setMessage({ type: "success", text: data.message });
+    } catch (error) {
+      setMessage({ type: "error", text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyNewAdminOtp = async () => {
+    const newAdminMailId = changeDetails.newAdminMailId.trim().toLowerCase();
+    if (!newAdminOtpSent || !/^\d{6}$/.test(newAdminOtp.trim())) {
+      setMessage({
+        type: "error",
+        text: "Enter the six-digit OTP sent to the new admin email.",
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        apiUrl("/api/utility-locations/change/verify-new-email-otp"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locationName: changeDetails.locationName,
+            currentEmail: changeDetails.currentEmail,
+            newAdminMailId,
+            otp: newAdminOtp.trim(),
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Unable to verify OTP.");
+      setNewAdminOtpVerified(true);
+      setNewAdminOtpToken(data.verificationToken);
+      setMessage({ type: "success", text: data.message });
+    } catch (error) {
+      setNewAdminOtpVerified(false);
+      setNewAdminOtpToken("");
       setMessage({ type: "error", text: error.message });
     } finally {
       setIsLoading(false);
@@ -586,8 +806,9 @@ function SignIn() {
           >
             <Typography variant="h6">
               {isRegistration
-                ? "Register New Location"
-                : "Change Location Credentials"}
+                ? "Register New Location and Super Admin"
+                : "Change Location Credentials"
+              }
             </Typography>
             {isRegistration ? (
               <>
@@ -636,18 +857,156 @@ function SignIn() {
                         "Location code to be updated. Contact Admin."
                       : "Location code"
                   }
+                                    sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
                 />
                 <TextField
                   required
                   type="password"
-                  label="Passcode"
+                  placeholder="Enter Location Passcode"
                   value={registration.passcode}
                   onChange={update("passcode")}
+                                    sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  value={superUserDetail.name}
+                  style={{ backgroundColor: "white" }}
+                  placeholder="Enter name"
+                  onChange={(e) =>
+                    setSuperUserDetail({
+                      ...superUserDetail,
+                      name:
+                        e.target.value
+                          ?.replace(/\s+/g, " ")
+                          .toLowerCase()
+                          .replace(/\b\w/g, (char) => char.toUpperCase()) || "",
+                    })
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="text"
+                  value={superUserDetail.empID}
+                  placeholder="Emp id must be 8-digit for officer role else enter '1'"
+                  inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) =>
+                    setSuperUserDetail({
+                      ...superUserDetail,
+                      empID: e.target.value.replace(/\D/g, ""),
+                    })
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="text"
+                  value={superUserDetail.designation}
+                  placeholder="Enter designation"
+                  inputProps={{ maxLength: 50 }}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) =>
+                    setSuperUserDetail({
+                      ...superUserDetail,
+                      designation: e.target.value,
+                    })
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  type="text"
+                  placeholder="Enter Mobile No"
+                  value={superUserDetail.mobileNo}
+                  error={
+                    superUserDetail.mobileNo &&
+                    superUserDetail.mobileNo.length !== 10
+                  }
+                  inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                  style={{ backgroundColor: "white" }}
+                  onChange={(e) =>
+                    setSuperUserDetail({
+                      ...superUserDetail,
+                      mobileNo: e.target.value.replace(/\D/g, ""),
+                    })
+                  }
+                  sx={{
+                    // 1. Increase font size of the placeholder/input text
+                    "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                    },
+                  }}
                 />
                 <TextField
                   required
                   type="email"
-                  label="Admin email"
+                  placeholder="Enter email"
                   error={
                     Boolean(registration.adminMailId) &&
                     !isValidEmail(registration.adminMailId)
@@ -660,10 +1019,18 @@ function SignIn() {
                     setRegistrationOtpVerified(false);
                     registrationOtpCooldown.resetCooldown();
                   }}
-                  sx={{
+                                    sx={{
                     // 1. Increase font size of the placeholder/input text
                     "& .MuiInputBase-input": {
+                      fontSize: "1rem",
+                      fontFamily: "Lucida Sans",
                       textTransform: "lowercase",
+                    },
+                    "& .MuiInputBase-input::placeholder": {
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                      textTransform: "none",
                     },
                   }}
                 />
@@ -712,7 +1079,7 @@ function SignIn() {
                       type="button"
                       variant="outlined"
                       onClick={handleVerifyRegistrationOtp}
-                      disabled={isLoading || !registrationOtp.trim()}
+                      disabled={isLoading || !registrationOtp.trim() || registrationOtpVerified}
                     >
                       {isLoading ? "Verifying..." : "Verify OTP"}
                     </Button>
@@ -766,13 +1133,17 @@ function SignIn() {
                               item.LOCATION_NAME === changeDetails.locationName,
                           )?.ADMIN_MAIL_ID || "",
                         )
-                      : ""
+                      : "Select Location First"
                   }
                   value={changeDetails.currentEmail}
                   onChange={(event) => {
                     update("currentEmail")(event);
                     setChangeOtpSent(false);
                     changeOtpCooldown.resetCooldown();
+                    setNewAdminOtp("");
+                    setNewAdminOtpSent(false);
+                    setNewAdminOtpVerified(false);
+                    setNewAdminOtpToken("");
                   }}
                   InputLabelProps={{ shrink: true }}
                   sx={{
@@ -836,7 +1207,13 @@ function SignIn() {
                       }
                       label="New admin email"
                       value={changeDetails.newAdminMailId}
-                      onChange={update("newAdminMailId")}
+                      onChange={(event) => {
+                        update("newAdminMailId")(event);
+                        setNewAdminOtp("");
+                        setNewAdminOtpSent(false);
+                        setNewAdminOtpVerified(false);
+                        setNewAdminOtpToken("");
+                      }}
                       sx={{
                         "& .MuiInputBase-input": {
                           textTransform: "lowercase",
@@ -844,12 +1221,52 @@ function SignIn() {
                       }}
                     />
                     <Button
+                      type="button"
+                      variant="outlined"
+                      onClick={handleSendNewAdminOtp}
+                      disabled={
+                        isLoading ||
+                        !isValidEmail(changeDetails.newAdminMailId) ||
+                        newAdminOtpVerified
+                      }
+                    >
+                      {newAdminOtpVerified
+                        ? "New Email Verified"
+                        : "Send OTP to New Email"}
+                    </Button>
+                    {newAdminOtpSent ? (
+                      <>
+                        <TextField
+                          label="New email OTP"
+                          value={newAdminOtp}
+                          onChange={(event) => {
+                            setNewAdminOtp(event.target.value);
+                            setNewAdminOtpVerified(false);
+                            setNewAdminOtpToken("");
+                          }}
+                          inputProps={{ inputMode: "numeric", maxLength: 6 }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outlined"
+                          onClick={handleVerifyNewAdminOtp}
+                          disabled={isLoading || newAdminOtpVerified}
+                        >
+                          {newAdminOtpVerified
+                            ? "Verified"
+                            : "Verify New Email OTP"}
+                        </Button>
+                      </>
+                    ) : null}
+                    <Button
                       type="submit"
                       variant="contained"
                       disabled={
                         isLoading ||
                         (!changeDetails.newPasscode &&
-                          !changeDetails.newAdminMailId)
+                          !changeDetails.newAdminMailId) ||
+                        (Boolean(changeDetails.newAdminMailId) &&
+                          !newAdminOtpVerified)
                       }
                     >
                       {isLoading ? "Updating..." : "Verify OTP & Update"}
@@ -879,6 +1296,10 @@ function SignIn() {
                 setRegistrationOtp("");
                 setRegistrationOtpSent(false);
                 setRegistrationOtpVerified(false);
+                setNewAdminOtp("");
+                setNewAdminOtpSent(false);
+                setNewAdminOtpVerified(false);
+                setNewAdminOtpToken("");
                 setChangeDetails({
                   stateOffice: "",
                   locationName: "",
@@ -920,7 +1341,7 @@ function SignIn() {
               style={{ width: 200 }}
               onClick={() => setViewMode("register")}
             >
-              New location
+              New Registration
             </Button>
             <Button
               type="button"
