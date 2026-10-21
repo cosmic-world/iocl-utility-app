@@ -116,7 +116,7 @@ export default function formControlPage({ show, setShow }) {
       );
       return;
     }
-    if (!/[HCWE]/.test(permitNo)) {
+    if (!/^\d{4}[HCWE]\d{7}$/.test(permitNo.trim().toUpperCase())) {
       alert("Invalid Permit No!");
       return;
     }

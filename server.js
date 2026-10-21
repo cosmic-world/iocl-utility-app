@@ -3256,6 +3256,9 @@ app.post('/api/permits/manual', async (req, res) => {
     if (!locationCode || !permitNo.startsWith(locationCode)) {
       return res.status(400).json({ success: false, message: 'Permit No does not match the selected terminal.' });
     }
+    if (!/^\d{4}[HCWE]\d{7}$/.test(normalizePermitNo(permitNo))) {
+      return res.status(400).json({ success: false, message: 'Invalid Permit No. Expected format: 4-digit location code, permit type, and 7 digits.' });
+    }
 
     if (!utilityLocationsCache.length) {
       await refreshUtilityLocationsCache();
