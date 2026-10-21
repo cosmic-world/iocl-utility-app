@@ -22,6 +22,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import UserConfirmationModalWithoutPin from "./UserConfirmationModalWithoutPin";
 import NavbarPermit from "../components/NavbarPermit";
 import { apiUrl } from "../api";
+import {
+  SetPermitList,
+} from "../action/userSlice";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -50,7 +53,6 @@ const ModifyRecords = () => {
   const [pageSize, setPageSize] = React.useState(100);
   const [selectedId, setSelectedId] = useState("");
   const [saveLoader, setSaveLoader] = useState(false);
-  const [show, setShow] = useState(false);
   const locationName = selectedTerminal[selectedTerminal.length - 1];
 
   const fetchSheetData = async () => {
@@ -102,7 +104,8 @@ const ModifyRecords = () => {
     setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
   };
 
-  const handleDeleteClick = async (id) => {
+  const handleDeleteClick = async () => {
+    const id = selectedId;
     setSaveLoader(true);
     try {
       const response = await fetch(
@@ -114,7 +117,8 @@ const ModifyRecords = () => {
       if (!response.ok) throw new Error("Unable to delete permit record");
       setSaveLoader(false);
       setSuccessOpen(true);
-      fetchSheetData();
+      // fetchSheetData();
+      setRows(rows.filter((item) => item["Unique ID"] != id));
     } catch (error) {
       setSaveLoader(false);
       setFailOpen(true);
@@ -142,7 +146,6 @@ const ModifyRecords = () => {
 
   const processRowUpdate = async (newRow) => {
     const updatedRow = { ...newRow, isNew: false };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
     setSaveLoader(true);
     try {
       const response = await fetch(
@@ -170,6 +173,10 @@ const ModifyRecords = () => {
       fetchSheetData();
       setSaveLoader(false);
       setSuccessOpen(true);
+      const updatedRecord = rows.map((row) =>
+        row["Unique ID"] === newRow["Unique ID"] ? updatedRow : row
+      );
+      setRows(updatedRecord);
     } catch (error) {
       setSaveLoader(false);
       setFailOpen(true);
@@ -354,7 +361,7 @@ const ModifyRecords = () => {
             label="Delete"
             onClick={() => {
               setSelectedId(params.row["Unique ID"]);
-              setShow(true);
+              setUserFormShow(true);
             }}
             color="danger"
             style={{ color: "red" }}
