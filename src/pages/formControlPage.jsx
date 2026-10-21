@@ -28,16 +28,10 @@ class DraggableModalDialog extends React.Component {
 }
 
 export default function formControlPage({ show, setShow }) {
-  const dispatch = useDispatch();
-  const {
-    selectedTerminal,
-    officerList,
-    contractorList,
-    locationCode,
-    locationList,
-  } = useSelector((state) => state.myApp);
+  const { officerList, contractorList, locationCode, locationList } =
+    useSelector((state) => state.myApp);
+
   const [saveLoader, setSaveLoader] = useState(false);
-  // const [show, setShow] = useState(false);
   const [permitType, setPermitType] = useState("");
   const [workDesc, setWorkDesc] = useState("");
   const [workLocation, setWorkLocation] = useState("");
@@ -46,14 +40,33 @@ export default function formControlPage({ show, setShow }) {
   const [clrEnd, setClrEnd] = useState("");
   const [contractorName, setContractorName] = useState("");
   const [permitNo, setPermitNo] = useState("");
-  const [division, setDivision] = useState("");
-  const locationName = selectedTerminal[selectedTerminal.length - 1];
-  const officerListForLocation = officerList;
   const contractorListForLocation = contractorList;
 
-  // Permit No is prefixed with the 4-digit location code, which is the authoritative
-  // source of the issuing terminal — must match App.jsx's automated write path,
-  // otherwise a manual entry can be tagged with whichever terminal is currently selected.
+  const location_officerList = officerList.filter((item) =>
+    ["ADMIN", "SUPER_ADMIN"].includes(item.ROLE),
+  );
+  const checkIfOfficerListHasDuplicates =
+    location_officerList.length !=
+    [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))]
+      .length;
+
+  const FinalOfficerList = checkIfOfficerListHasDuplicates
+    ? [
+        ...new Set(
+          location_officerList.map(
+            (item) => `${item["OFFICER_NAME"]}(${item["Emp_ID"]})`,
+          ),
+        ),
+      ]
+    : [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))];
+
+  const officerName =
+    receiverName !== ""
+      ? checkIfOfficerListHasDuplicates
+        ? receiverName.split("(")[0].trim()
+        : receiverName
+      : "";
+
   const findLocationName = (permitNo) => {
     const locCode = String(permitNo || "").match(/^\d{4}/)?.[0];
     if (!locCode) {
@@ -76,7 +89,6 @@ export default function formControlPage({ show, setShow }) {
     setClrEnd("");
     setContractorName("");
     setPermitNo("");
-    setDivision("");
   };
 
   const handleCloseModal = () => {
@@ -113,13 +125,19 @@ export default function formControlPage({ show, setShow }) {
       alert("Unable to resolve a location for this Permit No.");
       return;
     }
+    if (clrEnd <= clrStart) {
+      alert(
+        "Clearance End time must be after Clearance Start time. Check AM/PM format.",
+      );
+      return;
+    }
     setSaveLoader(true);
     try {
       const payload = {
         "Permit Type": permitType,
         "Work Description": workDesc,
         "Work Location": workLocation,
-        "Receiver Name": receiverName,
+        "Receiver Name": officerName,
         "Clearance From": clrStart,
         "Clearance Till": clrEnd,
         "Contractor Name": contractorName,
@@ -139,8 +157,9 @@ export default function formControlPage({ show, setShow }) {
       alert(result.message || "Data submitted successfully");
       handleResetForm();
     } catch (error) {
-      setSaveLoader(false);
       alert(error.message || "Unable to submit permit. Check your connection.");
+    } finally {
+      setSaveLoader(false);
     }
   };
 
@@ -348,9 +367,7 @@ export default function formControlPage({ show, setShow }) {
           <div className="col-8">
             <Autocomplete
               className="w-100"
-              options={officerListForLocation.map(
-                (officer) => officer["OFFICER_NAME"],
-              )}
+              options={FinalOfficerList}
               name="receiverName"
               value={receiverName !== "" ? receiverName : null}
               isOptionEqualToValue={(option, value) => option === value}
@@ -523,46 +540,6 @@ export default function formControlPage({ show, setShow }) {
             />
           </div>
         </div>
-
-        {/* <div className="row w-100 mt-2 mb-4">
-          <div
-            className="col-4 border-bottom"
-            style={{
-              fontSize: "18px",
-              fontFamily: "Lucida Sans",
-              color: "black",
-              textAlign: "center",
-              alignContent: "center",
-            }}
-          >
-            Division
-          </div>
-          <div className="col-8">
-            <Autocomplete
-              className="w-100"
-              options={["Marketing", "Pipeline"]}
-              name="division"
-              value={division !== "" ? division : null}
-              isOptionEqualToValue={(option, value) => option === value}
-              onChange={(e, newValue) =>
-                newValue !== null ? setDivision(newValue) : setDivision("")
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  error={division == ""}
-                  InputProps={{
-                    ...params.InputProps,
-                    style: {
-                      fontFamily: "Lucida Sans",
-                      fontSize: 20,
-                    },
-                  }}
-                />
-              )}
-            />
-          </div>
-        </div> */}
 
         <Button
           color="success"

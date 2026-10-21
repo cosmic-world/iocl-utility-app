@@ -14,15 +14,12 @@ import {
 } from "@mui/material";
 import NavbarPermit from "../components/NavbarPermit";
 import { apiUrl } from "../api";
-import {
-  SetPermitList,
-} from "../action/userSlice";
-
+import { SetPermitList } from "../action/userSlice";
 
 export default function LayoutDisplay({ state }) {
   const { PermitList, selectedTerminal, officerList, locationCode } =
     useSelector((state) => state.myApp);
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const [saveLoader, setSaveLoader] = useState(false);
   const [menuPosition, setMenuPosition] = useState(null);
   const [markerPosition, setMarkerPosition] = useState(null);
@@ -106,8 +103,12 @@ export default function LayoutDisplay({ state }) {
       if (!response.ok) throw new Error("Unable to save permit marker");
       const updatedPermitData = PermitList.map((item) =>
         item["Unique ID"] === rowNumber
-          ? { ...item, page_top: mark === "existing" ? y : markerPosition.mouseY, page_left: mark === "existing" ? x : markerPosition.mouseX }
-          : item
+          ? {
+              ...item,
+              page_top: mark === "existing" ? y : markerPosition.mouseY,
+              page_left: mark === "existing" ? x : markerPosition.mouseX,
+            }
+          : item,
       );
       dispatch(SetPermitList(updatedPermitData));
       if (mark === "existing") {
@@ -123,11 +124,12 @@ export default function LayoutDisplay({ state }) {
             }),
           },
         );
-        if (!clearResponse.ok) throw new Error("Unable to clear the previous permit marker");
+        if (!clearResponse.ok)
+          throw new Error("Unable to clear the previous permit marker");
         const clearedPermitData = PermitList.map((item) =>
           item["Unique ID"] === oldrowNumber
             ? { ...item, page_top: null, page_left: null }
-            : item
+            : item,
         );
         dispatch(SetPermitList(clearedPermitData));
       }

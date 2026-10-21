@@ -339,35 +339,35 @@ function SignIn() {
   }, [dispatch]);
 
   const handleSendRegistrationOtp = async () => {
-          if (!superUserDetail.name) {
-        alert("Please enter Officer Name.");
-        return;
-      }
-  
-      if (!superUserDetail.empID ) {
-        alert("Please enter Emp ID");
-        return;
-      }
-  
-      if (!/^[0-9]{8}$/.test(superUserDetail.empID)) {
-        alert("Company Emp ID should be exactly 8 digits.");
-        return;
-      }
-  
-      if (!superUserDetail.designation) {
-        alert("Please enter Designation.");
-        return;
-      }
-  
-      if (!superUserDetail.mobileNo) {
-        alert("Please enter Mobile No.");
-        return;
-      }
-  
-      if (!/^[0-9]{10}$/.test(superUserDetail.mobileNo)) {
-        alert("Mobile No should be exactly 10 digits.");
-        return;
-      }
+    if (!superUserDetail.name) {
+      alert("Please enter Officer Name.");
+      return;
+    }
+
+    if (!superUserDetail.empID) {
+      alert("Please enter Emp ID");
+      return;
+    }
+
+    if (!/^[0-9]{8}$/.test(superUserDetail.empID)) {
+      alert("Company Emp ID should be exactly 8 digits.");
+      return;
+    }
+
+    if (!superUserDetail.designation) {
+      alert("Please enter Designation.");
+      return;
+    }
+
+    if (!superUserDetail.mobileNo) {
+      alert("Please enter Mobile No.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(superUserDetail.mobileNo)) {
+      alert("Mobile No should be exactly 10 digits.");
+      return;
+    }
 
     if (!registration.adminMailId.trim()) {
       setMessage({
@@ -470,44 +470,44 @@ function SignIn() {
   };
 
   const handlePostSuperUserData = async (e) => {
-      try {
-        const payload = {
-          locationCode: String(registration.locationCode),
-          name:superUserDetail.name,
-          empID: superUserDetail.empID,
-          mobileNo: superUserDetail.mobileNo,
-          mailID: registration.adminMailId,
-          designation: superUserDetail.designation,
-          role: 'SUPER_ADMIN',
-        };
-        // Submit to server
-        const response = await fetch(apiUrl("/api/upload-officer-single"), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
-          },
-          body: JSON.stringify(payload),
+    try {
+      const payload = {
+        locationCode: String(registration.locationCode),
+        name: superUserDetail.name,
+        empID: superUserDetail.empID,
+        mobileNo: superUserDetail.mobileNo,
+        mailID: registration.adminMailId,
+        designation: superUserDetail.designation,
+        role: "SUPER_ADMIN",
+      };
+      // Submit to server
+      const response = await fetch(apiUrl("/api/upload-officer-single"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // <-- ADD THIS CRITICAL LINE
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert("Record submitted successfully!");
+        // Reset form
+        setSuperUserDetail({
+          name: "",
+          empID: "",
+          mobileNo: "",
+          mailID: "",
+          designation: "",
         });
-        const data = await response.json();
-        if (data.success) {
-          alert("Record submitted successfully!");
-          // Reset form
-          setSuperUserDetail({
-            name: "",
-            empID: "",
-            mobileNo: "",
-            mailID: "",
-            designation: "",
-          });
-          return true;
-        } else {
-          alert("Upload failed: " + data.error);
-          return false;
-        }
-      } catch (error) {
-        alert("Error: " + error.message);
+        return true;
+      } else {
+        alert("Upload failed: " + data.error);
         return false;
       }
+    } catch (error) {
+      alert("Error: " + error.message);
+      return false;
+    }
   };
 
   const handleRegisterLocation = async (event) => {
@@ -560,9 +560,7 @@ function SignIn() {
       setRegistrationOtpVerified(false);
       registrationOtpCooldown.resetCooldown();
       handleRefreshLocations();
-      alert(
-        data.message
-      );
+      alert(data.message);
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -807,8 +805,7 @@ function SignIn() {
             <Typography variant="h6">
               {isRegistration
                 ? "Register New Location and Super Admin"
-                : "Change Location Credentials"
-              }
+                : "Change Location Credentials"}
             </Typography>
             {isRegistration ? (
               <>
@@ -857,7 +854,7 @@ function SignIn() {
                         "Location code to be updated. Contact Admin."
                       : "Location code"
                   }
-                                    sx={{
+                  sx={{
                     // 1. Increase font size of the placeholder/input text
                     "& .MuiInputBase-input": {
                       fontSize: "1rem",
@@ -876,7 +873,7 @@ function SignIn() {
                   placeholder="Enter Location Passcode"
                   value={registration.passcode}
                   onChange={update("passcode")}
-                                    sx={{
+                  sx={{
                     // 1. Increase font size of the placeholder/input text
                     "& .MuiInputBase-input": {
                       fontSize: "1rem",
@@ -1019,7 +1016,7 @@ function SignIn() {
                     setRegistrationOtpVerified(false);
                     registrationOtpCooldown.resetCooldown();
                   }}
-                                    sx={{
+                  sx={{
                     // 1. Increase font size of the placeholder/input text
                     "& .MuiInputBase-input": {
                       fontSize: "1rem",
@@ -1079,7 +1076,11 @@ function SignIn() {
                       type="button"
                       variant="outlined"
                       onClick={handleVerifyRegistrationOtp}
-                      disabled={isLoading || !registrationOtp.trim() || registrationOtpVerified}
+                      disabled={
+                        isLoading ||
+                        !registrationOtp.trim() ||
+                        registrationOtpVerified
+                      }
                     >
                       {isLoading ? "Verifying..." : "Verify OTP"}
                     </Button>

@@ -75,13 +75,7 @@ export default function LabourPassDashboard() {
         ),
       ]
     : [...new Set(location_officerList.map((item) => item["OFFICER_NAME"]))];
-  const designation = location_officerList
-    .filter((val) =>
-      checkIfOfficerListHasDuplicates
-        ? val["OFFICER_NAME"] === approvingOfficer.split("(")[0].trim()
-        : val["OFFICER_NAME"].toLowerCase() === approvingOfficer.toLowerCase(),
-    )
-    .map((val) => val["DESIGNATION"]);
+
   const getTodayLabel = () =>
     new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
 

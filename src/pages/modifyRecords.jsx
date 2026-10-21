@@ -22,9 +22,6 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import UserConfirmationModalWithoutPin from "./UserConfirmationModalWithoutPin";
 import NavbarPermit from "../components/NavbarPermit";
 import { apiUrl } from "../api";
-import {
-  SetPermitList,
-} from "../action/userSlice";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -41,9 +38,9 @@ const EditToolbar = () => {
 };
 
 const ModifyRecords = () => {
-  const dispatch = useDispatch();
-  const { selectedTerminal, userType, navBarComponent, locationCode } =
-    useSelector((state) => state.myApp);
+  const { selectedTerminal, locationCode } = useSelector(
+    (state) => state.myApp,
+  );
   const [rows, setRows] = React.useState([]);
   const [rowModesModel, setRowModesModel] = React.useState({});
   const [localID, setlocalID] = React.useState(0);
@@ -174,7 +171,7 @@ const ModifyRecords = () => {
       setSaveLoader(false);
       setSuccessOpen(true);
       const updatedRecord = rows.map((row) =>
-        row["Unique ID"] === newRow["Unique ID"] ? updatedRow : row
+        row["Unique ID"] === newRow["Unique ID"] ? updatedRow : row,
       );
       setRows(updatedRecord);
     } catch (error) {

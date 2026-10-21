@@ -978,11 +978,11 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       paddingBottom: "10px !important", // Keeps it centered vertically
                     },
                     "& .MuiInputBase-input::placeholder": {
-                fontFamily: "Lucida Sans",
-                fontSize: "0.8rem", // Optional: adjust placeholder size
-                fontStyle: "italic", // Optional: make placeholder italicized
-                textTransform: "none",
-              },
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                      textTransform: "none",
+                    },
                   }}
                 />
               </div>
@@ -995,12 +995,8 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                   value={designation}
                   placeholder="required only for officer role"
                   style={{ backgroundColor: "white" }}
-                  disabled = {userType === "SECURITY" || role === "SECURITY"}
-                  onChange={(e) =>
-                    setDesignation(
-                      e.target.value
-                    )
-                  }
+                  disabled={userType === "SECURITY" || role === "SECURITY"}
+                  onChange={(e) => setDesignation(e.target.value)}
                   sx={{
                     // 1. Increase font size of the placeholder/input text
                     "& .MuiInputBase-input": {
@@ -1010,11 +1006,11 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       paddingBottom: "10px !important", // Keeps it centered vertically
                     },
                     "& .MuiInputBase-input::placeholder": {
-                fontFamily: "Lucida Sans",
-                fontSize: "0.8rem", // Optional: adjust placeholder size
-                fontStyle: "italic", // Optional: make placeholder italicized
-                textTransform: "none",
-              },
+                      fontFamily: "Lucida Sans",
+                      fontSize: "0.8rem", // Optional: adjust placeholder size
+                      fontStyle: "italic", // Optional: make placeholder italicized
+                      textTransform: "none",
+                    },
                   }}
                 />
               </div>
@@ -1208,8 +1204,10 @@ export default function OfficerCredentials({ handleSyncOfficer }) {
                       }
                       fullWidth
                     />
+                  ) : officer.ROLE == "SECURITY" ? (
+                    Number(officer.Emp_ID)
                   ) : (
-                    officer.ROLE=='SECURITY' ? Number(officer.Emp_ID) : officer.Emp_ID
+                    officer.Emp_ID
                   )}
                 </td>
                 <td>

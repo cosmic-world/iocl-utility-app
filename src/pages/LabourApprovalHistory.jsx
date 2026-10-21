@@ -17,9 +17,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import NavbarWorkerEntry from "../components/NavbarWorkerEntry";
 
 export default function LabourApprovalHistory() {
-  const { locationCode, contractorList } = useSelector(
-    (state) => state.myApp,
-  );
+  const { locationCode, contractorList } = useSelector((state) => state.myApp);
   const [recordsLaborsEntry, setRecordsLaborsEntry] = useState([]);
   const $table = document.querySelector(".ttes_table_view");
   const $table_height = $table ? $table.clientHeight : 500;

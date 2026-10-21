@@ -14,25 +14,23 @@ export default function NavbarMaterialManagement() {
         width: "100%",
       }}
     >
-        <Button
-          variant={
-            navBarComponent === "iocl_incoming" ? "contained" : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "iocl_incoming" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("IOCL Incoming"));
-            dispatch(NavBarComponent("iocl_incoming"));
-          }}
-          disabled={userType == "User"}
-        >
-          IOCL Incoming
-        </Button>
+      <Button
+        variant={navBarComponent === "iocl_incoming" ? "contained" : "outlined"}
+        color="warning"
+        sx={{
+          my: 1,
+          mx: 5,
+          backgroundColor:
+            navBarComponent === "iocl_incoming" ? "null" : "white",
+        }}
+        onClick={() => {
+          dispatch(SetSelectedApplication("IOCL Incoming"));
+          dispatch(NavBarComponent("iocl_incoming"));
+        }}
+        disabled={userType == "User"}
+      >
+        IOCL Incoming
+      </Button>
       <Button
         variant={
           navBarComponent === "iocl_non_return" ? "contained" : "outlined"
@@ -69,27 +67,25 @@ export default function NavbarMaterialManagement() {
       >
         IOCL Returnable
       </Button>
-        <Button
-          variant={
-            navBarComponent === "contractor_incoming"
-              ? "contained"
-              : "outlined"
-          }
-          color="warning"
-          sx={{
-            my: 1,
-            mx: 5,
-            backgroundColor:
-              navBarComponent === "contractor_incoming" ? "null" : "white",
-          }}
-          onClick={() => {
-            dispatch(SetSelectedApplication("Contractor Incoming"));
-            dispatch(NavBarComponent("contractor_incoming"));
-          }}
-          disabled={userType == "User"}
-        >
-          Contractor Incoming
-        </Button>
+      <Button
+        variant={
+          navBarComponent === "contractor_incoming" ? "contained" : "outlined"
+        }
+        color="warning"
+        sx={{
+          my: 1,
+          mx: 5,
+          backgroundColor:
+            navBarComponent === "contractor_incoming" ? "null" : "white",
+        }}
+        onClick={() => {
+          dispatch(SetSelectedApplication("Contractor Incoming"));
+          dispatch(NavBarComponent("contractor_incoming"));
+        }}
+        disabled={userType == "User"}
+      >
+        Contractor Incoming
+      </Button>
       <Button
         variant={
           navBarComponent === "contractor_non_return" ? "contained" : "outlined"
